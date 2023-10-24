@@ -1,7 +1,5 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import { access } from 'fs';
 
 @Injectable()
 export class OauthService {
@@ -12,31 +10,31 @@ export class OauthService {
 
     async getAccessToken(code: string) {
         const body = {
-            grant_type: 'client_credentials',
+            grant_type: 'authorization_code',
             client_id: this.UID,
             client_secret: this.SECRET,
-            redirect_uri: 'https://google.com.br',
+            redirect_uri: 'https://google.com.br/',
             code: code,
         }
-        const accessToken = await this.httpService.axiosRef.post(this.site+'/oauth/token', body).then((res)=>{
-            //console.log(res.data)
+
+        const accessToken = await this.httpService.axiosRef.post(this.site + '/oauth/token', body).then((res) => {
             return res.data.access_token
-    }).catch((error)=>{
+        }).catch((error) => {
             console.log(error)
-    });
-    console.log(accessToken)
-    const config = {headers: {
-        Authorization: `Bearer ${accessToken}`,
-      }}
-    //const response2 = await this.httpService.axiosRef(this.site+'/v2/me', config).then((res)=>{
-    //    //console.log(res.data)
-    //    return res.data
-    //}).catch((error)=>{
-    //    console.log(error)
-    //})
-              
-        
-        //console.log(response2)
-        return accessToken;
+        });
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            }
+        }
+
+        const response2 = await this.httpService.axiosRef.get(this.site + '/v2/me', config).then((res) => {
+            return res.data
+        }).catch((error) => {
+            console.log(error)
+        })
+
+        return response2;
     }
 }
