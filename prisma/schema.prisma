@@ -17,5 +17,6 @@ model User{
 
   email String @unique
   user String  @unique
-  hash String
+  hash String?
+  userIntra Boolean?
 }

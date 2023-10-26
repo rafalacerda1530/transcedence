@@ -1,13 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { Param } from '@nestjs/common/decorators';
 import { OauthService } from './oauth.service';
-
+import { PrismaCommands } from 'src/prisma/prisma.commands';
 @Controller()
 export class OauthController {
-  constructor(private readonly authService: OauthService) {}
+  constructor(private readonly authService: OauthService, private prismaCommands: PrismaCommands) {}
 
   @Get('token/:code')
   async getToken(@Param('code') code: string) {
-    return this.authService.getAccessToken(code);
+    var testeString  =  this.authService.getAccessToken(code);
+    return this.prismaCommands.createUserIntra(await testeString)
   }
 }
