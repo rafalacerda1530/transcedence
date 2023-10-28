@@ -13,7 +13,7 @@ export class OauthService {
             grant_type: 'authorization_code',
             client_id: this.UID,
             client_secret: this.SECRET,
-            redirect_uri: 'https://google.com.br/',
+            redirect_uri: 'http://localhost:3000/callBack',
             code: code,
         }
 
@@ -34,7 +34,7 @@ export class OauthService {
         }).catch((error) => {
             console.log(error)
         })
-        console.log(response2['email'])
+        //console.log(typeof response2['email'])
         return response2;
     }
 }

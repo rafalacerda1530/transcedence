@@ -2,13 +2,12 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { PrismaService } from "./prisma.service";
 
-
 @Injectable()
 export class PrismaCommands{
     constructor(private prisma: PrismaService){}
 
-    async createUserIntra(responseFromIntra: string){
-
+    async createUserIntra(responseFromIntra: object){
+        console.log(typeof responseFromIntra)
         try{
             const user = await this.prisma.user.create({
                 data: {
@@ -17,7 +16,6 @@ export class PrismaCommands{
                     userIntra: true
             },
         }
-        
     )}catch (error) {
         if (error instanceof PrismaClientKnownRequestError){
            if (error.code === 'P2002') {
