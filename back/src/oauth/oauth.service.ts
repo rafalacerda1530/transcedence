@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class OauthService {
@@ -21,6 +21,7 @@ export class OauthService {
             return res.data.access_token
         }).catch((error) => {
             console.log(error)
+            throw BadRequestException;
         });
 
         const config = {

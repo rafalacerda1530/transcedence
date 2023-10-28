@@ -1,25 +1,37 @@
-import { useLocation } from 'react-router-dom';
-import React from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-function CallBack(){
-    const location = useLocation();
-    const params = new URLSearchParams(location.search);
-    const code = params.get('code');
-    const url = 'http://localhost:4000/token/'+code 
+function CallBack() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const [code, setCode] = useState('');;
 
-    axios.get(url).then((response: AxiosResponse) => {
-        console.log('Resposta do servidor:', response.data);
-      })
-      .catch((error: AxiosError) => {
-        console.error('Erro na requisição:', error);
-      })
+  useEffect(() => {
+      const newCode = params.get('code');
+      if (newCode)
+        setCode(newCode);
+  }, []);
 
-    return(
-        <div>Call back
-        <p>URL atual: {url}</p>
-        </div>
-    )
+  const url = 'http://localhost:4000/token/' + code;
+  useEffect(() => {
+    if (code){
+      axios.get(url)
+        .then((response: AxiosResponse) => {
+          console.log('Server response:', response.data);
+        })
+        .catch((error: AxiosError) => {
+          console.error('Request error:', error);
+        });
+    }
+  }, [code]);
+
+  return (
+    <div>
+      Call back
+      <p>URL: {url}</p>
+    </div>
+  );
 }
 
-export default CallBack
+export default CallBack;
