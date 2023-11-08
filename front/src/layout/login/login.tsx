@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import  {CallBackUserAndPassword } from '../../components/callBack';
-import {CallBack }from '../../components/callBack';
+import React, { useState } from 'react';
+import { CallBackUserAndPassword } from '../../components/callBack';
 import handleLoginClick from '../../components/handleCLickIntra';
 import { BrowserRouter as Router } from 'react-router-dom';
-import axios from 'axios';
+import "./loginGame.css"
 
 interface UserState {
   user: string;
   senha: string;
 }
 
-function Login_game() {
-  const [isActive, setActive] = useState(true);
+function LoginGame() {
   const [userState, setUserState] = useState<UserState>({
     user: '',
     senha: '',
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleUserChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserState({
@@ -31,78 +30,76 @@ function Login_game() {
     });
   };
 
-  const handleToggle = () => {
-    setActive(!isActive);
-  };
-
   const handleLogin = () => {
-    CallBackUserAndPassword(userState.user, userState.senha).then((result) => {
-      alert("Correto")
-    }).catch((error) => {
-      handleToggle();
-    });
-    
-  }
+    CallBackUserAndPassword(userState.user, userState.senha)
+      .then(() => {
+        alert('Login bem-sucedido');
+      })
+      .catch(() => {
+        setErrorMessage('Senha ou usuário incorretos');
+      });
+  };
 
   const handleLoginIntra = () => {
     handleLoginClick();
   };
 
   return (
-    <>
-      <div className="flex h-screen justify-center items-center flex-col bg-gradient-to-b from-purple-700 via-purple-400 to-transparent via-teal-500">
-        <div className="text-center text-2xl mb-2 font-oxanium font-extrabold flex flex-col gap-20">
-          <h1 className="flex justify-center items-center">PONG GAME</h1>
-          <div className="flex flex-col gap-8 items-center justify-center">
-            <input
-              type="text"
-              placeholder="User"
-              className="rounded-lg p-2 px-14"
-              value={userState.user}
-              onChange={handleUserChange}
-            />
-            <div className={
-                isActive
-                  ? " visibility: hidden"
-                  : " text-red-500"
-              }>
-              Incorret password or user
-            </div>
-            <input
-              type="password"
-              placeholder="Senha"
-              className="rounded-lg p-2 px-14"
-              value={userState.senha}
-              onChange={handleSenhaChange}
-            />
-            <h1 className="flex space-x-10">
-              <button
-                className="text-black rounded-lg"
-                //onClick={handleLogin} //criar tela de registro
-              >
-                Register
-              </button>
-              <button
-                className="text-black rounded-lg"
-                onClick={handleLoginIntra}
-              >
-                Login Intra
-              </button>
-              <Router><CallBack/></Router>
-            </h1>
-          </div>
-          <div className="flex flex-col items-center justify-center">
-            <button
-              className="p-2 px-14 bg-black text-white rounded-lg"
-              onClick={handleLogin}
-            >
-              Login
-            </button>
-          </div>
+    <div className="h-screen flex items-center justify-center bg-gradient-to-r from-purple-800 to-blue-800">
+      <div className="w-full max-w-md p-6 rounded-xl bg-white text-black shadow-2xl">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-purple-600">
+          PONG - GAME
+        </h1>
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Usuário"
+            className="w-full px-4 py-3 bg-gray-200 border rounded-full text-black focus:outline-none focus:ring-2 focus:ring-purple-400"
+            value={userState.user}
+            onChange={handleUserChange}
+          />
+        </div>
+        {errorMessage && (
+          <div className="text-red-500 mb-6 text-center">{errorMessage}</div>
+        )}
+        <div className="mb-6">
+          <input
+            type="password"
+            placeholder="Senha"
+            className="w-full px-4 py-3 bg-gray-200 border rounded-full text-black focus:outline-none focus:ring-2 focus:ring-purple-400"
+            value={userState.senha}
+            onChange={handleSenhaChange}
+          />
+        </div>
+        <div className="flex justify-between">
+          <button
+            className="w-1/2 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-700"
+          >
+            Registrar
+          </button>
+          <button
+            className="w-1/2 py-3 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+            onClick={handleLoginIntra}
+          >
+            Login Intra
+          </button>
+        </div>
+        <Router>
+          {/* <CallBack /> */}
+        </Router>
+        <div className="text-center mt-6">
+          <button
+            className="py-3 w-full rounded-full bg-purple-600 text-white hover:bg-purple-700"
+            onClick={handleLogin}
+          >
+            Login
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
-export default Login_game;
+
+
+export default LoginGame;

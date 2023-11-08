@@ -1,0 +1,67 @@
+.atari-login-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background-color: #000;
+  }
+  
+  .atari-login-box {
+	background-color: #222;
+	padding: 20px;
+	border: 2px solid #777;
+	border-radius: 10px;
+	text-align: center;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .atari-title {
+	font-size: 28px;
+	color: #fff;
+	margin-bottom: 20px;
+  }
+  
+  .atari-inputs {
+	margin-bottom: 20px;
+  }
+  
+  .atari-input {
+	padding: 8px;
+	font-size: 16px;
+	border: 2px solid #777;
+	border-radius: 5px;
+	margin: 5px;
+	background-color: #333;
+	color: #fff;
+  }
+  
+  .atari-error {
+	color: #ff3333;
+	margin-top: 10px;
+	font-size: 14px;
+  }
+  
+  .atari-buttons {
+	display: flex;
+	justify-content: center;
+  }
+  
+  .atari-button {
+	font-size: 16px;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+  }
+  
+  .atari-register-button {
+	background-color: #777;
+	color: #fff;
+	margin-right: 10px;
+  }
+  
+  .atari-login-button {
+	background-color: #33cc33;
+	color: #000;
+  }
+  
