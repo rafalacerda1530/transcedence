@@ -1,18 +1,13 @@
-import './App.css';
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
-import React from 'react';
-import './index.css'
-import Login_game from './layout/login/login';
+import React from "react";
+import "./index.css";
+import { Router } from "./Services/Router";
+import "./App.css";
 
 function App() {
   return (
-    <Login_game/>
-    //<Router>
-    //  <Routes>
-    //    <Route path="/" element={<Login/>} />
-    //    <Route path="/callback" element={<CallBack/>} />
-    //  </Routes>
-    //</Router>
+    <>
+      <Router />
+    </>
   );
 }
 export default App;

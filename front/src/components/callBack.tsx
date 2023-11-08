@@ -7,7 +7,7 @@ export function CallBack() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const code = params.get('code');
-  const url = 'http://localhost:4000/token/' + code;
+  const url = 'http://localhost:6000/token/' + code;
 
   // Realize a chamada ao servidor aqui, de forma assíncrona
   useEffect(() => {
@@ -25,7 +25,7 @@ export function CallBack() {
 }
 
 export const CallBackUserAndPassword = (user: String, password : String) => {
-  const url = 'http://localhost:4000/auth/signin';
+  const url = 'http://localhost:6000/auth/signin';
   const data = {
     user: user,
     password: password,
