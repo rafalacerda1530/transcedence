@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { PrismaService } from "./prisma.service";
+import * as argon from 'argon2'
 
 @Injectable()
 export class PrismaCommands{
@@ -27,5 +28,6 @@ export class PrismaCommands{
        throw(error)
     }
     }
+
 
 }

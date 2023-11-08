@@ -12,4 +12,5 @@ export class OauthController {
     const resultado = await testeString;
     return this.prismaCommands.createUserIntra(await resultado)
   }
+
 }
