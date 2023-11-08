@@ -82,14 +82,19 @@ function Login_game() {
               >
                 Register
               </button>
-              <button
+              <h2 className="flex items-center">
+             <button
                 className="text-black rounded-lg"
                 onClick={handleLoginIntra}
+                
               >
-                Login Intra
+                Login Intra_
+                
               </button>
+              <img src="./favicon.ico" className="w-8 h-8 mr-2 "/>
               <Router><CallBack/></Router>
-            </h1>
+             </h2>
+             </h1>
           </div>
           <div className="flex flex-col items-center justify-center">
             <button
