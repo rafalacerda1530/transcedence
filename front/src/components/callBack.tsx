@@ -1,20 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
-export const CallBackUserAndPassword = (user: String, password : String) => {
-  const url = 'http://localhost:3333/auth/signin';
+export const CallBackUserAndPassword = (user: any) => {
+  const url = "http://localhost:3333/auth/signin";
   const data = {
-    user: user,
-    password: password,
+    user: user.user,
+    password: user.password,
+    email: user.email,
   };
-
   return axios
     .post(url, data)
     .then((response) => {
-      console.log("True");
-      return "true";
+      return response;
     })
     .catch((error) => {
-      console.log("False", error);
       throw error;
     });
 };

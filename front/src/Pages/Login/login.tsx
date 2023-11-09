@@ -1,39 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { CallBackUserAndPassword } from "../../components/callBack";
-import handleLoginClick from "../../components/handleCLickIntra";
-import { BrowserRouter as Router } from "react-router-dom";
+import axios from "axios";
 
 function LoginGame() {
-
-  const [userState, setUserState] = useState({
+  const [formData, setFormData] = useState({
     user: "",
-    senha: "",
+    password: "",
+    email: "",
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [showBall, setShowBall] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleUserChange = (event: { target: { value: any } }) => {
-    setUserState({
-      ...userState,
-      user: event.target.value,
+  const handleInputChange = (event: { target: { name: any; value: any } }) => {
+    const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value,
     });
   };
 
-  const handleSenhaChange = (event: { target: { value: any } }) => {
-    setUserState({
-      ...userState,
-      senha: event.target.value,
-    });
-  };
-
-  const handleLogin = () => {
-    CallBackUserAndPassword(userState.user, userState.senha)
-      .then(() => {
-        alert("Login bem-sucedido");
-      })
-      .catch(() => {
-        setErrorMessage("Senha ou usuário incorretos");
-      });
+  const handleLogin = (event: { preventDefault: () => void }) => {
+    event.preventDefault(); // Evite o envio do formulário padrão
+    formData.email = "teste@teste.com";
+    if (!formData.user || !formData.password) {
+      setErrorMessage("Campos não podem estar vazios");
+    } else {
+      CallBackUserAndPassword(formData)
+        .then((response) => {
+          console.log(response.data);
+          window.location.href = "http://localhost:3000/Home";
+        })
+        .catch((error) => {
+          console.log("erro:", error.response.data.message);
+          setErrorMessage(error.response.data.message);
+        });
+    }
   };
 
   const handleLoginIntra = () => {
@@ -42,6 +44,25 @@ function LoginGame() {
 
     window.location.href = url;
     console.log("teste da url: ", url);
+  };
+
+  const handleRegister = (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+    // const data = {
+    // 	user: "julia",
+    // 	password: "1234",
+    // 	email: "julia@julia.com",
+    //   };
+    axios
+      .post("http://localhost:3333/auth/signup", formData)
+      .then((response) => {
+        console.log(response.data);
+        window.location.href = "http://localhost:3000/Home";
+      })
+      .catch((error) => {
+        console.log("erro:", error.response.data.message);
+        setErrorMessage(error.response.data.message);
+      });
   };
 
   useEffect(() => {
@@ -56,52 +77,127 @@ function LoginGame() {
   return (
     <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
       {showBall && (
-        <div className="absolute top-0 left-0 right-0 w-16 h-16 mx-auto mt-16 bg-white rounded-full animate-bounce">
+        <div className="absolute top-0 left-0 right-0 w-16 h-16 mx-auto mt-8 bg-white rounded-full animate-bounce">
           {/*bola de ping pong */}
         </div>
       )}
-      <div className="bg-black text-white p-8 rounded-lg border border-gray-700">
+      <div className="bg-black text-white p-8 rounded-lg border border-gray-700 w-96">
         <h1 className="text-4xl font-bold text-center mb-4">PONG GAME</h1>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Usuário"
-            className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
-            value={userState.user}
-            onChange={handleUserChange}
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="Senha"
-            className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
-            value={userState.senha}
-            onChange={handleSenhaChange}
-          />
-          {errorMessage && (
-            <p className="text-red-500 text-center mt-2">{errorMessage}</p>
-          )}
-        </div>
-        <div className="flex justify-center">
-          <button
-            className="bg-blue-600 text-white rounded-full px-4 py-2 mr-2"
-            onClick={handleLogin}
-          >
-            Login
-          </button>
-          <button
-            className="bg-blue-600 text-white rounded-full px-4 py-2"
-            onClick={handleLoginIntra}
-          >
-            Login Intra
-          </button>
-        </div>
-        <p className="text-center text-sm mt-4">
-          <a className="text-blue-400" href="#">
-            Registrar
-          </a>
-        </p>
+        {isRegistering ? (
+          <form onSubmit={handleRegister}>
+            <div className="mb-4">
+              <input
+                type="text"
+                name="email"
+                placeholder="Email"
+                className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                name="user"
+                placeholder="Usuário"
+                className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                value={formData.user}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="mb-4">
+              <input
+                type="password"
+                name="password"
+                placeholder="password"
+                className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                value={formData.password}
+                onChange={(event) => {
+                  setErrorMessage(""); // Limpa a mensagem de erro
+                  handleInputChange(event); // Chama a função handleInputChange original
+                }}
+              />
+              {errorMessage && (
+                <p className="text-red-500 text-center mt-2">{errorMessage}</p>
+              )}
+            </div>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white rounded-full px-4 py-2 mr-2"
+              >
+                Registrar
+              </button>
+              <button
+                type="button"
+                className="bg-blue-600 text-white rounded-full px-4 py-2"
+                onClick={() => setIsRegistering(false)}
+              >
+                Voltar para Login
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleLogin}>
+            <input
+              type="text"
+              name="email"
+              placeholder="Email"
+              className="visibility: hidden"
+              value={formData.email}
+              onChange={handleInputChange}
+            />
+            <div className="mb-4">
+              <input
+                type="text"
+                name="user"
+                placeholder="Usuário"
+                className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                value={formData.user}
+                onChange={(event) => {
+                  setErrorMessage(""); // Limpa a mensagem de erro
+                  handleInputChange(event); // Chama a função handleInputChange original
+                }}
+              />
+            </div>
+            <div className="mb-4">
+              <input
+                type="password"
+                name="password"
+                placeholder="password"
+                className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                value={formData.password}
+                onChange={(event) => {
+                  setErrorMessage(""); // Limpa a mensagem de erro
+                  handleInputChange(event); // Chama a função handleInputChange original
+                }}
+              />
+              {errorMessage && (
+                <p className="text-red-500 text-center mt-2">{errorMessage}</p>
+              )}
+            </div>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white rounded-full px-4 py-2 mr-2"
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                className="bg-blue-600 text-white rounded-full px-4 py-2"
+                onClick={handleLoginIntra}
+              >
+                Login Intra
+              </button>
+            </div>
+            <p className="text-center text-sm mt-4">
+              <button type="button" onClick={() => setIsRegistering(true)}>
+                Registrar
+              </button>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );

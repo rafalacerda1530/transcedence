@@ -1,10 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module'; 
+import * as cors from 'cors'; // Importe o módulo cors
+
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create
+  (AppModule);
   app.enableCors({
     origin: 'http://localhost:3000'
   });
@@ -20,6 +23,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+   // Configure o middleware CORS
+   app.use(cors());
   await app.listen(3333);
 }
 bootstrap();
