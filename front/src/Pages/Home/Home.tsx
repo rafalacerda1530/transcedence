@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
+
 export const Home = () => {
-  const queryParams = new URLSearchParams(window.location.search);
-  const error = queryParams.get("error");
   const [showBall, setShowBall] = useState(false);
 
   useEffect(() => {
@@ -13,11 +12,6 @@ export const Home = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  if (error === "access_denied") {
-    // Redirecione para a tela de login
-    window.location.href = "http://localhost:3000/Login";
-    return null; // Você pode retornar null ou outra coisa, já que o redirecionamento aconteceu
-  } else {
     return (
       <>
         <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
@@ -32,5 +26,4 @@ export const Home = () => {
         </div>
       </>
     );
-  }
 };

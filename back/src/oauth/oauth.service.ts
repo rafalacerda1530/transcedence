@@ -21,7 +21,7 @@ export class OauthService {
             return res.data.access_token
         }).catch((error) => {
             console.log(error)
-            throw BadRequestException;
+            throw new BadRequestException;
         });
 
         const config = {
