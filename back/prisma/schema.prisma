@@ -19,4 +19,5 @@ model User{
   user String  @unique
   hash String?
   userIntra Boolean?
+  jwt_token String?
 }
