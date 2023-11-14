@@ -1,11 +1,15 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OauthService {
-    constructor(private readonly httpService: HttpService) { }
-    private readonly UID = 'u-s4t2ud-e4c7b8cd4fb31c268132af823110ef8bdbf90e2df97baf4c1fe0f4a6f93e110b';
-    private readonly SECRET = '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';
+    constructor(
+        private readonly httpService: HttpService,
+        private config: ConfigService,
+        ){}
+    private readonly UID = this.config.get('API_INTRA_UID')
+    private readonly SECRET = this.config.get('API_INTRA_SECRET');
     private readonly site = 'https://api.intra.42.fr';
 
     async getAccessToken(code: string) {

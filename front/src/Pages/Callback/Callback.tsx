@@ -21,7 +21,7 @@ export const CallBack = () => {
 
   useEffect(() => {
     if (code){
-        const url = "http://localhost:3333/token/" + code;
+        const url = "http://localhost:3333/oauth/intra/" + code;
         axios
           .get(url)
           .then((response) => {

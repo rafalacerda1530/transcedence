@@ -6,7 +6,7 @@ import { PrismaCommands } from 'src/prisma/prisma.commands';
 export class OauthController {
   constructor(private readonly authService: OauthService, private prismaCommands: PrismaCommands) {}
 
-  @Get('token/:code')
+  @Get('oauth/intra/:code')
   async getToken(@Param('code') code: string) {
       var  testeString  =  this.authService.getAccessToken(code);
       const resultado = await testeString;

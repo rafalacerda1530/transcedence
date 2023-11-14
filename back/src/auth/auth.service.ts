@@ -27,7 +27,6 @@ export class AuthService {
             })
 
             const user_token = await this.token.signToken(user.user)
-            console.log("token_bd: ", user_token)
             response.cookie('accessToken', user_token.accessToken, {
                 httpOnly: true,
             });
@@ -49,13 +48,11 @@ export class AuthService {
     }
 
     async signin(dto: AuthDto, @Res() response: Response) {
-        console.log(dto)
         const user = await this.prisma.user.findUnique({
             where: {
                 user: dto.user
             }
         })
-        console.log(user)
         if (!user) throw new ForbiddenException(
             'User Incorect'
         )
@@ -64,7 +61,6 @@ export class AuthService {
             'Password Incorrect'
         )
         const user_token = await this.token.signToken(user.user);
-        console.log("token_bd: ", user_token);
         response.cookie('accessToken', user_token.accessToken, {
             httpOnly: true,
         });
