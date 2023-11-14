@@ -1,20 +1,25 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Res } from "@nestjs/common";
 import { AuthDto } from "src/dto/auth.dto";
 import { AuthService } from "./auth.service";
+import { Response } from "express";
 
 @Controller('auth')
 export class AuthController{
     constructor(private authService: AuthService) {}
 
     @Post('signup')
-    signup(@Body() dto: AuthDto){
-        return this.authService.signup(dto)
+    @HttpCode(HttpStatus.CREATED)
+    async signup(@Body() dto: AuthDto, @Res() response: Response){
+        await this.authService.signup(dto, response);
+        response.send();
     }
 
     @Post('signin')
-    signin(@Body()dto: AuthDto){
+    @HttpCode(HttpStatus.OK)
+    async signin(@Body()dto: AuthDto, @Res() response: Response){
         console.log("Chegando Signin")
-        return this.authService.signin(dto)
+        await this.authService.signin(dto, response);
+        response.send();
     }
-    
+
 }

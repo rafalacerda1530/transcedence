@@ -35,14 +35,15 @@ export class PrismaCommands {
             }
             throw (error)
         }
-    }  
+    }
 
     async updateJwtToken(userId: string, jwtToken: string): Promise<any> {
-        return this.prisma.user.update({
+        const user = await this.prisma.user.update({
             where: { user: userId },
             data: {
                 jwt_token: jwtToken,
             },
         });
+        console.log("TETETETETE");
     }
 }

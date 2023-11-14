@@ -1,8 +1,9 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module'; 
-import * as cors from 'cors'; // Importe o módulo cors
+import { AppModule } from './app.module';
+import * as cors from 'cors';
+import * as cookieParser from 'cookie-parser';
 
 
 async function bootstrap() {
@@ -23,8 +24,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-   // Configure o middleware CORS
-   app.use(cors());
+  app.use(cors({
+    credentials: true,
+  }));
+  app.use(cookieParser());
   await app.listen(3333);
 }
 bootstrap();

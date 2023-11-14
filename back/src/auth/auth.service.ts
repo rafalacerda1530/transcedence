@@ -1,23 +1,21 @@
-import { Body, ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, Res } from "@nestjs/common";
 import { AuthDto } from "src/dto/auth.dto";
 import * as argon from 'argon2'
 import { PrismaService } from "src/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import axios from 'axios';
-import { JwtService } from "@nestjs/jwt/dist";
-import { ConfigService } from "@nestjs/config";
 import { PrismaCommands } from "src/prisma/prisma.commands";
+import { TokenService } from "src/token/token.service";
+import { Response } from 'express';
 
 @Injectable({})
-export class AuthService{
+export class AuthService {
     constructor(
-        private prisma: PrismaService, 
-        private jwt: JwtService,
-        private config: ConfigService,
-        private prismaCommands: PrismaCommands, 
-    ){}
+        private prisma: PrismaService,
+        private prismaCommands: PrismaCommands,
+        private token: TokenService
+    ) { }
 
-    async signup(dto: AuthDto){
+    async signup(dto: AuthDto, @Res() response: Response) {
         const hash = await argon.hash(dto.password);
         try {
             const user = await this.prisma.user.create({
@@ -28,22 +26,29 @@ export class AuthService{
                 },
             })
 
-            delete user.hash
-            return user
-            
+            const user_token = await this.token.signToken(user.user)
+            console.log("token_bd: ", user_token)
+            response.cookie('accessToken', user_token.accessToken, {
+                httpOnly: true,
+            });
+            response.cookie('refreshToken', user_token.refreshToken, {
+                httpOnly: true,
+            });
+            const hashRefreshToken = await argon.hash(user_token.refreshToken);
+            await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);
         } catch (error) {
-             if (error instanceof PrismaClientKnownRequestError){
+            if (error instanceof PrismaClientKnownRequestError) {
                 if (error.code === 'P2002') {
                     throw new ForbiddenException(
                         'Credentials already exists'
                     )
                 }
             }
-            throw(error)
+            throw (error)
         }
     }
 
-    async signin(dto: AuthDto){
+    async signin(dto: AuthDto, @Res() response: Response) {
         console.log(dto)
         const user = await this.prisma.user.findUnique({
             where: {
@@ -58,23 +63,16 @@ export class AuthService{
         if (!pwMatches) throw new ForbiddenException(
             'Password Incorrect'
         )
-        const user_token = await this.signToken(user.user)
-        console.log("token_bd: ",user_token)
-        this.prismaCommands.updateJwtToken(dto.user, user_token['acces_token'])
-        return this.signToken(user.user)
-    }
-
-    async signToken(user: string): Promise<{acces_token: string}>{
-        const payload = {
-            sub: user
-        }
-        const secret = this.config.get('JWT_SECRET')
-        
-        const token = await this.jwt.signAsync(payload, {
-            expiresIn: '1h',
-            secret: secret,
+        const user_token = await this.token.signToken(user.user);
+        console.log("token_bd: ", user_token);
+        response.cookie('accessToken', user_token.accessToken, {
+            httpOnly: true,
         });
-        return {acces_token: token};
+        response.cookie('refreshToken', user_token.refreshToken, {
+            httpOnly: true,
+        });
+        const hashRefreshToken = await argon.hash(user_token.refreshToken);
+        await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);
     }
 
 }
