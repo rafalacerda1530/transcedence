@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from "react";
 import pingPongBall from "./pingPongBall.png"; // Importe uma imagem de uma bola de ping pong
+import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 
 export const Home = () => {
   const [showBall, setShowBall] = useState(false);
+  const [username, setUserName] = useState();
+  const axiosPrivate = useAxiosPrivate();
+
+  useEffect(() => {
+    const user = async () => {
+      try {
+        const response = await axiosPrivate.get('/user/me');
+        console.log(response.data);
+        setUserName(response.data?.user?.toUpperCase());
+        return response.data;
+      } catch (error){
+        console.log(error)
+        window.location.href = "http://localhost:3000/Login"
+      }
+    }
+    user();
+  }, []);
 
   useEffect(() => {
     // Mostrar a bola após 2 segundos (pode ajustar o tempo)
@@ -23,7 +41,7 @@ export const Home = () => {
         )}
         <div className="bg-black text-white p-8 rounded-lg border border-gray-700">
           <h1 className="text-4xl font-bold text-center mb-4">
-            SEJA BEM-VINDO AO PONG GAME
+          {username}, SEJA BEM-VINDO AO PONG GAME
           </h1>
           <p className="text-center">
             Desafie seus amigos em uma partida emocionante de Ping Pong!

@@ -23,7 +23,9 @@ export const CallBack = () => {
     if (code){
         const url = "http://localhost:3333/oauth/intra/" + code;
         axios
-          .get(url)
+          .get(url, {
+            withCredentials: true,
+          })
           .then((response) => {
         console.log("Resposta do servidor:", response.data);
         window.location.href = "http://localhost:3000/Home";

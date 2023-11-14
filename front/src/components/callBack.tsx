@@ -8,7 +8,9 @@ export const CallBackUserAndPassword = (user: any) => {
     email: user.email,
   };
   return axios
-    .post(url, data)
+    .post(url, data, {
+      withCredentials: true,
+    })
     .then((response) => {
       return response;
     })
