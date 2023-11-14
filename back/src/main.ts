@@ -10,7 +10,8 @@ async function bootstrap() {
   const app = await NestFactory.create
   (AppModule);
   app.enableCors({
-    origin: 'http://localhost:3000'
+    origin: 'http://localhost:3000',
+    credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -23,10 +24,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  app.use(cors({
-    credentials: true,
-  }));
   app.use(cookieParser());
   await app.listen(3333);
 }

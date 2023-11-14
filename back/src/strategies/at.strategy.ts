@@ -1,10 +1,8 @@
-import { ForbiddenException, Injectable, Req } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import * as argon from 'argon2'
-import { PrismaService } from 'src/prisma/prisma.service';
 
 type JwtPayload = {
 	sub: string
@@ -13,17 +11,13 @@ type JwtPayload = {
 @Injectable()
 export class AccessStrategy extends PassportStrategy(Strategy, 'jwt-access') {
   constructor(
-    private readonly config: ConfigService,
-    private prisma: PrismaService,
-
+    config: ConfigService,
     ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => req.cookies['accessToken'],
       ]),
-      secretOrKey: () => {
-        return this.config.get('JWT_SECRET_REFRESH');
-      },
+      secretOrKey: config.get('JWT_SECRET_ACCESS'),
     });
   }
 

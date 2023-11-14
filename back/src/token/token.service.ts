@@ -23,9 +23,13 @@ export class TokenService {
 		const user_token = await this.signToken(username)
 		response.cookie('accessToken', user_token.accessToken, {
 			httpOnly: true,
+			path: '/',
+			sameSite: "strict",
 		});
 		response.cookie('refreshToken', user_token.refreshToken, {
 			httpOnly: true,
+			path: '/',
+			sameSite: "strict",
 		});
 		const hashRefreshToken = await argon.hash(user_token.refreshToken);
 		await this.prismaCommands.updateJwtToken(username, hashRefreshToken);

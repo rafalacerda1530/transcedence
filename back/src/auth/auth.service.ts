@@ -29,9 +29,13 @@ export class AuthService {
             const user_token = await this.token.signToken(user.user)
             response.cookie('accessToken', user_token.accessToken, {
                 httpOnly: true,
+                path: '/',
+                sameSite: "strict",
             });
             response.cookie('refreshToken', user_token.refreshToken, {
                 httpOnly: true,
+                path: '/',
+                sameSite: "strict",
             });
             const hashRefreshToken = await argon.hash(user_token.refreshToken);
             await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);
@@ -63,9 +67,13 @@ export class AuthService {
         const user_token = await this.token.signToken(user.user);
         response.cookie('accessToken', user_token.accessToken, {
             httpOnly: true,
+            path: '/',
+            sameSite: "strict",
         });
         response.cookie('refreshToken', user_token.refreshToken, {
             httpOnly: true,
+            path: '/',
+            sameSite: "strict",
         });
         const hashRefreshToken = await argon.hash(user_token.refreshToken);
         await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);

@@ -28,14 +28,11 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   }
 
   async validate(payload: JwtPayload, @Req() req: Request) {
-    console.log(this.refreshToken);
-    console.log(payload.sub);
     const user = await this.prisma.user.findUnique({
       where: {
         user: payload.sub
       }
     })
-    console.log(user);
     const tokenMatches = await argon.verify(user.jwt_token, this.refreshToken);
     if (!tokenMatches) throw new ForbiddenException(
       'Incorrect token'

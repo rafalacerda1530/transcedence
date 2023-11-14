@@ -44,6 +44,5 @@ export class PrismaCommands {
                 jwt_token: jwtToken,
             },
         });
-        console.log("TETETETETE");
     }
 }

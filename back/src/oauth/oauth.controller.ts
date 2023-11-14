@@ -8,9 +8,9 @@ export class OauthController {
 
   @Get('oauth/intra/:code')
   async getToken(@Param('code') code: string) {
-      var  testeString  =  this.authService.getAccessToken(code);
-      const resultado = await testeString;
-      return (this.prismaCommands.createUserIntra(await resultado))
+      var  testeString  = await this.authService.getAccessToken(code);
+      const resultado = testeString;
+      return (await this.prismaCommands.createUserIntra(resultado))
   }
 
 }

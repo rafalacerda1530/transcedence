@@ -39,7 +39,6 @@ export class OauthService {
         }).catch((error) => {
             console.log(error)
         })
-        //console.log(typeof response2['email'])
         return response2;
     }
 }
