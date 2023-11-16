@@ -25,18 +25,8 @@ export class AuthService {
                     user: dto.user
                 },
             })
-
             const user_token = await this.token.signToken(user.user)
-            response.cookie('accessToken', user_token.accessToken, {
-                httpOnly: true,
-                path: '/',
-                sameSite: "strict",
-            });
-            response.cookie('refreshToken', user_token.refreshToken, {
-                httpOnly: true,
-                path: '/',
-                sameSite: "strict",
-            });
+            this.token.createCookies(response, user_token);
             const hashRefreshToken = await argon.hash(user_token.refreshToken);
             await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);
         } catch (error) {
@@ -60,21 +50,15 @@ export class AuthService {
         if (!user) throw new ForbiddenException(
             'User Incorect'
         )
+        if (!user.hash) throw new ForbiddenException(
+            'Intra user'
+        )
         const pwMatches = await argon.verify(user.hash, dto.password)
         if (!pwMatches) throw new ForbiddenException(
             'Password Incorrect'
         )
         const user_token = await this.token.signToken(user.user);
-        response.cookie('accessToken', user_token.accessToken, {
-            httpOnly: true,
-            path: '/',
-            sameSite: "strict",
-        });
-        response.cookie('refreshToken', user_token.refreshToken, {
-            httpOnly: true,
-            path: '/',
-            sameSite: "strict",
-        });
+        this.token.createCookies(response, user_token);
         const hashRefreshToken = await argon.hash(user_token.refreshToken);
         await this.prismaCommands.updateJwtToken(user.user, hashRefreshToken);
     }

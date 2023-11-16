@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaCommands } from 'src/prisma/prisma.commands';
 import * as argon from 'argon2'
+import { Response } from 'express';
 
 @Injectable()
 export class TokenService {
@@ -14,23 +15,14 @@ export class TokenService {
 		private prismaCommands: PrismaCommands,
 	) { }
 
-	async refreshToken(username: string, @Res() response: any) {
+	async refreshToken(username: string, @Res() response: Response) {
 		const user = await this.prisma.user.findUnique({
 			where: {
 				user: username,
 			}
 		});
 		const user_token = await this.signToken(username)
-		response.cookie('accessToken', user_token.accessToken, {
-			httpOnly: true,
-			path: '/',
-			sameSite: "strict",
-		});
-		response.cookie('refreshToken', user_token.refreshToken, {
-			httpOnly: true,
-			path: '/',
-			sameSite: "strict",
-		});
+		this.createCookies(response, user_token);
 		const hashRefreshToken = await argon.hash(user_token.refreshToken);
 		await this.prismaCommands.updateJwtToken(username, hashRefreshToken);
 	}
@@ -54,5 +46,19 @@ export class TokenService {
 		});
 
 		return { accessToken, refreshToken };
+	}
+
+	createCookies(@Res() response: Response, user_token: any) {
+		response.cookie('accessToken', user_token.accessToken, {
+			httpOnly: true,
+			path: '/',
+			sameSite: "strict",
+		});
+		response.cookie('refreshToken', user_token.refreshToken, {
+			httpOnly: true,
+			path: '/',
+			sameSite: "strict",
+		});
+		return ;
 	}
 }
