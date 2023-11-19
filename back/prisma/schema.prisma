@@ -20,4 +20,6 @@ model User{
   hash String?
   userIntra Boolean?
   jwt_token String?
+  authentication2fa Boolean?
+  authentication2faSecret String?
 }

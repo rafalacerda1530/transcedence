@@ -15,7 +15,6 @@ export class UserService {
 			user: user.user,
 			email: user.email,
 		};
-		console.log(userSend);
 		return (userSend);
 	}
 }

@@ -6,9 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { OauthModule } from './oauth/oauth.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
+import { Authentication2faModule } from './2fa-authentication/authentication-2fa.module';
 
 
 @Module({
-  imports: [AuthModule, AuthDto, PrismaModule, ConfigModule.forRoot({isGlobal: true}), OauthModule, TokenModule, UserModule],
+  imports: [AuthModule, AuthDto, PrismaModule, ConfigModule.forRoot({isGlobal: true}), OauthModule, TokenModule, UserModule, Authentication2faModule],
 })
 export class AppModule {}

@@ -17,7 +17,6 @@ export class AuthController{
     @Post('signin')
     @HttpCode(HttpStatus.OK)
     async signin(@Body()dto: AuthDto, @Res() response: Response){
-        console.log("Chegando Signin")
         await this.authService.signin(dto, response);
         response.send();
     }

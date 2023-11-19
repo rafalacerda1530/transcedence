@@ -20,5 +20,4 @@ export class OauthController {
       await this.token.refreshToken(user.user, response);
       response.send();
   }
-
 }

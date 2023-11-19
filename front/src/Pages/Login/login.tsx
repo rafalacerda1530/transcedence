@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CallBackUserAndPassword } from "../../components/callBack";
+import { CallBack2faAuthenticate, CallBackCheck2fa, CallBackUserAndPassword } from "../../components/callBack";
 import axios from "axios";
 
 function LoginGame() {
@@ -7,10 +7,12 @@ function LoginGame() {
     user: "",
     password: "",
     email: "",
+    twoFactorAuthenticationCode: ""
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [showBall, setShowBall] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [authenticate2factor, setAuthenticate2faActive] = useState(false);
 
   const handleInputChange = (event: { target: { name: any; value: any } }) => {
     const { name, value } = event.target;
@@ -20,20 +22,27 @@ function LoginGame() {
     });
   };
 
-  const handleLogin = (event: { preventDefault: () => void }) => {
+  const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
     formData.email = "teste@teste.com";
-    if (!formData.user || !formData.password) {
+    const  authentication2fa = await CallBackCheck2fa(formData)
+    if (authentication2fa && authenticate2factor == false)
+      setAuthenticate2faActive(true)
+    else if (!formData.user || !formData.password) {
       setErrorMessage("Campos não podem estar vazios");
     } else {
-      CallBackUserAndPassword(formData)
-        .then((response) => {
-          console.log(response.data);
-          window.location.href = "http://localhost:3000/Home";
-        })
-        .catch((error) => {
-          console.log("erro:", error.response.data.message);
-          setErrorMessage(error.response.data.message);
+      if (authentication2fa)
+        if(await CallBack2faAuthenticate(formData) == false)
+          setErrorMessage("Código Inválido");
+      else
+        CallBackUserAndPassword(formData)
+          .then((response) => {
+            console.log(response.data);
+            window.location.href = "http://localhost:3000/Home";
+          })
+          .catch((error) => {
+            console.log("erro:", error.response.data.message);
+            setErrorMessage(error.response.data.message);
         });
     }
   };
@@ -139,14 +148,6 @@ function LoginGame() {
           </form>
         ) : (
           <form onSubmit={handleLogin}>
-            <input
-              type="text"
-              name="email"
-              placeholder="Email"
-              className="visibility: hidden"
-              value={formData.email}
-              onChange={handleInputChange}
-            />
             <div className="mb-4">
               <input
                 type="text"
@@ -160,6 +161,20 @@ function LoginGame() {
                 }}
               />
             </div>
+              {authenticate2factor && (
+                <div className="mb-4">
+                <input
+                  type="text"
+                  name="twoFactorAuthenticationCode"
+                  placeholder="Authenticator CODE"
+                  className="w-full px-3 py-2 rounded-full bg-gray-700 text-white placeholder-white"
+                  onChange={(event) => {
+                    setErrorMessage(""); // Limpa a mensagem de erro
+                    handleInputChange(event); // Chama a função handleInputChange original
+                  }}
+                />
+              </div>
+              )}
             <div className="mb-4">
               <input
                 type="password"
