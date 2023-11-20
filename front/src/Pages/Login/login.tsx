@@ -31,10 +31,11 @@ function LoginGame() {
     else if (!formData.user || !formData.password) {
       setErrorMessage("Campos não podem estar vazios");
     } else {
-      if (authentication2fa)
+      if (authentication2fa){
         if(await CallBack2faAuthenticate(formData) == false)
           setErrorMessage("Código Inválido");
-      else
+      }
+      else{
         CallBackUserAndPassword(formData)
           .then((response) => {
             console.log(response.data);
@@ -44,6 +45,7 @@ function LoginGame() {
             console.log("erro:", error.response.data.message);
             setErrorMessage(error.response.data.message);
         });
+      }
     }
   };
 
@@ -63,7 +65,10 @@ function LoginGame() {
     // 	email: "julia@julia.com",
     //   };
     axios
-      .post("http://localhost:3333/auth/signup", formData)
+      .post("http://localhost:3333/auth/signup", formData,
+      {
+        withCredentials: true,
+      })
       .then((response) => {
         console.log(response.data);
         window.location.href = "http://localhost:3000/Home";

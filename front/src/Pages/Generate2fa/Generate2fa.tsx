@@ -35,10 +35,10 @@ export const Generate2fa =  () => {
           window.location.href = "http://localhost:3000/login";
         }
       };
-    
+
       user();
-    }, []); 
-    
+    }, []);
+
     useEffect(() => {
       const qrcodePath = async () => {
         try {
@@ -50,10 +50,10 @@ export const Generate2fa =  () => {
           console.log(error);
         }
       };
-    
+
       qrcodePath();
-    }, []); 
-    
+    }, []);
+
     return(
         <>
           <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex flex-col items-center justify-center relative">
