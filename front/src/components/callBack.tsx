@@ -71,5 +71,4 @@ export const CallBack2faAuthenticate = async (user: any): Promise<boolean> => {
   }catch (error){
     return false
   }
-
 }

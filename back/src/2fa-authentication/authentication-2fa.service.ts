@@ -54,5 +54,11 @@ export class Authentication2faService {
             data: {authentication2fa: true}
         })
     }
-    
+
+    async setTwoFactorOf(userName: string){
+        await this.prisma.user.update({
+            where: {user: userName},
+            data: {authentication2fa: false}
+        })
+    }
 }

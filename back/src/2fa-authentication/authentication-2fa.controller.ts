@@ -63,4 +63,16 @@ export class Authentication2faController {
             return {success: "false"}
         }
     }
+
+    @Post('2fa/desactivate')
+    @HttpCode(200)
+    async desactivate2faAuthenticate(@Req() request, @Body() body){
+        console.log(body)
+        try{
+            await this.service2fa.setTwoFactorOf(body.user)
+            return {success: "true"}
+        } catch(error){
+            return {success: "false"}
+        }
+    }
 }

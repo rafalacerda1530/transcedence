@@ -53,7 +53,7 @@ export const Generate2fa =  () => {
     
       qrcodePath();
     }, []); 
-    
+
     return(
         <>
           <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex flex-col items-center justify-center relative">
