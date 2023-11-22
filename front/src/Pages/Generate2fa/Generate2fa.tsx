@@ -35,10 +35,10 @@ export const Generate2fa =  () => {
           window.location.href = "http://localhost:3000/login";
         }
       };
-    
+
       user();
-    }, []); 
-    
+    }, []);
+
     useEffect(() => {
       const qrcodePath = async () => {
         try {
@@ -50,7 +50,7 @@ export const Generate2fa =  () => {
           console.log(error);
         }
       };
-    
+
       qrcodePath();
     }, []); 
 

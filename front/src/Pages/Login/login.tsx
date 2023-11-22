@@ -74,7 +74,10 @@ function LoginGame() {
     // 	email: "julia@julia.com",
     //   };
     axios
-      .post("http://localhost:3333/auth/signup", formData)
+      .post("http://localhost:3333/auth/signup", formData,
+      {
+        withCredentials: true,
+      })
       .then((response) => {
         console.log(response.data);
         window.location.href = "http://localhost:3000/Home";
