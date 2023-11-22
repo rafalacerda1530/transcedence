@@ -1,17 +1,17 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { TokenService } from './token.service';
-import { Request, Response } from 'express';
-import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import { RtGuard } from 'src/common/guards';
+import { GetCurrentUser } from 'src/common/decorators';
 
 @Controller('/token')
 export class TokenController {
   constructor(private tokenService: TokenService) {}
 
-  @UseGuards(AuthGuard('jwt-refresh'))
+  @UseGuards(RtGuard)
   @Get('/refresh')
-  async refreshToken(@Req() req: Request, @Res() response: Response) {
-    const user = req.user;
-    await this.tokenService.refreshToken(user['sub'], response);
+  async refreshToken(@GetCurrentUser('sub') user: string, @Res() response: Response) {
+    await this.tokenService.refreshToken(user, response);
     response.send();
   }
 }

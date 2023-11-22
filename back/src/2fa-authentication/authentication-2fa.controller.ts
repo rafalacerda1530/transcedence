@@ -9,8 +9,8 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { Authentication2faService } from './authentication-2fa.service';
-import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { AtGuard } from 'src/common/guards';
+import { GetCurrentUser } from 'src/common/decorators';
 
 @Controller('authentication-2fa')
 export class Authentication2faController {
@@ -20,11 +20,11 @@ export class Authentication2faController {
     private readonly prisma: PrismaService,
   ) {}
 
-  @UseGuards(AuthGuard('jwt-access'))
+  @UseGuards(AtGuard)
   @Post('generate')
   @HttpCode(200)
-  async generateQrCode(@Req() req: Request) {
-    const user = await this.userService.getUserInfo(req.user['sub']);
+  async generateQrCode(@GetCurrentUser('sub') username: string) {
+    const user = await this.userService.getUserInfo(username);
     const secret = await this.service2fa.generateTwoFactorAuthenticationSecret(
       user['user'],
     );
@@ -41,7 +41,7 @@ export class Authentication2faController {
 
   @Post('2fa/authenticate')
   @HttpCode(200)
-  async authenticate(@Req() request, @Body() body) {
+  async authenticate(@Body() body) {
     const isCodeValid =
       await this.service2fa.isTwoFactorAuthenticationCodeValid(
         body.twoFactorAuthenticationCode,
@@ -56,7 +56,7 @@ export class Authentication2faController {
 
   @Post('2fa/checkAtive')
   @HttpCode(200)
-  async isActive2faAuthenticate(@Req() request, @Body() body) {
+  async isActive2faAuthenticate(@Body() body) {
     try {
       const user = await this.prisma.user.findUnique({
         where: {
@@ -72,26 +72,26 @@ export class Authentication2faController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt-access'))
+  @UseGuards(AtGuard)
   @Post('2fa/activate')
   @HttpCode(200)
-  async activate2faAuthenticate(@Req() req: Request) {
-    console.log(req.user['sub']);
+  async activate2faAuthenticate(@GetCurrentUser('sub') username: string) {
+    console.log(username);
     try {
-      await this.service2fa.setTwoFactorOn(req.user['sub']);
+      await this.service2fa.setTwoFactorOn(username);
       return { success: 'true' };
     } catch (error) {
       return { success: 'false' };
     }
   }
 
-  @UseGuards(AuthGuard('jwt-access'))
+  @UseGuards(AtGuard)
   @Post('2fa/desactivate')
   @HttpCode(200)
-  async desactivate2faAuthenticate(@Req() req: Request) {
-    console.log(req.user['sub']);
+  async desactivate2faAuthenticate(@GetCurrentUser('sub') username: string) {
+    console.log(username);
     try {
-      await this.service2fa.setTwoFactorOf(req.user['sub']);
+      await this.service2fa.setTwoFactorOf(username);
       return { success: 'true' };
     } catch (error) {
       return { success: 'false' };

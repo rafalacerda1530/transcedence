@@ -4,7 +4,7 @@ import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 
 export const Home = () => {
   const [showBall, setShowBall] = useState(false);
-  const [username, setUserName] = useState();
+  const [username, setUserName] = useState("");
   const axiosPrivate = useAxiosPrivate();
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export const Home = () => {
       try {
         const response = await axiosPrivate.get('/user/me');
         console.log(response.data);
-        setUserName(response.data?.user?.toUpperCase());
+        setUserName(response.data?.user?.toUpperCase() + ',');
         return response.data;
       } catch (error){
         console.log(error)
@@ -41,7 +41,7 @@ export const Home = () => {
         )}
         <div className="bg-black text-white p-8 rounded-lg border border-gray-700">
           <h1 className="text-4xl font-bold text-center mb-4">
-          {username}, SEJA BEM-VINDO AO PONG GAME
+          {username} SEJA BEM-VINDO AO PONG GAME
           </h1>
           <p className="text-center">
             Desafie seus amigos em uma partida emocionante de Ping Pong!
