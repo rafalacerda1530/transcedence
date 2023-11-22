@@ -6,6 +6,6 @@ import { RefreshStrategy } from 'src/strategies/rt.strategy';
 
 @Module({
   providers: [TokenService, JwtService, RefreshStrategy],
-  controllers: [TokenController]
+  controllers: [TokenController],
 })
 export class TokenModule {}

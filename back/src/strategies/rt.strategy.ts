@@ -3,12 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import * as argon from 'argon2'
+import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 type JwtPayload = {
-	sub: string
-}
+  sub: string;
+};
 
 @Injectable()
 export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
@@ -16,12 +16,13 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor(
     config: ConfigService,
     private prisma: PrismaService,
-    ) {
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
-          this.refreshToken = req.cookies['refreshToken']
-          return req.cookies['refreshToken']}
+          this.refreshToken = req.cookies['refreshToken'];
+          return req.cookies['refreshToken'];
+        },
       ]),
       secretOrKey: config.get('JWT_SECRET_REFRESH'),
     });
@@ -30,13 +31,11 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   async validate(payload: JwtPayload, @Req() req: Request) {
     const user = await this.prisma.user.findUnique({
       where: {
-        user: payload.sub
-      }
-    })
+        user: payload.sub,
+      },
+    });
     const tokenMatches = await argon.verify(user.jwt_token, this.refreshToken);
-    if (!tokenMatches) throw new ForbiddenException(
-      'Incorrect token'
-    )
+    if (!tokenMatches) throw new ForbiddenException('Incorrect token');
     return payload;
   }
 }

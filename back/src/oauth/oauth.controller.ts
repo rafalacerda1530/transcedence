@@ -10,14 +10,15 @@ export class OauthController {
   constructor(
     private readonly authService: OauthService,
     private prismaCommands: PrismaCommands,
-    private token: TokenService) {}
+    private token: TokenService,
+  ) {}
 
   @Get('oauth/intra/:code')
   async getToken(@Param('code') code: string, @Res() response: Response) {
-      var  testeString  = await this.authService.getAccessToken(code);
-      const resultado = testeString;
-      const user = await this.prismaCommands.createUserIntra(resultado)
-      await this.token.refreshToken(user.user, response);
-      response.send();
+    var testeString = await this.authService.getAccessToken(code);
+    const resultado = testeString;
+    const user = await this.prismaCommands.createUserIntra(resultado);
+    await this.token.refreshToken(user.user, response);
+    response.send();
   }
 }

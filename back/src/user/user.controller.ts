@@ -5,13 +5,12 @@ import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
-	constructor(private userService: UserService) {}
+  constructor(private userService: UserService) {}
 
-	@UseGuards(AuthGuard('jwt-access'))
-	@Get('me')
-	async getUserInfo(@Req() req: Request){
-		const user = req.user
-		return (await this.userService.getUserInfo(user['sub']))
-	}
-
+  @UseGuards(AuthGuard('jwt-access'))
+  @Get('me')
+  async getUserInfo(@Req() req: Request) {
+    const user = req.user;
+    return await this.userService.getUserInfo(user['sub']);
+  }
 }

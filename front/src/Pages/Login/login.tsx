@@ -31,21 +31,10 @@ function LoginGame() {
     else if (!formData.user || !formData.password) {
       setErrorMessage("Campos não podem estar vazios");
     } else {
-      if (authentication2fa == true){
-        if(await CallBack2faAuthenticate(formData) == false)
+      if (authentication2fa === true && await CallBack2faAuthenticate(formData) === false){
           setErrorMessage("Código Inválido");
-        else
-          CallBackUserAndPassword(formData)
-            .then((response) => {
-              console.log(response.data);
-              window.location.href = "http://localhost:3000/Home";
-            })
-            .catch((error) => {
-              console.log("erro:", error.response.data.message);
-              setErrorMessage(error.response.data.message);
-          });
       }
-      else
+      else{
         CallBackUserAndPassword(formData)
               .then((response) => {
                 console.log(response.data);
@@ -55,6 +44,7 @@ function LoginGame() {
                 console.log("erro:", error.response.data.message);
                 setErrorMessage(error.response.data.message);
             });
+      }
     }
   };
 

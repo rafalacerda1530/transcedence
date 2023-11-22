@@ -5,6 +5,6 @@ import { AccessStrategy } from 'src/strategies/at.strategy';
 
 @Module({
   providers: [UserService, AccessStrategy],
-  controllers: [UserController]
+  controllers: [UserController],
 })
 export class UserModule {}

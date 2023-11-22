@@ -2,57 +2,36 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { axiosPrivate } from "../../hooks/useAxiosPrivate";
 
-export const CallBackQrCode = (user: any) => {
-  const url = "http://localhost:3333/authentication-2fa/generate/";
-  const data = {
-    user: user.user,
-  };
-  return axios
-    .post(url, data, {
+export const CallBackQrCode = () => {
+  return axiosPrivate
+    .post('/authentication-2fa/generate/', {
       withCredentials: true,
     })
     .then((response) => {
       return response;
     })
     .catch((error) => {
-      throw error;
+      console.log(error);
+      throw(error);
     });
 };
 
 export const Generate2fa =  () => {
-    const [username, setUserName] = useState();
     const [qrcode, setQrCodePath] = useState();
-
-    useEffect(() => {
-      const user = async () => {
-        try {
-          const response = await axiosPrivate.get('/user/me');
-          console.log(response.data);
-          setUserName(response.data?.user?.toUpperCase());
-          return response.data;
-        } catch (error) {
-          console.log(error);
-          window.location.href = "http://localhost:3000/login";
-        }
-      };
-
-      user();
-    }, []);
 
     useEffect(() => {
       const qrcodePath = async () => {
         try {
-          const userResponse = await axiosPrivate.get('/user/me');
-          const response = await CallBackQrCode(userResponse.data);
-          setQrCodePath(response.data.qrCode);
-          return response.data.qrCode;
+          const response = await CallBackQrCode();
+          setQrCodePath(response?.data.qrCode);
+          return response?.data.qrCode;
         } catch (error) {
           console.log(error);
         }
       };
 
       qrcodePath();
-    }, []); 
+    }, []);
 
     return(
         <>

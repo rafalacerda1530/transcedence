@@ -5,14 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
 type JwtPayload = {
-	sub: string
-}
+  sub: string;
+};
 
 @Injectable()
 export class AccessStrategy extends PassportStrategy(Strategy, 'jwt-access') {
-  constructor(
-    config: ConfigService,
-    ) {
+  constructor(config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => req.cookies['accessToken'],

@@ -5,6 +5,6 @@ import { UserService } from 'src/user/user.service';
 
 @Module({
   providers: [Authentication2faService, UserService],
-  controllers: [Authentication2faController]
+  controllers: [Authentication2faController],
 })
 export class Authentication2faModule {}
