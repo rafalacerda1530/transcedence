@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, User, Friendship } from '@prisma/client';
+
+interface Friend {
+    id: number;
+    user: string;
+}
+
 @Injectable()
 export class FriendshipService {
     constructor(private readonly prisma: PrismaService) { }
@@ -37,23 +43,29 @@ export class FriendshipService {
         });
     }
 
-    async getFriends(username: string): Promise<User[]> {
+    async getFriends(username: string): Promise<Friend[]> {
         const user = await this.prisma.user.findUnique({
             where: { user: username },
         });
-
         if (!user) {
             throw new Error('User not found');
         }
-
         const friendships = await this.prisma.friendship.findMany({
             where: { followedById: user.id },
+            include: {
+                following: {
+                    select: {
+                        id: true,
+                        user: true,
+                    },
+                },
+            },
         });
-
-        const friendUserIds = friendships.map((friendship) => friendship.followingId);
-
-        return this.prisma.user.findMany({
-            where: { id: { in: friendUserIds } },
-        });
+        const friends: Friend[] = friendships.map((friendship) => ({
+            id: friendship.following.id,
+            user: friendship.following.user,
+        }));
+    
+        return friends;
     }
 }
