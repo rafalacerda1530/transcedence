@@ -28,6 +28,7 @@ model User {
 }
 
 model Friendship {
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   followedBy   User @relation("followedBy", fields: [followedById], references: [id])
@@ -35,5 +36,5 @@ model Friendship {
   following    User @relation("following", fields: [followingId], references: [id])
   followingId  Int
 
-  @@id([followingId, followedById])
+  @@unique([followingId, followedById])
 }
