@@ -10,16 +10,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id Int  @default(autoincrement()) @id
+model User {
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email String @unique
-  user String  @unique
-  hash String?
-  userIntra Boolean?
-  jwt_token String?
-  authentication2fa Boolean?
+  email                   String   @unique
+  user                    String   @unique
+  hash                    String?
+  userIntra               Boolean?
+  jwt_token               String?
+  authentication2fa       Boolean?
   authentication2faSecret String?
+
+  followedBy Friendship[] @relation("followedBy")
+  following  Friendship[] @relation("following")
+}
+
+model Friendship {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  followedBy   User @relation("followedBy", fields: [followedById], references: [id])
+  followedById Int
+  following    User @relation("following", fields: [followingId], references: [id])
+  followingId  Int
+
+  @@id([followingId, followedById])
 }

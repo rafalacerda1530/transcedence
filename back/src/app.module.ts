@@ -7,17 +7,9 @@ import { OauthModule } from './oauth/oauth.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { Authentication2faModule } from './2fa-authentication/authentication-2fa.module';
+import { FriendshipModule } from './Friendship/Friendship.module';
 
 @Module({
-  imports: [
-    AuthModule,
-    AuthDto,
-    PrismaModule,
-    ConfigModule.forRoot({ isGlobal: true }),
-    OauthModule,
-    TokenModule,
-    UserModule,
-    Authentication2faModule,
-  ],
+  imports: [AuthModule, AuthDto, PrismaModule, ConfigModule.forRoot({isGlobal: true}), OauthModule, TokenModule, UserModule, Authentication2faModule, FriendshipModule],
 })
 export class AppModule {}
