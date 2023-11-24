@@ -22,8 +22,6 @@ export class FriendshipController {
     @Get(':username')
     async getFriends(@Param('username') username: string): Promise<{ id: number; user: string }[]> {
         const friends = await this.friendshipService.getFriends(username);
-
-        // Transformar para retornar somente id e user
         return friends.map(({ id, user }) => ({ id, user }));
     }
 }
