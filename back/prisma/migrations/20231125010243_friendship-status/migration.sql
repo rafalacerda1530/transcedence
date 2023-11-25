@@ -1,3 +1,9 @@
+-- CreateEnum
+CREATE TYPE "UserStatus" AS ENUM ('ONLINE', 'OFFLINE', 'IN_GAME', 'IN_QUEUE');
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "status" "UserStatus";
+
 -- CreateTable
 CREATE TABLE "Friendship" (
     "id" SERIAL NOT NULL,

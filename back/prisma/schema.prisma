@@ -23,6 +23,8 @@ model User {
   authentication2fa       Boolean?
   authentication2faSecret String?
 
+  status  UserStatus?
+
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")
 }
@@ -37,4 +39,11 @@ model Friendship {
   followingId  Int
 
   @@unique([followingId, followedById])
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  IN_GAME
+  IN_QUEUE
 }

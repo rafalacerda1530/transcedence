@@ -1,10 +1,10 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClient, User, Friendship } from '@prisma/client';
-
+import { PrismaClient, Friendship, UserStatus } from '@prisma/client';
 interface Friend {
     id: number;
     user: string;
+    status: UserStatus;
 }
 
 @Injectable()
@@ -60,6 +60,7 @@ export class FriendshipService {
                         select: {
                             id: true,
                             user: true,
+                            status: true,
                         },
                     },
                 },
@@ -67,6 +68,7 @@ export class FriendshipService {
             const friends: Friend[] = friendships.map((friendship) => ({
                 id: friendship.following.id,
                 user: friendship.following.user,
+                status: friendship.following.status,
             }));
             return friends;
         } catch (error) {
