@@ -4,6 +4,14 @@ import { User } from '@prisma/client';
 // import { AuthGuard } from '@nestjs/passport';
 
 
+
+const statusMappings = {
+    ONLINE: 'Online',
+    OFFLINE: 'Offline',
+    IN_GAME: 'In Game',
+    IN_QUEUE: 'In Queue',
+};
+
 @Controller('friendship')
 // @UseGuards(AuthGuard('jwt'))
 export class FriendshipController {
@@ -20,7 +28,8 @@ export class FriendshipController {
     }
 
     @Get(':username')
-    async getFriends(@Param('username') username: string): Promise<User[]> {
-        return this.friendshipService.getFriends(username);
+    async getFriends(@Param('username') username: string): Promise<{ id: number; user: string; status: string }[]> {
+        const friends = await this.friendshipService.getFriends(username);
+        return friends.map(({ id, user, status }) => ({ id, user, status: statusMappings[status]  }));
     }
 }

@@ -23,11 +23,14 @@ model User {
   authentication2fa       Boolean?
   authentication2faSecret String?
 
+  status  UserStatus?
+
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")
 }
 
 model Friendship {
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   followedBy   User @relation("followedBy", fields: [followedById], references: [id])
@@ -35,5 +38,12 @@ model Friendship {
   following    User @relation("following", fields: [followingId], references: [id])
   followingId  Int
 
-  @@id([followingId, followedById])
+  @@unique([followingId, followedById])
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  IN_GAME
+  IN_QUEUE
 }
