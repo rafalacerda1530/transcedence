@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClient, Friendship, UserStatus } from '@prisma/client';
 interface Friend {
@@ -12,34 +12,36 @@ export class FriendshipService {
     constructor(private readonly prisma: PrismaService) { }
 
     async addFriendship(userId: number, friendId: number): Promise<void> {
-        await this.prisma.$transaction([
-            this.prisma.friendship.create({
-                data: {
-                    followedById: userId,
-                    followingId: friendId,
-                },
-            }),
-            this.prisma.friendship.create({
-                data: {
-                    followedById: friendId,
-                    followingId: userId,
-                },
-            }),
-        ]);
+        if (userId === friendId)
+            throw new BadRequestException('Cannot add yourself as a friend');
+        const existingFriendship = await this.prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { followedById: userId, followingId: friendId },
+                    { followedById: friendId, followingId: userId },
+                ],
+            },
+        });
+        if (!existingFriendship) {
+            await this.prisma.$transaction([
+                this.prisma.friendship.create({
+                    data: {
+                        followedById: userId,
+                        followingId: friendId,
+                    },
+                }),
+            ]);
+        }
     }
 
     async deleteFriendship(userId: number, friendId: number): Promise<void> {
         await this.prisma.$transaction([
             this.prisma.friendship.deleteMany({
                 where: {
-                    followedById: userId,
-                    followingId: friendId,
-                },
-            }),
-            this.prisma.friendship.deleteMany({
-                where: {
-                    followedById: friendId,
-                    followingId: userId,
+                    OR: [
+                        { followedById: userId, followingId: friendId },
+                        { followedById: friendId, followingId: userId },
+                    ],
                 },
             }),
         ]);
@@ -53,28 +55,29 @@ export class FriendshipService {
             if (!user) {
                 throw new NotFoundException('User not found');
             }
+
             const friendships = await this.prisma.friendship.findMany({
-                where: { followedById: user.id },
+                where: {
+                    OR: [
+                        { followedById: user.id },
+                        { followingId: user.id },
+                    ],
+                },
                 include: {
-                    following: {
-                        select: {
-                            id: true,
-                            user: true,
-                            status: true,
-                        },
-                    },
+                    following: true,
+                    followedBy: true,
                 },
             });
+
             const friends: Friend[] = friendships.map((friendship) => ({
-                id: friendship.following.id,
-                user: friendship.following.user,
-                status: friendship.following.status,
+                id: friendship.followedById === user.id ? friendship.following.id : friendship.followedBy.id,
+                user: friendship.followedById === user.id ? friendship.following.user : friendship.followedBy.user,
+                status: friendship.followedById === user.id ? friendship.following.status : friendship.followedBy.status,
             }));
+
             return friends;
         } catch (error) {
             throw new InternalServerErrorException('Error fetching user');
         }
-
     }
-
 }
