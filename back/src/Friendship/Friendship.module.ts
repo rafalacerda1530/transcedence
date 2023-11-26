@@ -4,7 +4,7 @@ import { FriendshipService } from './Friendship.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-  controllers: [FriendshipController],
-  providers: [FriendshipService, PrismaService],
+    controllers: [FriendshipController],
+    providers: [FriendshipService, PrismaService],
 })
-export class FriendshipModule {}
+export class FriendshipModule { }

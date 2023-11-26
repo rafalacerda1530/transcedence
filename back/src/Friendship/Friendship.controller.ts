@@ -30,6 +30,6 @@ export class FriendshipController {
     @Get(':username')
     async getFriends(@Param('username') username: string): Promise<{ id: number; user: string; status: string }[]> {
         const friends = await this.friendshipService.getFriends(username);
-        return friends.map(({ id, user, status }) => ({ id, user, status: statusMappings[status]  }));
+        return friends.map(({ id, user, status }) => ({ id, user, status: statusMappings[status] }));
     }
 }
