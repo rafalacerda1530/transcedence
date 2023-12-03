@@ -1,16 +1,13 @@
 
-export interface UserMessage {
-    login: string;
-}
-
 export interface messageToServer {
     user: string;
     message: string;
 }
 
 export interface messageToClient {
-    id: Number;
-    user: UserMessage;
+    id?: number;
+    chat?: string;
+    user: string;
     message: string;
     date: Date;
 }

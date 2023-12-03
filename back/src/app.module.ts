@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { AuthDto } from './dto/auth.dto';
+import { AuthDto } from './auth/dto/auth.dto';
 import { PrismaModule } from './prisma/prisma.module';
 import { OauthModule } from './oauth/oauth.module';
 import { TokenModule } from './token/token.module';

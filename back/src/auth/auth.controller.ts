@@ -6,7 +6,7 @@ import {
   Post,
   Res,
 } from '@nestjs/common';
-import { AuthDto } from 'src/dto/auth.dto';
+import { AuthDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 

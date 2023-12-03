@@ -1,11 +1,11 @@
 import { ForbiddenException, Injectable, Res } from '@nestjs/common';
-import { AuthDto } from 'src/dto/auth.dto';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaCommands } from 'src/prisma/prisma.commands';
 import { TokenService } from 'src/token/token.service';
 import { Response } from 'express';
+import { AuthDto } from './dto/auth.dto';
 
 @Injectable({})
 export class AuthService {
