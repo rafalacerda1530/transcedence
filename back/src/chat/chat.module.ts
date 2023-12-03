@@ -6,7 +6,7 @@ import { GroupService } from './services/group.service';
 
 @Module({
   controllers: [ChatController],
-  providers: [ChatGateway, ChatService],
+  providers: [ChatGateway, ChatService, GroupService],
   exports: [ChatService, GroupService]
 })
 export class ChatModule { }

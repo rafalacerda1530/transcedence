@@ -40,7 +40,12 @@ export class ChatService {
         return messageToClient;
     }
 
-    async createGroup({ type, groupName, ownerUsername, password }: CreateGroupDto) {
+    async createGroup({
+        type,
+        groupName,
+        ownerUsername,
+        password,
+    }: CreateGroupDto) {
         const userOwner = await this.groupService.getUserByUsername(ownerUsername);
         this.groupService.validatePasswordForGroupType(type, password);
 
@@ -49,6 +54,7 @@ export class ChatService {
                 name: groupName,
                 type: type,
                 password: password,
+                owner: { connect: { id: userOwner.id } },
                 members: { create: { user: { connect: { id: userOwner.id } } } },
                 admins: { create: { user: { connect: { id: userOwner.id } } } },
             },
@@ -57,8 +63,12 @@ export class ChatService {
     }
 
     async joinGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
-        const user = await this.groupService.getUserByUsername(groupActionsDto.username);
-        const group = await this.groupService.getGroupByName(groupActionsDto.groupName);
+        const user = await this.groupService.getUserByUsername(
+            groupActionsDto.username,
+        );
+        const group = await this.groupService.getGroupByName(
+            groupActionsDto.groupName,
+        );
 
         await this.groupService.checkAndAddMembership(user, group);
         const messageToClient: messageToClient = {
@@ -68,5 +78,16 @@ export class ChatService {
             date: new Date(Date.now()),
         };
         return messageToClient;
+    }
+
+    async joinOwnerInGroup(groupActionsDto: GroupActionsDto): Promise<boolean> {
+        const group = await this.groupService.getGroupByName(
+            groupActionsDto.groupName,
+        );
+        const target = await this.groupService.getUserByUsername(
+            groupActionsDto.username,
+        );
+        if (group.ownerId === target.id) return true;
+        return false;
     }
 }

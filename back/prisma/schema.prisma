@@ -37,10 +37,9 @@ model Message {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    date    DateTime
-    content String
-
-    sender   User @relation(fields: [senderId], references: [id])
+    date     DateTime
+    content  String
+    sender   User     @relation(fields: [senderId], references: [id])
     senderId Int
 
     group   Group? @relation(fields: [groupId], references: [id])
@@ -52,9 +51,12 @@ model Group {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    name     String @unique
+    name     String      @unique
     type     GroupStatus
     password String?
+
+    owner   User @relation("owner", fields: [ownerId], references: [id])
+    ownerId Int
 
     members GroupMembership[]
     admins  GroupAdmin[]
@@ -102,6 +104,7 @@ model User {
 
     followedBy Friendship[] @relation("followedBy")
     following  Friendship[] @relation("following")
+    ownedGroup Group[]      @relation("owner")
 
     Message        Message[]
     memberInGroups GroupMembership[]
