@@ -2,8 +2,8 @@ import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGat
 import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { messageToClient, messageToServer } from './chat.interface';
-import { ChatActionsDto } from './dto/chat.dto';
+import { messageToClient, messageToServer } from './dto/chat.interface';
+import { GroupActionsDto } from './dto/chat.dto';
 
 @WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
@@ -32,24 +32,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
 
-    //TODO: ARRUMAR PARA ACEITAR AS SALAS AGR
+    //TODO: ver como fica a logica para direct
     //TODO: criar o metodo de direct message
     @SubscribeMessage('messageToServer')
     async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
         const messageToClient: messageToClient = await this.chatService.saveMessage(message);
         if (messageToClient) {
-            this.server.emit('messageToClient', messageToClient);
-            this.logger.debug(`Client ${client.id} send message: |${messageToClient}|`);
+            this.server.to(message.groupName).emit('messageToClient', messageToClient);
+            this.logger.debug(`Client ${client.id} send message in group ${message.groupName}: |${messageToClient}|`);
         }
     }
 
     @SubscribeMessage('joinChat')
-    async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() chatActionsDto: ChatActionsDto) {
-        const messageToClient: messageToClient = await this.chatService.joinGroup(chatActionsDto);
-        client.join(chatActionsDto.chatName);
-        this.server.to(chatActionsDto.chatName).emit('messageToClient', messageToClient)
+    async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
+        const messageToClient: messageToClient = await this.chatService.joinGroup(groupActionsDto);
+        client.join(groupActionsDto.groupName);
+        this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
 
-        // console.log(messageToClient)
-        this.logger.debug(`Client ${client.id} join group: |${chatActionsDto}|`);
+        console.log(messageToClient)
+        this.logger.debug(`Client ${client.id} join group: |${groupActionsDto.groupName}|`);
     }
 }

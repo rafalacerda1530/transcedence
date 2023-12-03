@@ -7,16 +7,16 @@ export class CreateGroupDto {
     type: GroupStatus;
     @IsNotEmpty({ message: "Insert an valid type" })
     @MaxLength(20, { message: "Group name should be in max 20 characters" })
-    name: string;
+    groupName: string;
     @IsOptional()
     password?: string;
     @IsNotEmpty({ message: "Insert an valid owner" })
-    ownerName: string;
+    ownerUsername: string;
 }
 
-export class ChatActionsDto {
+export class GroupActionsDto {
     @IsNotEmpty({ message: "Insert an valid user" })
     username: string;
     @IsNotEmpty({ message: "Insert an valid chat name" })
-    chatName: string;
+    groupName: string;
 }

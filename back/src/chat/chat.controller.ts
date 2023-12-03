@@ -12,4 +12,5 @@ export class ChatController {
         console.log(createGroupDto);
         return await this.chatService.createGroup(createGroupDto);
     }
+    //TODO criar metedos para add admin delete admin set pass ban mute ...
 }

@@ -1,13 +1,15 @@
 
+//TODO: REMOVER ? quando direct estiver pronto
 export interface messageToServer {
-    user: string;
+    groupName?: string;
+    username: string;
     message: string;
 }
 
 export interface messageToClient {
     id?: number;
-    chat?: string;
-    user: string;
+    groupName?: string;
+    username: string;
     message: string;
     date: Date;
 }
