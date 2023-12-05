@@ -3,7 +3,9 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
 import { CreateGroupDto, GroupActionsDto } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
+import * as argon from 'argon2';
 
+//TODO NEED IMPLEMENT A FRONT END ROOMS AND MESSAGES TO ROOMS JUST SIMPLE
 @Injectable()
 export class ChatService {
     constructor(
@@ -13,12 +15,8 @@ export class ChatService {
 
     //TODO: ver se é nescessario o uso de id
     async saveMessage(messageToServer: messageToServer) {
-        const user = await this.groupService.getUserByUsername(
-            messageToServer.username,
-        );
-        const chat = await this.groupService.getGroupByName(
-            messageToServer.groupName,
-        );
+        const user = await this.groupService.getUserByUsername(messageToServer.username,);
+        const chat = await this.groupService.getGroupByName(messageToServer.groupName,);
         if (!messageToServer.message)
             throw new BadRequestException("Invalid request - message");
 
@@ -40,15 +38,11 @@ export class ChatService {
         return messageToClient;
     }
 
-    async createGroup({
-        type,
-        groupName,
-        ownerUsername,
-        password,
-    }: CreateGroupDto) {
+    async createGroup({ type, groupName, ownerUsername, password }: CreateGroupDto) {
         const userOwner = await this.groupService.getUserByUsername(ownerUsername);
         this.groupService.validatePasswordForGroupType(type, password);
-
+        if (type === "PROTECT" && password)
+            password = await argon.hash(password);
         const newGroup = await this.prisma.group.create({
             data: {
                 name: groupName,
@@ -62,15 +56,16 @@ export class ChatService {
         return newGroup;
     }
 
+    //TODO NEED VERIFY GROUP TYPE AND HANDLE CREATE ROLES FOR PRIVATE PROTECT AND INVITE TO GROUP
     async joinGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
-        const user = await this.groupService.getUserByUsername(
-            groupActionsDto.username,
-        );
-        const group = await this.groupService.getGroupByName(
-            groupActionsDto.groupName,
-        );
+        const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
+        const group = await this.groupService.getGroupByName(groupActionsDto.groupName,);
 
-        await this.groupService.checkAndAddMembership(user, group);
+        const permission = await this.groupService.checkUserPermissionGroupType(group, groupActionsDto.password)
+        if (!permission)
+            throw new BadRequestException('Invalid form for group type')
+
+        await this.groupService.AddMembership(user, group);
         const messageToClient: messageToClient = {
             groupName: user.user,
             username: group.name,
@@ -80,14 +75,15 @@ export class ChatService {
         return messageToClient;
     }
 
+    /**
+    * @brief when create a group in controller the front end should use this socket to join the owner socket in group
+    */
     async joinOwnerInGroup(groupActionsDto: GroupActionsDto): Promise<boolean> {
-        const group = await this.groupService.getGroupByName(
-            groupActionsDto.groupName,
-        );
-        const target = await this.groupService.getUserByUsername(
-            groupActionsDto.username,
-        );
-        if (group.ownerId === target.id) return true;
+        const group = await this.groupService.getGroupByName(groupActionsDto.groupName,);
+        const target = await this.groupService.getUserByUsername(groupActionsDto.username,);
+        if (group.ownerId === target.id)
+            return true;
         return false;
+
     }
 }

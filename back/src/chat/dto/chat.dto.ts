@@ -19,4 +19,6 @@ export class GroupActionsDto {
     username: string;
     @IsNotEmpty({ message: "Insert an valid chat name" })
     groupName: string;
+    @IsOptional()
+    password?: string;
 }
