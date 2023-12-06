@@ -14,7 +14,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     private logger: Logger = new Logger(ChatGateway.name);
 
-    //TODO: usar jwt para verificao de auth para permitir a coneccao
+    //TODO:later -- usar jwt para verificao de auth para permitir a coneccao
     afterInit() {
         this.logger.log('Chat websocket initialized');
     }
@@ -32,8 +32,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
 
-    //TODO: ver como fica a logica para direct
-    //TODO: criar o metodo de direct message
+    //TODO:later -- ver como fica a logica para direct
+    //TODO:later -- criar o metodo de direct message
     @SubscribeMessage('messageToServer')
     async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
         const messageToClient: messageToClient = await this.chatService.saveMessage(message);
@@ -46,7 +46,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     /**
     * @brief when create a group join the owner socket in the group
     */
-    //TODO VER COMO RESPONDER O CLIENT QUANDO NAO FOR OWNER SE NESCESSARIO
     @SubscribeMessage('ownerJoinGroup')
     async handleOwnerJoinGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
         const permission = await this.chatService.joinOwnerInGroup(groupActionsDto)
@@ -65,4 +64,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
     }
+
 }

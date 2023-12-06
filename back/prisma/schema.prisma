@@ -58,9 +58,10 @@ model Group {
     owner   User @relation("owner", fields: [ownerId], references: [id])
     ownerId Int
 
-    members GroupMembership[]
-    admins  GroupAdmin[]
-    Message Message[]
+    members     GroupMembership[]
+    admins      GroupAdmin[]
+    Message     Message[]
+    GroupInvite GroupInvite[]
 }
 
 model GroupMembership {
@@ -106,7 +107,23 @@ model User {
     following  Friendship[] @relation("following")
     ownedGroup Group[]      @relation("owner")
 
-    Message        Message[]
-    memberInGroups GroupMembership[]
-    adminInGroup   GroupAdmin[]
+    Message         Message[]
+    memberInGroups  GroupMembership[]
+    adminInGroup    GroupAdmin[]
+    invitesSent     GroupInvite[]     @relation("invitedByUser")
+    invitesReceived GroupInvite[]     @relation("invitedUser")
+}
+
+model GroupInvite {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
+
+    invitedUser     User @relation("invitedUser", fields: [invitedUserId], references: [id])
+    invitedUserId   Int
+    invitedByUser   User @relation("invitedByUser", fields: [invitedByUserId], references: [id])
+    invitedByUserId Int
 }

@@ -33,11 +33,9 @@ export class GroupService {
         }
     }
 
-    async AddMembership(user: User, group: Group): Promise<void> {
+    async addMembership(user: User, group: Group): Promise<void> {
         try {
-            const isAlredyMember = await this.prisma.groupMembership.findFirst({
-                where: { userId: user.id, groupId: group.id },
-            });
+            const isAlredyMember = await this.isMemberInGroup(user.id, group.id);
             if (isAlredyMember)
                 throw new BadRequestException(`User ${user.user} is already a member of the group ${group.name}`,);
             await this.prisma.groupMembership.create({
@@ -62,20 +60,62 @@ export class GroupService {
         }
     }
 
-    async checkUserPermissionGroupType(group: Group, password: string): Promise<boolean> {
+    async checkUserPermissionGroupType(user: User, group: Group, password: string): Promise<boolean> {
         const type = group.type;
         if (type === "PUBLIC" && !password)
             return true;
-        //TODO NEED A INVITE
-        //TODO PRIVATE CRIA LOGICA DE CONVITES E VER SE O MAN FOI CONVIDADO // TER ROTA PARA CONVITE OBS ALERTAS SAO OUTROS QUINHETOS
-        // if (type === "PRIVATE" && this.checkUserPermissionPrivate(user, group) )
-        //     return true
+        if (type === "PRIVATE" && !password)
+            return await this.checkUserPermissionPrivate(user.id, group.id);
         if (type === "PROTECT" && password)
             return await this.checkUserPermissionProtect(group, password);
         return false;
     }
 
+    private async checkUserPermissionPrivate(userId: number, groupId: number): Promise<boolean> {
+        const invited = await this.checkExistingInviteForUserInGroup(userId, groupId);
+        if (!invited) {
+            return false;
+        }
+        await this.prisma.groupInvite.deleteMany({
+            where: {
+                groupId: groupId,
+                invitedUserId: userId,
+            },
+        });
+        return true;
+    }
+
     private async checkUserPermissionProtect(group: Group, password: string): Promise<boolean> {
         return await argon.verify(group.password, password)
+    }
+
+    async isAdmInGroup(admId: number, groupId: number): Promise<boolean> {
+        const isAdm = await this.prisma.groupAdmin.findFirst({
+            where: {
+                userId: admId,
+                groupId: groupId,
+            },
+        });
+        return !!isAdm;
+    }
+
+    async checkExistingInviteForUserInGroup(userId: number, groupId: number): Promise<boolean> {
+        const invited = await this.prisma.groupInvite.findFirst({
+            where: {
+                groupId: groupId,
+                invitedUserId: userId,
+            },
+        });
+        return !!invited;
+    }
+
+    async isMemberInGroup(userId: number, groupId: number): Promise<boolean> {
+        const isAlredyMember = await this.prisma.groupMembership.findFirst({
+            where: { userId: userId, groupId: groupId },
+        });
+        if (isAlredyMember)
+            return true;
+        return false;
+
     }
 }

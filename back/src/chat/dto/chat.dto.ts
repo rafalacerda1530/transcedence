@@ -3,22 +3,31 @@ import { IsNotEmpty, IsOptional, MaxLength } from "class-validator";
 
 // type: public private protect
 export class CreateGroupDto {
-    @IsNotEmpty({ message: "Insert an valid type" })
+    @IsNotEmpty({ message: "Insert a valid type" })
     type: GroupStatus;
-    @IsNotEmpty({ message: "Insert an valid type" })
+    @IsNotEmpty({ message: "Insert a valid type" })
     @MaxLength(20, { message: "Group name should be in max 20 characters" })
     groupName: string;
     @IsOptional()
     password?: string;
-    @IsNotEmpty({ message: "Insert an valid owner" })
+    @IsNotEmpty({ message: "Insert a valid owner" })
     ownerUsername: string;
 }
 
 export class GroupActionsDto {
-    @IsNotEmpty({ message: "Insert an valid user" })
+    @IsNotEmpty({ message: "Insert a valid user" })
     username: string;
-    @IsNotEmpty({ message: "Insert an valid chat name" })
+    @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
     @IsOptional()
     password?: string;
+}
+
+export class InviteToGroupDto {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    admUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    invitedUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
 }

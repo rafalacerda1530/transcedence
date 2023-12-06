@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { CreateGroupDto, GroupActionsDto } from "./dto/chat.dto";
+import { CreateGroupDto, GroupActionsDto, InviteToGroupDto } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 
-//TODO NEED IMPLEMENT A FRONT END ROOMS AND MESSAGES TO ROOMS JUST SIMPLE
+//TODO later -- NEED IMPLEMENT A FRONT END ROOMS AND MESSAGES TO ROOMS JUST SIMPLE
 @Injectable()
 export class ChatService {
     constructor(
@@ -13,7 +13,7 @@ export class ChatService {
         private readonly groupService: GroupService,
     ) { }
 
-    //TODO: ver se é nescessario o uso de id
+    //TODO:later -- ver se é nescessario o uso de id
     async saveMessage(messageToServer: messageToServer) {
         const user = await this.groupService.getUserByUsername(messageToServer.username,);
         const chat = await this.groupService.getGroupByName(messageToServer.groupName,);
@@ -56,16 +56,16 @@ export class ChatService {
         return newGroup;
     }
 
-    //TODO NEED VERIFY GROUP TYPE AND HANDLE CREATE ROLES FOR PRIVATE PROTECT AND INVITE TO GROUP
+    //TODO NEED VERIFY GROUP TYPE AND HANDLE CREATE ROLES FOR PRIVATE->INVITE TO GROUP
     async joinGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
         const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
         const group = await this.groupService.getGroupByName(groupActionsDto.groupName,);
 
-        const permission = await this.groupService.checkUserPermissionGroupType(group, groupActionsDto.password)
+        const permission = await this.groupService.checkUserPermissionGroupType(user, group, groupActionsDto.password)
         if (!permission)
-            throw new BadRequestException('Invalid form for group type')
+            throw new BadRequestException('Invalid form or permission for group type')
 
-        await this.groupService.AddMembership(user, group);
+        await this.groupService.addMembership(user, group);
         const messageToClient: messageToClient = {
             groupName: user.user,
             username: group.name,
@@ -85,5 +85,31 @@ export class ChatService {
             return true;
         return false;
 
+    }
+
+    async inviteToGroup(inviteToGroupDto: InviteToGroupDto) {
+        const group = await this.groupService.getGroupByName(inviteToGroupDto.groupName);
+        if (group.type !== 'PRIVATE')
+            throw new BadRequestException(`Group ${group.name} is not a Private type`)
+        const admUser = await this.groupService.getUserByUsername(inviteToGroupDto.admUsername);
+        const isAdm = await this.groupService.isAdmInGroup(admUser.id, group.id);
+        if (!isAdm)
+            throw new BadRequestException(`User ${admUser.user} is not a ADM in Group ${group.name}`);
+
+        const invitedUser = await this.groupService.getUserByUsername(inviteToGroupDto.invitedUsername);
+        const isMember = await this.groupService.isMemberInGroup(invitedUser.id, group.id);
+        if (isMember)
+            throw new BadRequestException(`User ${invitedUser.user} alredy is a member in Group ${group.name}`);
+
+        const wasInvited = await this.groupService.checkExistingInviteForUserInGroup(invitedUser.id, group.id);
+        if (wasInvited)
+            throw new BadRequestException('User is alredy invited')
+        await this.prisma.groupInvite.create({
+            data: {
+                groupId: group.id,
+                invitedUserId: invitedUser.id,
+                invitedByUserId: admUser.id,
+            },
+        })
     }
 }
