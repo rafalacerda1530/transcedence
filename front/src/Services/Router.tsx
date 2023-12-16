@@ -9,6 +9,7 @@ import FriendsList from "../Pages/FriendList/FriendList";
 import { GameProvider, gameSocket } from "../context/GameContext";
 import { QueueGame } from "../Pages/Queue/Queue";
 import { Game } from "../Pages/Game/Game";
+import { QueueProvider, queueSocket } from "../context/QueueContext";
 
 export const Router = () => {
     return (
@@ -17,10 +18,12 @@ export const Router = () => {
                 <Routes>
                     <Route path="/Login" element={<LoginGame />} />
                 </Routes>
-                <GameProvider value={gameSocket}>
+                <QueueProvider value={queueSocket}>
                     <Routes>
                         <Route path="/Queue" element={<QueueGame />} />
                     </Routes>
+                </QueueProvider>
+                <GameProvider value={gameSocket}>
                     <Routes>
                         <Route path="/Game" element={<Game />} />
                     </Routes>
