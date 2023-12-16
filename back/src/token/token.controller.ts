@@ -6,12 +6,15 @@ import { GetCurrentUser } from 'src/common/decorators';
 
 @Controller('/token')
 export class TokenController {
-  constructor(private tokenService: TokenService) {}
+    constructor(private tokenService: TokenService) {}
 
-  @UseGuards(RtGuard)
-  @Get('/refresh')
-  async refreshToken(@GetCurrentUser('sub') user: string, @Res() response: Response) {
-    await this.tokenService.refreshToken(user, response);
-    response.send();
-  }
+    @UseGuards(RtGuard)
+    @Get('/refresh')
+    async refreshToken(
+        @GetCurrentUser('sub') user: string,
+        @Res() response: Response,
+    ) {
+        await this.tokenService.refreshToken(user, response);
+        response.send();
+    }
 }

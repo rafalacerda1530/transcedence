@@ -7,4 +7,4 @@ import { PrismaService } from 'src/prisma/prisma.service';
     controllers: [FriendshipController],
     providers: [FriendshipService, PrismaService],
 })
-export class FriendshipModule { }
+export class FriendshipModule {}

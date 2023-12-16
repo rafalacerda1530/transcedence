@@ -8,59 +8,59 @@ import { Response } from 'express';
 
 @Injectable()
 export class TokenService {
-  constructor(
-    private config: ConfigService,
-    private jwt: JwtService,
-    private prisma: PrismaService,
-    private prismaCommands: PrismaCommands,
-  ) {}
+    constructor(
+        private config: ConfigService,
+        private jwt: JwtService,
+        private prisma: PrismaService,
+        private prismaCommands: PrismaCommands,
+    ) {}
 
-  async refreshToken(username: string, @Res() response: Response) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        user: username,
-      },
-    });
-    const user_token = await this.signToken(username);
-    this.createCookies(response, user_token);
-    const hashRefreshToken = await argon.hash(user_token.refreshToken);
-    await this.prismaCommands.updateJwtToken(username, hashRefreshToken);
-  }
+    async refreshToken(username: string, @Res() response: Response) {
+        await this.prisma.user.findUnique({
+            where: {
+                user: username,
+            },
+        });
+        const user_token = await this.signToken(username);
+        this.createCookies(response, user_token);
+        const hashRefreshToken = await argon.hash(user_token.refreshToken);
+        await this.prismaCommands.updateJwtToken(username, hashRefreshToken);
+    }
 
-  async signToken(
-    user: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload = {
-      sub: user,
-    };
+    async signToken(
+        user: string,
+    ): Promise<{ accessToken: string; refreshToken: string }> {
+        const payload = {
+            sub: user,
+        };
 
-    const accessTokenSecret = this.config.get('JWT_SECRET_ACCESS');
-    const refreshTokenSecret = this.config.get('JWT_SECRET_REFRESH');
+        const accessTokenSecret = this.config.get('JWT_SECRET_ACCESS');
+        const refreshTokenSecret = this.config.get('JWT_SECRET_REFRESH');
 
-    const accessToken = await this.jwt.signAsync(payload, {
-      expiresIn: '15m',
-      secret: accessTokenSecret,
-    });
+        const accessToken = await this.jwt.signAsync(payload, {
+            expiresIn: '1m',
+            secret: accessTokenSecret,
+        });
 
-    const refreshToken = await this.jwt.signAsync(payload, {
-      expiresIn: '30d',
-      secret: refreshTokenSecret,
-    });
+        const refreshToken = await this.jwt.signAsync(payload, {
+            expiresIn: '30d',
+            secret: refreshTokenSecret,
+        });
 
-    return { accessToken, refreshToken };
-  }
+        return { accessToken, refreshToken };
+    }
 
-  createCookies(@Res() response: Response, user_token: any) {
-    response.cookie('accessToken', user_token.accessToken, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'strict',
-    });
-    response.cookie('refreshToken', user_token.refreshToken, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'strict',
-    });
-    return;
-  }
+    createCookies(@Res() response: Response, user_token: any) {
+        response.cookie('accessToken', user_token.accessToken, {
+            httpOnly: true,
+            path: '/',
+            sameSite: 'strict',
+        });
+        response.cookie('refreshToken', user_token.refreshToken, {
+            httpOnly: true,
+            path: '/',
+            sameSite: 'strict',
+        });
+        return;
+    }
 }

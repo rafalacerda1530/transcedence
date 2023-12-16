@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import pingPongBall from "./pingPongBall.png"; // Importe uma imagem de uma bola de ping pong
 import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 
@@ -16,11 +16,12 @@ export const Home = () => {
         return response.data;
       } catch (error){
         console.log(error)
-        window.location.href = "http://localhost:3000/Login"
+        window.location.href = 'http://localhost:3000/login';
+        return ;
       }
     }
     user();
-  }, []);
+  }, [axiosPrivate]);
 
   useEffect(() => {
     // Mostrar a bola após 2 segundos (pode ajustar o tempo)
