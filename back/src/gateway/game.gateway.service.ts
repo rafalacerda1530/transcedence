@@ -39,8 +39,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     @SubscribeMessage('moveDown')
     handleMoveDown(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         console.log('moveDown');
-        console.log(client.id);
-        console.log(data.roomId);
         client.to(data.roomId).emit('moveDown', { message: 'moveUp' });
         return ;
     }
@@ -48,7 +46,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         console.log(data);
-        console.log(data.roomId);
         client.join(data.roomId);
         return ;
     }
