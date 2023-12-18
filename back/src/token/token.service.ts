@@ -38,7 +38,7 @@ export class TokenService {
         const refreshTokenSecret = this.config.get('JWT_SECRET_REFRESH');
 
         const accessToken = await this.jwt.signAsync(payload, {
-            expiresIn: '1m',
+            expiresIn: '15m',
             secret: accessTokenSecret,
         });
 
