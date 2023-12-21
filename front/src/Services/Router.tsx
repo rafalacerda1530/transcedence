@@ -6,6 +6,7 @@ import { Home } from "../Pages/Home/Home";
 import { CallBack } from "../Pages/Callback/Callback";
 import { Generate2fa } from "../Pages/Generate2fa/Generate2fa";
 import FriendsList from "../Pages/FriendList/FriendList";
+import Profile from "../Pages/Profile/Profile";
 
 export const Router = () => {
     return (
@@ -16,6 +17,9 @@ export const Router = () => {
                 </Routes>
                 <Routes>
                     <Route path="/Home" element={<Home />} />
+                </Routes>
+				<Routes>
+                    <Route path="/Profile" element={<Profile />} />
                 </Routes>
                 <Routes>
                     <Route path="/Callback" element={<CallBack />} />

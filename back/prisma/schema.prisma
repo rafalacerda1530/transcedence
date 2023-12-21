@@ -22,6 +22,7 @@ model User {
   jwt_token               String?
   authentication2fa       Boolean?
   authentication2faSecret String?
+   profileImage            String?  
 
   status  UserStatus?
 

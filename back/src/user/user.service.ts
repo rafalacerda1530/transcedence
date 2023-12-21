@@ -14,6 +14,8 @@ export class UserService {
     const userSend = {
       user: user.user,
       email: user.email,
+	  profileImage: user.profileImage
+	  
     };
     return userSend;
   }
