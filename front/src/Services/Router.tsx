@@ -7,6 +7,7 @@ import { CallBack } from "../Pages/Callback/Callback";
 import { Generate2fa } from "../Pages/Generate2fa/Generate2fa";
 import FriendsList from "../Pages/FriendList/FriendList";
 import Profile from "../Pages/Profile/Profile";
+import { GameProvider, gameSocket } from "../context/GameContext";
 
 export const Router = () => {
     return (
@@ -15,8 +16,16 @@ export const Router = () => {
                 <Routes>
                     <Route path="/Login" element={<LoginGame />} />
                 </Routes>
+                <GameProvider value={gameSocket}>
+                    <Routes>
+                        <Route path="/Queue" element={<QueueGame />} />
+                    </Routes>
+                    <Routes>
+                        <Route path="/Game" element={<Game />} />
+                    </Routes>
+                </GameProvider>
                 <Routes>
-                    <Route path="/Home" element={<Home />} />
+                        <Route path="/Home" element={<Home />} />
                 </Routes>
 				<Routes>
                     <Route path="/Profile" element={<Profile />} />

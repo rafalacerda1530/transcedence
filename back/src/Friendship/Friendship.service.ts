@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClient, Friendship, UserStatus } from '@prisma/client';
 interface Friend {
@@ -9,7 +14,7 @@ interface Friend {
 
 @Injectable()
 export class FriendshipService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) {}
 
     async addFriendship(userId: number, friendId: number): Promise<void> {
         if (userId === friendId)
@@ -58,10 +63,7 @@ export class FriendshipService {
 
             const friendships = await this.prisma.friendship.findMany({
                 where: {
-                    OR: [
-                        { followedById: user.id },
-                        { followingId: user.id },
-                    ],
+                    OR: [{ followedById: user.id }, { followingId: user.id }],
                 },
                 include: {
                     following: true,
@@ -70,9 +72,18 @@ export class FriendshipService {
             });
 
             const friends: Friend[] = friendships.map((friendship) => ({
-                id: friendship.followedById === user.id ? friendship.following.id : friendship.followedBy.id,
-                user: friendship.followedById === user.id ? friendship.following.user : friendship.followedBy.user,
-                status: friendship.followedById === user.id ? friendship.following.status : friendship.followedBy.status,
+                id:
+                    friendship.followedById === user.id
+                        ? friendship.following.id
+                        : friendship.followedBy.id,
+                user:
+                    friendship.followedById === user.id
+                        ? friendship.following.user
+                        : friendship.followedBy.user,
+                status:
+                    friendship.followedById === user.id
+                        ? friendship.following.status
+                        : friendship.followedBy.status,
             }));
 
             return friends;

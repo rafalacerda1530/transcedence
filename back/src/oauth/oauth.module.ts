@@ -7,8 +7,8 @@ import { TokenService } from 'src/token/token.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports: [HttpModule, PrismaModule],
-  providers: [OauthService, TokenService, JwtService],
-  controllers: [OauthController],
+    imports: [HttpModule, PrismaModule],
+    providers: [OauthService, TokenService, JwtService],
+    controllers: [OauthController],
 })
 export class OauthModule {}

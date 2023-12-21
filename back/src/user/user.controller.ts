@@ -5,11 +5,11 @@ import { GetCurrentUser } from 'src/common/decorators';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+    constructor(private userService: UserService) {}
 
-  @UseGuards(AtGuard)
-  @Get('me')
-  async getUserInfo(@GetCurrentUser('sub') user: string) {
-    return await this.userService.getUserInfo(user);
-  }
+    @UseGuards(AtGuard)
+    @Get('me')
+    async getUserInfo(@GetCurrentUser('sub') user: string) {
+        return await this.userService.getUserInfo(user);
+    }
 }

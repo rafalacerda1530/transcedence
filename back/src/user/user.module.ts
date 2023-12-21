@@ -4,7 +4,7 @@ import { UserController } from './user.controller';
 import { AccessStrategy } from 'src/strategies/at.strategy';
 
 @Module({
-  providers: [UserService, AccessStrategy],
-  controllers: [UserController],
+    providers: [UserService, AccessStrategy],
+    controllers: [UserController],
 })
 export class UserModule {}
