@@ -13,9 +13,6 @@ function Paddle({ initialPosition }: PaddleProps) {
     if (paddleRef.current) {
         const paddleHeight = paddleRef.current.offsetHeight;
 
-		console.log(paddleHeight);
-		console.log(window.innerHeight);
-
         if ((e.key === "w" || e.key === "W") && positionRef.current - window.innerHeight / 100 >= (window.innerHeight / 10)) {
             setPosition((prevPosition) => prevPosition - window.innerHeight / 100);
         } else if ((e.key === "s" || e.key === "S") && positionRef.current + window.innerHeight / 100 <= (window.innerHeight * 9 / 10) - paddleHeight) {
