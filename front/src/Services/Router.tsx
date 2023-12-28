@@ -6,6 +6,7 @@ import { Home } from "../Pages/Home/Home";
 import { CallBack } from "../Pages/Callback/Callback";
 import { Generate2fa } from "../Pages/Generate2fa/Generate2fa";
 import FriendsList from "../Pages/FriendList/FriendList";
+import Profile from "../Pages/Profile/Profile";
 import { GameProvider, gameSocket } from "../context/GameContext";
 import { QueueGame } from "../Pages/Queue/Queue";
 import { Game } from "../Pages/Game/Game";
@@ -30,6 +31,9 @@ export const Router = () => {
                 </GameProvider>
                 <Routes>
                         <Route path="/Home" element={<Home />} />
+                </Routes>
+				<Routes>
+                    <Route path="/Profile" element={<Profile />} />
                 </Routes>
                 <Routes>
                     <Route path="/Callback" element={<CallBack />} />
