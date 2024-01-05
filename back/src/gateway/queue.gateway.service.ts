@@ -47,16 +47,13 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
                 this.config.get('JWT_SECRET_ACCESS'),
             );
             if (this.queue[0] != null) {
-                let opponent = this.queue.shift();
-                console.log(opponent.socketId)
-                console.log(client.id)
-                console.log(this.queue);
+                const opponent = this.queue.shift();
                 this.server.to(client.id).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
                 this.server.to(opponent.socketId).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
                 return ;
             }
-            let player = {username: decoded['sub'], socketId: client.id};
-            let userData = player as UserData;
+            const player = {username: decoded['sub'], socketId: client.id};
+            const userData = player as UserData;
             this.queue.push(userData);
         } catch (error) {
             console.log(error);

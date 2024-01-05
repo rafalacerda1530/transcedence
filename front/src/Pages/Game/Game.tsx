@@ -18,6 +18,7 @@ export const Game = () => {
     }, [queryParams]);
 
     const connectSocket = () => {
+        console.log(roomId);
         if (roomId) {
             socket.connect();
             socket.on("connect", () => {
@@ -48,6 +49,15 @@ export const Game = () => {
             socket.on("moveDown", () => {
                 console.log("Opponent Moved Down");
             });
+
+            socket.on("gameSet", (body) => {
+                console.log("Game Set");
+                console.log(body.game);
+            });
+
+            socket.on("disconnect", () => {
+                console.log("Disconnected from socket");
+            });
         }
     };
 
@@ -65,6 +75,7 @@ export const Game = () => {
         connectSocket();
         return () => {
             console.log("Desconectando do socket");
+            socket.emit("quitGame", { roomId: roomId });
             disconnectSocket();
         };
     }, [socket, roomId]);
@@ -72,6 +83,9 @@ export const Game = () => {
     return (
 		<>
 		<div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex relative">
+            <div className="text-center text-white text-9xl font-bold font-['Inter'] leading-[44px]">0x0</div>
+            <div className="text-white text-5xl font-bold font-['Inter'] leading-[44px]">Matomomitsu</div>
+            <div className="text-right text-white text-5xl font-bold font-['Inter'] leading-[44px]">Mato</div>
 			<div style={{position: 'absolute', left: '15%'}}>
 				<Paddle initialPosition={window.innerHeight * 4 / 10 - 10} />
 			</div>
