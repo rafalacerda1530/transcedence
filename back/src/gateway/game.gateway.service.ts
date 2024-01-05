@@ -11,7 +11,7 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { Game } from 'src/dto/games';
+import { GameDto } from 'src/dto/game.dto';
 
 @WebSocketGateway({
     cors: {
@@ -27,30 +27,36 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         private config: ConfigService,
     ) {}
 
-    private games = new Map<string, Game>();
+    private games = new Map<string, GameDto>();
+    private players = new Map<string, string>();
 
     @WebSocketServer() server: Server;
 
     @SubscribeMessage('moveUp')
     handleMoveUp(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
-        console.log('moveUp');
-        console.log(client.id);
-        console.log(data.roomId);
-        client.to(data.roomId).emit('moveUp', { message: 'moveUp' });
+        const game = this.games.get(data.roomId);
+        if (game.player1 === client.id && game.paddle1Y > 24) {
+            game.paddle1Y -= 1;
+        }
+        else if (game.player2 === client.id && game.paddle2Y > 24) {
+            game.paddle2Y -= 1;
+        }
+        this.games.set(data.roomId, game);
+        this.server.to(data.roomId).emit('moveUp', { game: this.games.get(data.roomId) });
         return ;
     }
 
     @SubscribeMessage('moveDown')
     handleMoveDown(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
-        console.log('moveDown');
-        client.to(data.roomId).emit('moveDown', { message: 'moveUp' });
-        return ;
-    }
-
-    @SubscribeMessage('quitGame')
-    handleQuitGame(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
-        console.log('Deleting Game');
-        this.games.delete(data.roomId);
+        const game = this.games.get(data.roomId);
+        if (game.player1 === client.id && game.paddle1Y < 65) {
+            game.paddle1Y += 1;
+        }
+        else if (game.player2 === client.id && game.paddle2Y < 65) {
+            game.paddle2Y += 1;
+        }
+        this.games.set(data.roomId, game);
+        this.server.to(data.roomId).emit('moveDown', { game: this.games.get(data.roomId) });
         return ;
     }
 
@@ -69,25 +75,28 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
                 result,
                 this.config.get('JWT_SECRET_ACCESS'),
             );
-            console.log(decoded);
             if (!this.games.has(data.roomId)) {
-                const game = new Game(data.roomId);
+                const game = new GameDto(data.roomId);
                 game.player1 = client.id;
                 if (typeof decoded['sub'] === 'string') {
                     game.player1Name = decoded['sub'];
                 }
-                this.games.set(data.roomId, game);
                 client.join(data.roomId);
+                this.players.set(client.id, data.roomId);
+                this.games.set(data.roomId, game);
             }
             else{
-                const game = this.games.get(data.roomId);
-                game.player2 = client.id;
-                if (typeof decoded['sub'] === 'string') {
-                    game.player2Name = decoded['sub'];
-                }
-                this.games.set(data.roomId, game);
                 client.join(data.roomId);
-                this.server.to(data.roomId).emit('gameSet', { game: this.games.get(data.roomId) });
+                const game = this.games.get(data.roomId);
+                if (game.player2 === ""){
+                    game.player2 = client.id;
+                    if (typeof decoded['sub'] === 'string') {
+                        game.player2Name = decoded['sub'];
+                    }
+                    this.games.set(data.roomId, game);
+                    this.players.set(client.id, data.roomId);
+                    this.server.to(data.roomId).emit('gameSet', { game: this.games.get(data.roomId) });
+                }
             }
         } catch (error) {
             console.log(error);
@@ -98,6 +107,40 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
             client.disconnect();
             return;
         }
+        return ;
+    }
+
+    @SubscribeMessage('startGame')
+    handleStartGame(@ConnectedSocket() client: Socket, @MessageBody() data: any){
+        if (this.games.has(data.roomId)) {
+            const game = this.games.get(data.roomId);
+            if (game.player1 === client.id || game.player2 === client.id)
+                game.ready++;
+            if (game.ready === 2) {
+                this.startGameLoop(data.roomId);
+            }
+        }
+    }
+
+    startGameLoop(roomId: string) {
+        const game = this.games.get(roomId);
+        if (!game)
+            return;
+
+        const loop = () => {
+            if (game.score1 === 5 || game.score2 === 5) {
+                if (game.score1 === 5)
+                    this.server.to(roomId).emit('winner', { winner: game.player1Name });
+                else if (game.score2 === 5)
+                    this.server.to(roomId).emit('winner', { winner: game.player2Name });
+                return;
+            }
+            game.update();
+            this.games.set(roomId, game);
+            this.server.to(roomId).emit('update', { game: this.games.get(roomId) });
+            setTimeout(loop, 1000 / 60);
+        };
+        loop();
         return ;
     }
 
@@ -127,5 +170,21 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
      }
 
      handleDisconnect(@ConnectedSocket() client: Socket){
+        if (this.players.has(client.id)) {
+            const roomId = this.players.get(client.id);
+            this.players.delete(client.id);
+            client.leave(roomId);
+            if (this.games.has(roomId)) {
+                const game = this.games.get(roomId);
+                if (game.player1 === client.id) {
+                    this.server.to(roomId).emit('winner', { winner: game.player2Name });
+                }
+                else if (game.player2 === client.id) {
+                    this.server.to(roomId).emit('winner', { winner: game.player1Name });
+                }
+                this.games.delete(roomId);
+            }
+        }
+        return ;
      }
 }

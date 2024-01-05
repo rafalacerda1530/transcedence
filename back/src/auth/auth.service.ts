@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, Res } from '@nestjs/common';
-import { AuthDto } from 'src/dto/auth.dto';
+import { AuthDto, SigninDto } from 'src/dto/auth.dto';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -20,14 +20,14 @@ export class AuthService {
 		const hash = await argon.hash(dto.password);
 		const imageService = new ImageService();
 		const base64Image = await imageService.convertImageToBase64(dto.profileImage);
-		 
+
 		try {
 			const user = await this.prisma.user.create({
 				data: {
 					email: dto.email,
 					hash,
 					user: dto.user,
-					profileImage: base64Image, // Adicione o profileImage aqui		
+					profileImage: base64Image, // Adicione o profileImage aqui
 				},
 			});
 			const user_token = await this.token.signToken(user.user);
@@ -44,12 +44,14 @@ export class AuthService {
 		}
 	}
 
-	async signin(dto: AuthDto, @Res() response: Response) {
+	async signin(dto: SigninDto, @Res() response: Response) {
+		console.log("Aqui");
 		const user = await this.prisma.user.findUnique({
 			where: {
 				user: dto.user,
 			},
 		});
+		console.log(user);
 		if (!user) throw new ForbiddenException('User Incorect');
 		if (!user.hash) throw new ForbiddenException('Intra user');
 		const pwMatches = await argon.verify(user.hash, dto.password);
