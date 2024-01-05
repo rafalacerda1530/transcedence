@@ -15,6 +15,7 @@ export const CallBackUserAndPassword = (user: any) => {
       return response;
     })
     .catch((error) => {
+      console.log(error);
       throw error;
     });
 };

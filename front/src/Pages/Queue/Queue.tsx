@@ -63,7 +63,6 @@ export const QueueGame = () => {
     <>
       <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
                 <div className="absolute top-0 left-0 right-0 w-32 h-32 mx-auto mt-52 mb-0 bg-white rounded-full animate-bounce ">
-                {/*bola de ping pong */}
                 </div>
                 <h1 className="text-4xl font-bold text-center text-white mb-4">
                     SEARCHING PLAYERS

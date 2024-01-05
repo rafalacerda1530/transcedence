@@ -1,10 +1,22 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { GameContext } from "../../context/GameContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
-import Paddle from "../../components/paddle";
+import { Link } from "react-router-dom"; // Importe Link para navegar entre as páginas
 
 export const Game = () => {
     const socket = useContext(GameContext);
+    const [score1, setScore1] = useState(0);
+    const [score2, setScore2] = useState(0);
+    const [player1, setPlayer1] = useState("");
+    const [player2, setPlayer2] = useState("");
+    const [paddle1Y, setPaddle1Y] = useState("");
+    const [paddle2Y, setPaddle2Y] = useState("");
+    const [ballY, setBallY] = useState("");
+    const [ballX, setBallX] = useState("");
+    const [game, setGame] = useState(false);
+    const [winner, setWinner] = useState("");
+    const [winnerBool, setWinnerBool] = useState(false);
+    const [disconnect, setDisconnect] = useState(false);
     const queryParams = useMemo(() => {
         return new URLSearchParams(window.location.search);
     }, []);
@@ -17,82 +29,194 @@ export const Game = () => {
         else window.location.href = "http://localhost:3000/Queue";
     }, [queryParams]);
 
+    useEffect(() => {
+        if (disconnect && !game && !winnerBool) {
+            disconnectSocket();
+            alert("Time expired");
+            window.location.href = "/home";
+        }
+        else {
+            setDisconnect(false);
+        }
+    }, [disconnect]);
+
     const connectSocket = () => {
         console.log(roomId);
-        if (roomId) {
-            socket.connect();
-            socket.on("connect", () => {
-                console.log("Conectado ao socket");
-                console.log(roomId);
-                socket.emit("joinRoom", { roomId: roomId });
-                socket.emit("moveUp", { roomId: roomId });
-                socket.emit("moveDown", { roomId: roomId });
-            });
+        socket.connect();
+        socket.on("connect", () => {
+            console.log("Conectado ao socket");
+            console.log(roomId);
+            socket.emit("joinRoom", { roomId: roomId });
+            setTimeout(() => {
+                setDisconnect(true);
+            }, 3000);
+        });
 
-            socket.on("jwt_error", async (error) => {
-                console.log(`Connection failed due to ${error.message}`);
-                console.log("Tentando Reautenticar");
+        socket.on("jwt_error", async (error) => {
+            console.log(`Connection failed due to ${error.message}`);
+            console.log("Tentando Reautenticar");
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        socket.on("moveUp", (body) => {
+            setPaddle1Y(body.game.paddle1Y + "vh");
+            setPaddle2Y(body.game.paddle2Y + "vh");
+        });
+
+        socket.on("moveDown", (body) => {
+            setPaddle1Y(body.game.paddle1Y + "vh");
+            setPaddle2Y(body.game.paddle2Y + "vh");
+        });
+
+        socket.on("gameSet", (body) => {
+            console.log("Game Set");
+            console.log(body.game);
+            setScore1(body.game.score1);
+            setScore2(body.game.score2);
+            setPlayer1(body.game.player1Name);
+            setPlayer2(body.game.player2Name);
+            setPaddle1Y(body.game.paddle1Y + "vh");
+            setPaddle2Y(body.game.paddle2Y + "vh");
+            setBallX(body.game.ballX + "vw");
+            setBallY(body.game.ballY + "vh");
+            setGame(true);
+            socket.emit("startGame", { roomId: roomId });
+        });
+
+        socket.on("update", (body) => {
+            setScore1(body.game.score1);
+            setScore2(body.game.score2);
+            setPaddle1Y(body.game.paddle1Y + "vh");
+            setPaddle2Y(body.game.paddle2Y + "vh");
+            setBallX(body.game.ballX + "vw");
+            setBallY(body.game.ballY + "vh");
+        });
+
+        socket.on("winner", (body) => {
+            setGame(false);
+            setWinnerBool(true);
+            setWinner(body.winner);
+            setTimeout(() => {
                 disconnectSocket();
-                try {
-                    await refreshToken();
-                } catch (error) {
-                    console.log(error);
-                    window.location.href = "http://localhost:3000/login";
-                }
-                connectSocket();
-            });
-
-            socket.on("moveUp", () => {
-                console.log("Opponent Moved Up");
-            });
-
-            socket.on("moveDown", () => {
-                console.log("Opponent Moved Down");
-            });
-
-            socket.on("gameSet", (body) => {
-                console.log("Game Set");
-                console.log(body.game);
-            });
-
-            socket.on("disconnect", () => {
-                console.log("Disconnected from socket");
-            });
-        }
+                window.location.href = "/home";
+            }, 5000);
+        });
     };
 
     const disconnectSocket = () => {
-        if (roomId) {
-            socket.off("connect");
-            socket.off("jwt_error");
-            socket.off("moveUp");
-            socket.off("moveDown");
-            socket.disconnect();
-        }
+        socket.off("gameSet");
+        socket.off("winner");
+        socket.off("connect");
+        socket.off("jwt_error");
+        socket.off("moveUp");
+        socket.off("moveDown");
+        socket.disconnect();
     };
 
     useEffect(() => {
-        connectSocket();
-        return () => {
-            console.log("Desconectando do socket");
-            socket.emit("quitGame", { roomId: roomId });
-            disconnectSocket();
-        };
+        if (roomId) {
+            connectSocket();
+            return () => {
+                console.log("Desconectando do socket");
+                disconnectSocket();
+            };
+        }
     }, [socket, roomId]);
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "w") {
+                socket.emit("moveUp", { roomId: roomId });
+            } else if (event.key === "s") {
+                socket.emit("moveDown", { roomId: roomId });
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [roomId, socket]);
+
     return (
-		<>
-		<div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex relative">
-            <div className="text-center text-white text-9xl font-bold font-['Inter'] leading-[44px]">0x0</div>
-            <div className="text-white text-5xl font-bold font-['Inter'] leading-[44px]">Matomomitsu</div>
-            <div className="text-right text-white text-5xl font-bold font-['Inter'] leading-[44px]">Mato</div>
-			<div style={{position: 'absolute', left: '15%'}}>
-				<Paddle initialPosition={window.innerHeight * 4 / 10 - 10} />
-			</div>
-			<div style={{position: 'absolute', right: '15%'}}>
-				<Paddle initialPosition={window.innerHeight * 4 / 10 - 10} />
-			</div>
-		</div>
-	</>
+        <>
+            { !game && !winnerBool && (
+                    <>
+                        <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
+                                  <div className="absolute top-0 left-0 right-0 w-32 h-32 mx-auto mt-52 mb-0 bg-white rounded-full animate-bounce ">
+                                  </div>
+                                  <h1 className="text-4xl font-bold text-center text-white mb-4">
+                                      WAITING FOR OPPONENT
+                                  </h1>
+                        </div>
+                      </>
+            )}
+            <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex relative">
+                {game && (
+                    <>
+                        <div className="absolute top-[8vh] left-[20vw] w-[60vw] flex justify-between items-center text-[3vw] text-white font-bold font-['Inter'] leading-[44px]">
+                            <div className="text-right w-[35vw] mr-[8vw]">
+                                {player1}
+                            </div>
+                            <div className="text-center w-[20vw] text-[6vw]">
+                                {score1}x{score2}
+                            </div>
+                            <div className="text-left w-[35vw] ml-[8vw]">
+                                {player2}
+                            </div>
+                        </div>
+                        <div className="w-[60vw] h-[51vh] left-[20vw] top-[24vh] bottom-[24vh] absolute bg-white" />
+                        <div
+                            className="w-[0.8vw] h-[10vh] left-[23vw] absolute bg-black"
+                            style={{ top: paddle1Y }}
+                        />
+                        <div
+                            className="w-[0.6vw] h-[0.6vw] absolute bg-black"
+                            style={{ left: ballX, top: ballY }}
+                        />
+                        <div
+                            className="w-[0.8vw] h-[10vh] left-[76vw] absolute bg-black"
+                            style={{ top: paddle2Y }}
+                        />
+                    </>
+                )}
+                {winnerBool && (
+                    <>
+                        <div className="absolute top-[8vh] left-[20vw] w-[60vw] flex justify-between items-center text-[3vw] text-white font-bold font-['Inter'] leading-[44px]">
+                            <div className="text-right w-[35vw] mr-[8vw]">
+                                {player1}
+                            </div>
+                            <div className="text-center w-[20vw] text-[6vw]">
+                                {score1}x{score2}
+                            </div>
+                            <div className="text-left w-[35vw] ml-[8vw]">
+                                {player2}
+                            </div>
+                        </div>
+                        <div className="absolute left-[20vw] top-[24vh] w-[60vw] h-[51vh] bg-white flex items-center justify-center">
+                            <div className="w-[10vw] h-[6vw] flex items-center justify-center bg-white">
+                                <div className="text-[7vw] text-black text-center">
+                                    {winner} wins
+                                </div>
+                            </div>
+                        </div>
+                        <Link
+                            to="/home"
+                            className="absolute left-[50vw] transform -translate-x-1/2 top-[78vh] bg-blue-600 text-white rounded-full px-4 py-2"
+                        >
+                            Home
+                        </Link>
+                    </>
+                )}
+            </div>
+        </>
     );
 };

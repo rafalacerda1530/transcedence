@@ -6,7 +6,7 @@ import {
 } from "../../components/callBack";
 import axios from "axios";
 
-const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";  
+const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
 
 function LoginGame() {
   const [formData, setFormData] = useState({
@@ -31,9 +31,7 @@ function LoginGame() {
 
   const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
-    formData.email = "teste@teste.com";
     const authentication2fa = await CallBackCheck2fa(formData);
-    console.log("teste");
     if (authentication2fa && authenticate2factor == false)
       setAuthenticate2faActive(true);
     else if (!formData.user || !formData.password) {
