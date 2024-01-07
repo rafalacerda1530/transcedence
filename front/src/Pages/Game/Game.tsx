@@ -29,23 +29,19 @@ export const Game = () => {
         else window.location.href = "http://localhost:3000/Queue";
     }, [queryParams]);
 
-    useEffect(() => {
-        if (disconnect && !game && !winnerBool) {
-            disconnectSocket();
-            alert("Time expired");
-            window.location.href = "/home";
-        }
-        else {
-            setDisconnect(false);
-        }
-    }, [disconnect]);
+    const disconnectSocket = () => {
+        socket.off("gameSet");
+        socket.off("winner");
+        socket.off("connect");
+        socket.off("jwt_error");
+        socket.off("moveUp");
+        socket.off("moveDown");
+        socket.disconnect();
+    };
 
     const connectSocket = () => {
-        console.log(roomId);
         socket.connect();
         socket.on("connect", () => {
-            console.log("Conectado ao socket");
-            console.log(roomId);
             socket.emit("joinRoom", { roomId: roomId });
             setTimeout(() => {
                 setDisconnect(true);
@@ -76,8 +72,6 @@ export const Game = () => {
         });
 
         socket.on("gameSet", (body) => {
-            console.log("Game Set");
-            console.log(body.game);
             setScore1(body.game.score1);
             setScore2(body.game.score2);
             setPlayer1(body.game.player1Name);
@@ -110,15 +104,16 @@ export const Game = () => {
         });
     };
 
-    const disconnectSocket = () => {
-        socket.off("gameSet");
-        socket.off("winner");
-        socket.off("connect");
-        socket.off("jwt_error");
-        socket.off("moveUp");
-        socket.off("moveDown");
-        socket.disconnect();
-    };
+    useEffect(() => {
+        if (disconnect && !game && !winnerBool) {
+            disconnectSocket();
+            alert("Time expired");
+            window.location.href = "/home";
+        }
+        else {
+            setDisconnect(false);
+        }
+    }, [disconnect]);
 
     useEffect(() => {
         if (roomId) {

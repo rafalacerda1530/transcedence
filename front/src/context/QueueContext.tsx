@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { io, Socket } from "socket.io-client";
 
-export const queueSocket = io("http://localhost:3333/queue", {
+export const queueSocket = io(process.env.REACT_APP_API_URL + "/queue", {
  withCredentials: true,
  autoConnect: false,
 });

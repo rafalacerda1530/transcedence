@@ -31,8 +31,9 @@ function LoginGame() {
 
   const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
+    console.log(process.env.REACT_APP_API_URL);
     const authentication2fa = await CallBackCheck2fa(formData);
-    if (authentication2fa && authenticate2factor == false)
+    if (authentication2fa && authenticate2factor === false)
       setAuthenticate2faActive(true);
     else if (!formData.user || !formData.password) {
       setErrorMessage("Campos não podem estar vazios");
@@ -94,7 +95,7 @@ function LoginGame() {
     if (validatePassword(formData.password)) {
       //console.log("Senha válida! Pode ser enviada para a API.");
       axios
-        .post("http://localhost:3333/auth/signup", formData, {
+        .post(process.env.REACT_APP_API_URL + "/auth/signup", formData, {
           withCredentials: true,
         })
         .then((response) => {

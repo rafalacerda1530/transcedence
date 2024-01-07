@@ -21,7 +21,7 @@ export const CallBack = () => {
 
   useEffect(() => {
     if (code){
-        const url = "http://localhost:3333/oauth/intra/" + code;
+        const url = process.env.REACT_APP_API_URL + "/oauth/intra/" + code;
         axios
           .get(url, {
             withCredentials: true,

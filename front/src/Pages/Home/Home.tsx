@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
-import pingPongBall from "./pingPongBall.png"; // Importe uma imagem de uma bola de ping pong
+import React, { useEffect, useState } from "react";
 import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 import { Link } from "react-router-dom"; // Importe Link para navegar entre as páginas
 

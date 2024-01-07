@@ -62,7 +62,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
-        console.log(data);
         if (!client.handshake.headers.cookie) {
             client.disconnect();
             return;
