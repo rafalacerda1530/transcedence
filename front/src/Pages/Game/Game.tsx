@@ -125,21 +125,29 @@ export const Game = () => {
         }
     }, [socket, roomId]);
 
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "w") {
-                socket.emit("moveUp", { roomId: roomId });
-            } else if (event.key === "s") {
-                socket.emit("moveDown", { roomId: roomId });
-            }
-        };
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "w") {
+				socket.emit("moveUp", { roomId: roomId });
+			} else if (event.key === "s") {
+				socket.emit("moveDown", { roomId: roomId });
+			}
+		};
 
-        window.addEventListener("keydown", handleKeyDown);
+		const handleKeyUp = (event: KeyboardEvent) => {
+			if (event.key === "w" || event.key === "s") {
+				socket.emit("keyReleased", { roomId: roomId });
+			}
+		};
 
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [roomId, socket]);
+		window.addEventListener("keydown", handleKeyDown);
+		window.addEventListener("keyup", handleKeyUp);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keyup", handleKeyUp);
+		};
+	}, [roomId, socket]);
 
     return (
         <>

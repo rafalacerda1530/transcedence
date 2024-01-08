@@ -36,10 +36,30 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     handleMoveUp(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         const game = this.games.get(data.roomId);
         if (game.player1 === client.id && game.paddle1Y > 24) {
-            game.paddle1Y -= 1;
+			if (game.paddle1SpeedY > 0)
+				game.paddle1SpeedY = 0;
+			game.paddle1Y -= 1.5 - game.paddle1SpeedY;
+			game.paddle1SpeedY -= 0.1;
+			console.log(game.paddle1Y);
+			console.log(game.paddle1SpeedY);
+			if (game.paddle1Y <= 24)
+			{
+				game.paddle1SpeedY = 0;
+				game.paddle1Y = 24;
+			}
         }
         else if (game.player2 === client.id && game.paddle2Y > 24) {
-            game.paddle2Y -= 1;
+			if (game.paddle2SpeedY > 0)
+				game.paddle2SpeedY = 0;
+            game.paddle2Y -= 1.5 - game.paddle2SpeedY;
+			game.paddle2SpeedY -= 0.1;
+			console.log(game.paddle2Y);
+			console.log(game.paddle2SpeedY);
+			if (game.paddle2Y <= 24)
+			{
+				game.paddle2SpeedY = 0;
+				game.paddle2Y = 24;
+			}
         }
         this.games.set(data.roomId, game);
         this.server.to(data.roomId).emit('moveUp', { game: this.games.get(data.roomId) });
@@ -50,10 +70,44 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     handleMoveDown(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         const game = this.games.get(data.roomId);
         if (game.player1 === client.id && game.paddle1Y < 65) {
-            game.paddle1Y += 1;
+			if (game.paddle1SpeedY < 0)
+				game.paddle1SpeedY = 0;
+            game.paddle1Y += 1.5 + game.paddle1SpeedY;
+			game.paddle1SpeedY += 0.1;
+			console.log(game.paddle1Y);
+			console.log(game.paddle1SpeedY);
+			if (game.paddle1Y >= 65)
+			{
+				game.paddle1SpeedY = 0;
+				game.paddle1Y = 65;
+			}
         }
         else if (game.player2 === client.id && game.paddle2Y < 65) {
-            game.paddle2Y += 1;
+			if (game.paddle2SpeedY < 0)
+				game.paddle2SpeedY = 0;
+			game.paddle2Y += 1.5 + game.paddle2SpeedY;
+			game.paddle2SpeedY += 0.1;
+			console.log(game.paddle2Y);
+			console.log(game.paddle2SpeedY);
+			if (game.paddle2Y >= 65)
+			{
+				game.paddle2SpeedY = 0;
+				game.paddle2Y = 65;
+			}
+        }
+        this.games.set(data.roomId, game);
+        this.server.to(data.roomId).emit('moveDown', { game: this.games.get(data.roomId) });
+        return ;
+    }
+
+	@SubscribeMessage('moveStop')
+    handleMoveStop(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
+        const game = this.games.get(data.roomId);
+        if (game.player1 === client.id) {
+            game.paddle1SpeedY = 0;
+        }
+        else if (game.player2 === client.id) {
+            game.paddle2SpeedY = 0;
         }
         this.games.set(data.roomId, game);
         this.server.to(data.roomId).emit('moveDown', { game: this.games.get(data.roomId) });

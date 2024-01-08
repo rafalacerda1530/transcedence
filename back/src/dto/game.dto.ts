@@ -6,6 +6,8 @@ export class GameDto {
     player2Name: string;
     paddle1Y: number;
     paddle2Y: number;
+	paddle1SpeedY: number;
+    paddle2SpeedY: number;
     ballX: number;
     ballY: number;
     ballSpeedX: number;
@@ -23,6 +25,8 @@ export class GameDto {
         this.player2Name = "";
         this.paddle1Y = 45;
         this.paddle2Y = 45;
+		this.paddle1SpeedY = 0;
+		this.paddle2SpeedY = 0;
         this.ballX = 50;
         this.ballY = 49;
         this.score1 = 0;
@@ -42,6 +46,7 @@ export class GameDto {
         if (this.ballSpeedX < 0) {
             if (this.ballX < 24 && this.ballX > 23 && this.ballY >= this.paddle1Y && this.ballY < this.paddle1Y + 10){
                 this.ballSpeedX = - (this.ballSpeedX + this.ballSpeedX * 0.1);
+				this.ballSpeedY += (this.paddle1SpeedY * 0.2)
             }
             if (this.ballX < 20) {
                     this.score2++;
@@ -49,8 +54,10 @@ export class GameDto {
             }
         }
         else {
-            if (this.ballX > 75 && this.ballX > 76 && this.ballY >= this.paddle2Y && this.ballY < this.paddle2Y + 10)
-            this.ballSpeedX = - (this.ballSpeedX + this.ballSpeedX * 0.1);
+            if (this.ballX > 75 && this.ballX > 76 && this.ballY >= this.paddle2Y && this.ballY < this.paddle2Y + 10){
+				this.ballSpeedX = - (this.ballSpeedX + this.ballSpeedX * 0.1);
+				this.ballSpeedY += (this.paddle2SpeedY * 0.5)
+			}
             if (this.ballX > 78) {
                 this.score1++;
                 this.reset();
