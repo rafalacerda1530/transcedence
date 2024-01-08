@@ -41,7 +41,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 			game.paddle1Y -= 1.5 - game.paddle1SpeedY;
 			game.paddle1SpeedY -= 0.1;
 			if (game.paddle1Y <= 24)
-			{ 7u
+			{
 				game.paddle1SpeedY = 0;
 				game.paddle1Y = 24;
 			}

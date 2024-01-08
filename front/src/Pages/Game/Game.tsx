@@ -136,7 +136,7 @@ export const Game = () => {
 
 		const handleKeyUp = (event: KeyboardEvent) => {
 			if (event.key === "w" || event.key === "s") {
-				socket.emit("keyReleased", { roomId: roomId });
+				socket.emit("moveStop", { roomId: roomId });
 			}
 		};
 
