@@ -47,6 +47,7 @@ export class GameDto {
             if (this.ballX < 24 && this.ballX > 23 && this.ballY >= this.paddle1Y && this.ballY < this.paddle1Y + 10){
                 this.ballSpeedX = - (this.ballSpeedX + this.ballSpeedX * 0.1);
 				this.ballSpeedY += (this.paddle1SpeedY * 0.2)
+				this.ballX = 24;
             }
             if (this.ballX < 20) {
                     this.score2++;
@@ -54,9 +55,10 @@ export class GameDto {
             }
         }
         else {
-            if (this.ballX > 75 && this.ballX > 76 && this.ballY >= this.paddle2Y && this.ballY < this.paddle2Y + 10){
+            if (this.ballX > 75 && this.ballX < 76 && this.ballY >= this.paddle2Y && this.ballY < this.paddle2Y + 10){
 				this.ballSpeedX = - (this.ballSpeedX + this.ballSpeedX * 0.1);
 				this.ballSpeedY += (this.paddle2SpeedY * 0.5)
+				this.ballX = 75;
 			}
             if (this.ballX > 78) {
                 this.score1++;
@@ -65,12 +67,16 @@ export class GameDto {
         }
 
         if (this.ballSpeedY < 0) {
-            if (this.ballY < 24)
-                this.ballSpeedY = -this.ballSpeedY;
+            if (this.ballY < 24){
+				this.ballSpeedY = -this.ballSpeedY;
+				this.ballY = 24;
+			}
         }
         else {
-            if (this.ballY > 74)
-                this.ballSpeedY = -this.ballSpeedY;
+            if (this.ballY > 74){
+				this.ballSpeedY = -this.ballSpeedY;
+				this.ballY = 74;
+			}
         }
         this.ballX += this.ballSpeedX;
         this.ballY += this.ballSpeedY;
