@@ -40,8 +40,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 				game.paddle1SpeedY = 0;
 			game.paddle1Y -= 1.5 - game.paddle1SpeedY;
 			game.paddle1SpeedY -= 0.1;
-			console.log(game.paddle1Y);
-			console.log(game.paddle1SpeedY);
 			if (game.paddle1Y <= 24)
 			{
 				game.paddle1SpeedY = 0;
@@ -53,8 +51,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 				game.paddle2SpeedY = 0;
             game.paddle2Y -= 1.5 - game.paddle2SpeedY;
 			game.paddle2SpeedY -= 0.1;
-			console.log(game.paddle2Y);
-			console.log(game.paddle2SpeedY);
 			if (game.paddle2Y <= 24)
 			{
 				game.paddle2SpeedY = 0;
@@ -74,8 +70,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 				game.paddle1SpeedY = 0;
             game.paddle1Y += 1.5 + game.paddle1SpeedY;
 			game.paddle1SpeedY += 0.1;
-			console.log(game.paddle1Y);
-			console.log(game.paddle1SpeedY);
 			if (game.paddle1Y >= 65)
 			{
 				game.paddle1SpeedY = 0;
@@ -87,8 +81,6 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 				game.paddle2SpeedY = 0;
 			game.paddle2Y += 1.5 + game.paddle2SpeedY;
 			game.paddle2SpeedY += 0.1;
-			console.log(game.paddle2Y);
-			console.log(game.paddle2SpeedY);
 			if (game.paddle2Y >= 65)
 			{
 				game.paddle2SpeedY = 0;
