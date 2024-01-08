@@ -26,6 +26,13 @@ export const QueueGame = () => {
             connectSocket();
         });
 
+		socket.on("missing_cookie", async (error) => {
+			disconnectSocket();
+			console.log(error);
+            window.location.href = 'http://localhost:3000/login';
+            connectSocket();
+        });
+
         socket.on("joinGame", (response) => {
             console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
@@ -34,11 +41,7 @@ export const QueueGame = () => {
                 connectSocket();
             }
             console.log(response.roomId);
-            socket.off('connect');
-            socket.off('jwt_error');
-            socket.off("joinedQueue");
-            socket.off("joinQueue");
-            console.log(socket.id);
+            disconnectSocket();
             window.location.href = ('http://localhost:3000/Game?roomId=' + response.roomId);
         });
     };
@@ -48,6 +51,7 @@ export const QueueGame = () => {
         socket.off('jwt_error');
         socket.off("joinedQueue");
         socket.off("joinGame");
+		socket.off("missing_cookie");
         socket.disconnect();
     };
 

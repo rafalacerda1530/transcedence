@@ -35,6 +35,7 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
     @SubscribeMessage('joinQueue')
     handleJoinQueue(@ConnectedSocket() client: Socket): string {
         if (!client.handshake.headers.cookie) {
+			client.emit('missing_cookie', { message: 'Missing Cookie' });
             client.disconnect();
             return;
         }
@@ -69,6 +70,7 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
 
     handleConnection(@ConnectedSocket() client: Socket){
         if (!client.handshake.headers.cookie) {
+			client.emit('missing_cookie', { message: 'Missing Cookie' });
             client.disconnect();
             return;
         }

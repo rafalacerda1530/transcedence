@@ -54,11 +54,13 @@ export class TokenService {
         response.cookie('accessToken', user_token.accessToken, {
             httpOnly: true,
             path: '/',
+			maxAge: 15 * 60 * 1000,
             sameSite: 'strict',
         });
         response.cookie('refreshToken', user_token.refreshToken, {
             httpOnly: true,
             path: '/',
+			maxAge: 30 * 24 * 60 * 60 * 1000,
             sameSite: 'strict',
         });
         return;
