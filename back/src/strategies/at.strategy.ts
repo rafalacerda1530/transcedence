@@ -13,13 +13,13 @@ export class AccessStrategy extends PassportStrategy(Strategy, 'jwt-access') {
     constructor(config: ConfigService) {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
-				(req: Request) => {
-					if (!req.cookies || !req.cookies['accessToken']) {
-						throw new UnauthorizedException();
-					}
-					return req.cookies['accessToken'];
-				},
-			]),
+                (req: Request) => {
+                    if (!req.cookies || !req.cookies['accessToken']) {
+                        throw new UnauthorizedException();
+                    }
+                    return req.cookies['accessToken'];
+                },
+            ]),
             secretOrKey: config.get('JWT_SECRET_ACCESS'),
         });
     }

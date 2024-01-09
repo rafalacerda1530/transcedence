@@ -20,9 +20,9 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (req: Request) => {
-					if (!req.cookies || !req.cookies['refreshToken']) {
-						throw new UnauthorizedException();
-					}
+                    if (!req.cookies || !req.cookies['refreshToken']) {
+                        throw new UnauthorizedException();
+                    }
                     this.refreshToken = req.cookies['refreshToken'];
                     return req.cookies['refreshToken'];
                 },
