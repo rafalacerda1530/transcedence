@@ -193,15 +193,15 @@ export const Game = () => {
                         </div>
                         <div className="w-[60vw] h-[51vh] left-[20vw] top-[24vh] bottom-[24vh] absolute bg-white" />
                         <div
-                            className="w-[0.8vw] h-[10vh] left-[23vw] absolute bg-black"
+                            className="w-[0.8vw] h-[10vh] left-[23vw] absolute bg-black rounded-full"
                             style={{ top: paddle1Y }}
                         />
                         <div
-                            className="w-[0.6vw] h-[0.6vw] absolute bg-black"
+                            className="w-[0.6vw] h-[0.6vw] absolute bg-black rounded-full"
                             style={{ left: ballX, top: ballY }}
                         />
                         <div
-                            className="w-[0.8vw] h-[10vh] left-[76vw] absolute bg-black"
+                            className="w-[0.8vw] h-[10vh] left-[76vw] absolute bg-black rounded-full"
                             style={{ top: paddle2Y }}
                         />
                     </>

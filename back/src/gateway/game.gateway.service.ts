@@ -36,25 +36,31 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     handleMoveUp(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         const game = this.games.get(data.roomId);
         if (game.player1 === client.id && game.paddle1Y > 24) {
-			if (game.paddle1SpeedY > 0)
+			if (game.paddle1SpeedY > 0){
 				game.paddle1SpeedY = 0;
-			game.paddle1Y -= 1.5 - game.paddle1SpeedY;
-			game.paddle1SpeedY -= 0.1;
-			if (game.paddle1Y <= 24)
-			{
-				game.paddle1SpeedY = 0;
-				game.paddle1Y = 24;
+			}
+			else {
+				game.paddle1Y -= 2.0 - game.paddle1SpeedY;
+				game.paddle1SpeedY -= 0.3;
+				if (game.paddle1Y <= 24)
+				{
+					game.paddle1SpeedY = 0;
+					game.paddle1Y = 24;
+				}
 			}
         }
         else if (game.player2 === client.id && game.paddle2Y > 24) {
-			if (game.paddle2SpeedY > 0)
+			if (game.paddle2SpeedY > 0){
 				game.paddle2SpeedY = 0;
-            game.paddle2Y -= 1.5 - game.paddle2SpeedY;
-			game.paddle2SpeedY -= 0.1;
-			if (game.paddle2Y <= 24)
-			{
-				game.paddle2SpeedY = 0;
-				game.paddle2Y = 24;
+			}
+			else{
+				game.paddle2Y -= 2.0 - game.paddle2SpeedY;
+				game.paddle2SpeedY -= 0.3;
+				if (game.paddle2Y <= 24)
+				{
+					game.paddle2SpeedY = 0;
+					game.paddle2Y = 24;
+				}
 			}
         }
         this.games.set(data.roomId, game);
@@ -66,25 +72,31 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     handleMoveDown(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         const game = this.games.get(data.roomId);
         if (game.player1 === client.id && game.paddle1Y < 65) {
-			if (game.paddle1SpeedY < 0)
+			if (game.paddle1SpeedY < 0){
 				game.paddle1SpeedY = 0;
-            game.paddle1Y += 1.5 + game.paddle1SpeedY;
-			game.paddle1SpeedY += 0.1;
-			if (game.paddle1Y >= 65)
-			{
-				game.paddle1SpeedY = 0;
-				game.paddle1Y = 65;
+			}
+			else{
+				game.paddle1Y += 2.0 + game.paddle1SpeedY;
+				game.paddle1SpeedY += 0.3;
+				if (game.paddle1Y >= 65)
+				{
+					game.paddle1SpeedY = 0;
+					game.paddle1Y = 65;
+				}
 			}
         }
         else if (game.player2 === client.id && game.paddle2Y < 65) {
-			if (game.paddle2SpeedY < 0)
+			if (game.paddle2SpeedY < 0){
 				game.paddle2SpeedY = 0;
-			game.paddle2Y += 1.5 + game.paddle2SpeedY;
-			game.paddle2SpeedY += 0.1;
-			if (game.paddle2Y >= 65)
-			{
-				game.paddle2SpeedY = 0;
-				game.paddle2Y = 65;
+			}
+			else{
+				game.paddle2Y += 2.0 + game.paddle2SpeedY;
+				game.paddle2SpeedY += 0.3;
+				if (game.paddle2Y >= 65)
+				{
+					game.paddle2SpeedY = 0;
+					game.paddle2Y = 65;
+				}
 			}
         }
         this.games.set(data.roomId, game);
