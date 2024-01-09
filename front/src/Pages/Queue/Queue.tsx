@@ -26,10 +26,14 @@ export const QueueGame = () => {
             connectSocket();
         });
 
-		socket.on("missing_cookie", async (error) => {
+		socket.on("missing_token", async (error) => {
 			disconnectSocket();
-			console.log(error);
-            window.location.href = 'http://localhost:3000/login';
+			try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = 'http://localhost:3000/login';
+            }
             connectSocket();
         });
 

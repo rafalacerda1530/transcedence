@@ -36,6 +36,7 @@ export const Game = () => {
         socket.off("jwt_error");
         socket.off("moveUp");
         socket.off("moveDown");
+		socket.off("missing_token");
         socket.disconnect();
     };
 
@@ -57,6 +58,17 @@ export const Game = () => {
             } catch (error) {
                 console.log(error);
                 window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+		socket.on("missing_token", async (error) => {
+			disconnectSocket();
+			try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = 'http://localhost:3000/login';
             }
             connectSocket();
         });
@@ -97,9 +109,8 @@ export const Game = () => {
             setGame(false);
             setWinnerBool(true);
             setWinner(body.winner);
-            setTimeout(() => {
-                disconnectSocket();
-                window.location.href = "/home";
+			setTimeout(() => {
+                setDisconnect(true);
             }, 5000);
         });
     };
@@ -110,9 +121,13 @@ export const Game = () => {
             alert("Time expired");
             window.location.href = "/home";
         }
-        else {
-            setDisconnect(false);
+        else if (disconnect && winnerBool && !game) {
+            disconnectSocket();
+            window.location.href = "/home";
         }
+		else{
+			setDisconnect(false);
+		}
     }, [disconnect]);
 
     useEffect(() => {

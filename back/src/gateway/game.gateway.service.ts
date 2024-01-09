@@ -109,12 +109,26 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() data: any): string {
         if (!client.handshake.headers.cookie) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
             client.disconnect();
             return;
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
+        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+		if (!token) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
+            client.disconnect();
+            return;
+        }
         const end = token.indexOf(';');
-        const result = token.substring(0, end);
+		let result : string;
+		if (end == -1) {
+			result = token.substring(0);
+		}
+		else{
+			result = token.substring(0, end);
+		}
         try {
             const decoded = jwt.verify(
                 result,
@@ -173,7 +187,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
             return;
 
         const loop = () => {
-            if (game.score1 === 5 || game.score2 === 5) {
+            if (game.score1 === 5 || game.score2 === 5 || !this.games.has(roomId)) {
                 if (game.score1 === 5)
                     this.server.to(roomId).emit('winner', { winner: game.player1Name });
                 else if (game.score2 === 5)
@@ -191,12 +205,26 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 
     handleConnection(@ConnectedSocket() client: Socket){
         if (!client.handshake.headers.cookie) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
             client.disconnect();
             return;
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
+        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+		if (!token) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
+            client.disconnect();
+            return;
+        }
         const end = token.indexOf(';');
-        const result = token.substring(0, end);
+		let result : string;
+		if (end == -1) {
+			result = token.substring(0);
+		}
+		else{
+			result = token.substring(0, end);
+		}
         try {
             jwt.verify(
                 result,

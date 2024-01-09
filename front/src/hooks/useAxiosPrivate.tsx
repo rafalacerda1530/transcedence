@@ -16,6 +16,7 @@ export const useAxiosPrivate = () => {
 			response => response,
 			async (error) => {
 				const prevRequest = error?.config;
+				console.log(error?.response?.status);
 				if (error?.response?.status === 401 && !prevRequest?.sent){
 					const newRequest = { ...prevRequest };
 					newRequest.sent = true;

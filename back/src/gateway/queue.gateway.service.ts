@@ -35,13 +35,26 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
     @SubscribeMessage('joinQueue')
     handleJoinQueue(@ConnectedSocket() client: Socket): string {
         if (!client.handshake.headers.cookie) {
-			client.emit('missing_cookie', { message: 'Missing Cookie' });
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
             client.disconnect();
             return;
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
+        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+		if (!token) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
+            client.disconnect();
+            return;
+        }
         const end = token.indexOf(';');
-        const result = token.substring(0, end);
+		let result : string;
+		if (end == -1) {
+			result = token.substring(0);
+		}
+		else{
+			result = token.substring(0, end);
+		}
         try {
             const decoded = jwt.verify(
                 result,
@@ -70,13 +83,26 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
 
     handleConnection(@ConnectedSocket() client: Socket){
         if (!client.handshake.headers.cookie) {
-			client.emit('missing_cookie', { message: 'Missing Cookie' });
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
             client.disconnect();
             return;
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
+        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+		if (!token) {
+			console.log('Missing Token');
+			client.emit('missing_token', { message: 'Missing Token' });
+            client.disconnect();
+            return;
+        }
         const end = token.indexOf(';');
-        const result = token.substring(0, end);
+		let result : string;
+		if (end == -1) {
+			result = token.substring(0);
+		}
+		else{
+			result = token.substring(0, end);
+		}
         try {
             jwt.verify(
                 result,
