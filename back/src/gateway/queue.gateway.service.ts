@@ -32,35 +32,38 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
     @WebSocketServer() server: Server;
     private queue: UserData[] = [];
 
-    @SubscribeMessage('joinQueue')
-    handleJoinQueue(@ConnectedSocket() client: Socket): string {
+	emitErrorAndDisconnect(client: Socket, message: string, event: string) {
+        console.log(message);
+        client.emit(event, { message });
+        client.disconnect();
+    }
+
+	getTokenFromCookie(client: Socket): string | null {
         if (!client.handshake.headers.cookie) {
-			console.log('Missing Token');
-			client.emit('missing_token', { message: 'Missing Token' });
-            client.disconnect();
-            return;
+            return null;
         }
         const token = client.handshake.headers.cookie.split('accessToken=')[1];
-		if (!token) {
-			console.log('Missing Token');
-			client.emit('missing_token', { message: 'Missing Token' });
-            client.disconnect();
-            return;
+        if (!token) {
+            return null;
         }
         const end = token.indexOf(';');
-		let result : string;
-		if (end == -1) {
-			result = token.substring(0);
-		}
-		else{
-			result = token.substring(0, end);
-		}
+        return end == -1 ? token : token.substring(0, end);
+    }
+
+
+    @SubscribeMessage('joinQueue')
+    handleJoinQueue(@ConnectedSocket() client: Socket): string {
+        const token = this.getTokenFromCookie(client);
+		if (!token) {
+            this.emitErrorAndDisconnect(client, 'Missing Token', 'missing_token');
+            return ;
+        }
         try {
             const decoded = jwt.verify(
-                result,
+                token,
                 this.config.get('JWT_SECRET_ACCESS'),
             );
-            if (this.queue[0] != null) {
+            if (this.queue.length > 0) {
                 const opponent = this.queue.shift();
                 this.server.to(client.id).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
                 this.server.to(opponent.socketId).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
@@ -72,8 +75,7 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
-                console.log('JWT expired');
-                client.emit('jwt_error', { message: 'JWT expired' });
+                this.emitErrorAndDisconnect(client, 'JWT expired', 'jwt_error');;
             }
             client.disconnect();
             return;
@@ -82,37 +84,20 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
     }
 
     handleConnection(@ConnectedSocket() client: Socket){
-        if (!client.handshake.headers.cookie) {
-			console.log('Missing Token');
-			client.emit('missing_token', { message: 'Missing Token' });
-            client.disconnect();
-            return;
-        }
-        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+        const token = this.getTokenFromCookie(client);
 		if (!token) {
-			console.log('Missing Token');
-			client.emit('missing_token', { message: 'Missing Token' });
-            client.disconnect();
-            return;
+            this.emitErrorAndDisconnect(client, 'Missing Token', 'missing_token');
+            return ;
         }
-        const end = token.indexOf(';');
-		let result : string;
-		if (end == -1) {
-			result = token.substring(0);
-		}
-		else{
-			result = token.substring(0, end);
-		}
         try {
             jwt.verify(
-                result,
+                token,
                 this.config.get('JWT_SECRET_ACCESS'),
             );
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
-                console.log('JWT expired');
-                client.emit('jwt_error', { message: 'JWT expired' });
+                this.emitErrorAndDisconnect(client, 'JWT expired', 'jwt_error');
             }
             client.disconnect();
             return;
@@ -122,9 +107,7 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
      handleDisconnect(@ConnectedSocket() client: Socket){
         const user = this.queue.find(user => user.socketId === client.id);
         if (user){
-            console.log(this.queue);
             this.queue.splice(this.queue.indexOf(user), 1);
-            console.log(this.queue);
         }
      }
 }

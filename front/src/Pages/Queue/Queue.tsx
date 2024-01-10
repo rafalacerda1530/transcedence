@@ -26,7 +26,7 @@ export const QueueGame = () => {
             connectSocket();
         });
 
-		socket.on("missing_token", async (error) => {
+		socket.on("missing_token", async () => {
 			disconnectSocket();
 			try {
                 await refreshToken();

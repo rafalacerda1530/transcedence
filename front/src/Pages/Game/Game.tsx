@@ -201,7 +201,7 @@ export const Game = () => {
                             style={{ left: ballX, top: ballY }}
                         />
                         <div
-                            className="w-[0.8vw] h-[10vh] left-[76vw] absolute bg-black rounded-full"
+                            className="w-[0.8vw] h-[10vh] left-[76.2vw] absolute bg-black rounded-full"
                             style={{ top: paddle2Y }}
                         />
                     </>
