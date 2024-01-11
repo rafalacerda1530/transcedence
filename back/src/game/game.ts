@@ -1,4 +1,4 @@
-export class GameDto {
+export class Game {
     id: string;
     player1: string;
     player1Name: string;
@@ -14,7 +14,7 @@ export class GameDto {
     ballSpeedY: number;
     score1: number;
     score2: number;
-    ready: number;
+	ready: number;
 
     private static readonly INITIAL_PADDLE_Y = 45;
     private static readonly INITIAL_BALL_X = 50;
@@ -32,23 +32,23 @@ export class GameDto {
         this.player1Name = "";
         this.player2 = "";
         this.player2Name = "";
-        this.paddle1Y = GameDto.INITIAL_PADDLE_Y;
-        this.paddle2Y = GameDto.INITIAL_PADDLE_Y;
+        this.paddle1Y = Game.INITIAL_PADDLE_Y;
+        this.paddle2Y = Game.INITIAL_PADDLE_Y;
         this.paddle1SpeedY = 0;
         this.paddle2SpeedY = 0;
-        this.ballX = GameDto.INITIAL_BALL_X;
-        this.ballY = GameDto.INITIAL_BALL_Y;
+        this.ballX = Game.INITIAL_BALL_X;
+        this.ballY = Game.INITIAL_BALL_Y;
         this.score1 = 0;
         this.score2 = 0;
         this.ready = 0;
         if (Math.random() < 0.5)
-            this.ballSpeedX = GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedX = Game.INITIAL_BALL_SPEED;
         else
-            this.ballSpeedX = -GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedX = -Game.INITIAL_BALL_SPEED;
         if (Math.random() < 0.5)
-            this.ballSpeedY = GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedY = Game.INITIAL_BALL_SPEED;
         else
-            this.ballSpeedY = -GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedY = -Game.INITIAL_BALL_SPEED;
     }
 
     update() {
@@ -56,23 +56,23 @@ export class GameDto {
         const ballSpeedYNegative = this.ballSpeedY < 0;
         const ballHitPaddle1 = this.ballX <= 24.4 && this.ballX >= 23 && this.ballY >= (this.paddle1Y - 1) && this.ballY <= this.paddle1Y + 10;
         const ballHitPaddle2 = this.ballX <= 76.8 && this.ballX >= 75.4 && this.ballY >= (this.paddle2Y - 1) && this.ballY <= this.paddle2Y + 10;
-        const ballUnderSpeedLimit = this.ballSpeedY >= -GameDto.BALL_SPEED_LIMIT && this.ballSpeedY <= GameDto.BALL_SPEED_LIMIT;
+        const ballUnderSpeedLimit = this.ballSpeedY >= -Game.BALL_SPEED_LIMIT && this.ballSpeedY <= Game.BALL_SPEED_LIMIT;
 
         if (ballSpeedXNegative) {
             if (ballHitPaddle1) {
-                this.ballSpeedX = this.ballSpeedX > -GameDto.BALL_SPEED_LIMIT ? - (this.ballSpeedX + this.ballSpeedX * GameDto.BALL_SPEED_INCREASE_FACTOR) : GameDto.BALL_SPEED_LIMIT;
-                if (ballUnderSpeedLimit) this.ballSpeedY += (this.paddle2SpeedY * GameDto.PADDLE_SPEED_FACTOR);
+                this.ballSpeedX = this.ballSpeedX > -Game.BALL_SPEED_LIMIT ? - (this.ballSpeedX + this.ballSpeedX * Game.BALL_SPEED_INCREASE_FACTOR) : Game.BALL_SPEED_LIMIT;
+                if (ballUnderSpeedLimit) this.ballSpeedY += (this.paddle2SpeedY * Game.PADDLE_SPEED_FACTOR);
                 this.ballX = 24.4;
-            } else if (this.ballX < GameDto.BALL_MIN_X) {
+            } else if (this.ballX < Game.BALL_MIN_X) {
                 this.score2++;
                 this.reset();
             }
         } else {
             if (ballHitPaddle2) {
-                this.ballSpeedX = this.ballSpeedX < GameDto.BALL_SPEED_LIMIT ? - (this.ballSpeedX + this.ballSpeedX * GameDto.BALL_SPEED_INCREASE_FACTOR) : -GameDto.BALL_SPEED_LIMIT;
-                if (ballUnderSpeedLimit) this.ballSpeedY += (this.paddle2SpeedY * GameDto.PADDLE_SPEED_FACTOR);
+                this.ballSpeedX = this.ballSpeedX < Game.BALL_SPEED_LIMIT ? - (this.ballSpeedX + this.ballSpeedX * Game.BALL_SPEED_INCREASE_FACTOR) : -Game.BALL_SPEED_LIMIT;
+                if (ballUnderSpeedLimit) this.ballSpeedY += (this.paddle2SpeedY * Game.PADDLE_SPEED_FACTOR);
                 this.ballX = 75.4;
-            } else if (this.ballX > GameDto.BALL_MAX_X) {
+            } else if (this.ballX > Game.BALL_MAX_X) {
                 this.score1++;
                 this.reset();
             }
@@ -93,17 +93,17 @@ export class GameDto {
     }
 
     reset() {
-        this.paddle1Y = GameDto.INITIAL_PADDLE_Y;
-        this.paddle2Y = GameDto.INITIAL_PADDLE_Y;
-        this.ballX = GameDto.INITIAL_BALL_X;
-        this.ballY = GameDto.INITIAL_BALL_Y;
+        this.paddle1Y = Game.INITIAL_PADDLE_Y;
+        this.paddle2Y = Game.INITIAL_PADDLE_Y;
+        this.ballX = Game.INITIAL_BALL_X;
+        this.ballY = Game.INITIAL_BALL_Y;
         if (Math.random() < 0.5)
-            this.ballSpeedX = GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedX = Game.INITIAL_BALL_SPEED;
         else
-            this.ballSpeedX = -GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedX = -Game.INITIAL_BALL_SPEED;
         if (this.ballSpeedX < 0)
-            this.ballSpeedY = -GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedY = -Game.INITIAL_BALL_SPEED;
         else
-            this.ballSpeedY = GameDto.INITIAL_BALL_SPEED;
+            this.ballSpeedY = Game.INITIAL_BALL_SPEED;
     }
 }

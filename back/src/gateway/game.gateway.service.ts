@@ -11,7 +11,19 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { GameDto } from 'src/dto/game.dto';
+import { Game } from 'src/game/game';
+
+interface GameDto {
+    player1Name: string;
+    player2Name: string;
+    paddle1Y: number;
+    paddle2Y: number;
+    ballX: number;
+    ballY: number;
+    score1: number;
+    score2: number;
+}
+
 
 @WebSocketGateway({
     cors: {
@@ -27,7 +39,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         private config: ConfigService,
     ) { }
 
-    private games = new Map<string, GameDto>();
+    private games = new Map<string, Game>();
     private players = new Map<string, string>();
 
     @WebSocketServer() server: Server;
@@ -77,7 +89,17 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
             game = this.movePaddleUp(game, 'paddle2');
         }
         this.games.set(data.roomId, game);
-        this.server.to(data.roomId).emit('moveUp', { game: this.games.get(data.roomId) });
+		const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+        this.server.to(data.roomId).emit('moveUp', { game: gameDto });
     }
 
     movePaddleDown(game: any, paddle: string): any {
@@ -108,7 +130,17 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         }
 
         this.games.set(data.roomId, game);
-        this.server.to(data.roomId).emit('moveDown', { game: this.games.get(data.roomId) });
+		const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+        this.server.to(data.roomId).emit('moveDown', { game: gameDto });
     }
 
     stopPaddle(game: any, paddle: string): any {
@@ -130,7 +162,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     }
 
     createGame(client: Socket, data: any, decoded: any): void {
-        const game = new GameDto(data.roomId);
+        const game = new Game(data.roomId);
         game.player1 = client.id;
         if (typeof decoded['sub'] === 'string') {
             game.player1Name = decoded['sub'];
@@ -159,7 +191,17 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
                 }
                 this.games.set(data.roomId, game);
                 this.players.set(client.id, data.roomId);
-                this.server.to(data.roomId).emit('gameSet', { game: this.games.get(data.roomId) });
+				const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+                this.server.to(data.roomId).emit('gameSet', { game: gameDto });
             }
         }
     }
@@ -208,7 +250,17 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
             }
             game.update();
             this.games.set(roomId, game);
-            this.server.to(roomId).emit('update', { game: this.games.get(roomId) });
+			const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+            this.server.to(roomId).emit('update', { game: gameDto });
             setTimeout(loop, 1000 / 60);
         };
         loop();

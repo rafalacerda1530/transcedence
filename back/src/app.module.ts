@@ -9,13 +9,13 @@ import { UserModule } from './user/user.module';
 import { Authentication2faModule } from './2fa-authentication/authentication-2fa.module';
 import { FriendshipModule } from './Friendship/Friendship.module';
 import { GatewayModule } from './gateway/gateway.module';
-import { GameDto } from './dto/game.dto';
+import { Game } from './game/game';
 
 @Module({
     imports: [
         AuthModule,
         AuthDto,
-        GameDto,
+		Game,
         SigninDto,
         PrismaModule,
         ConfigModule.forRoot({ isGlobal: true }),
