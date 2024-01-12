@@ -17,3 +17,15 @@ export class AuthDto {
   @IsOptional()
   profileImage: string; // Campo para a imagem de perfil (opcional)
 }
+
+export class SigninDto {
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  user: string;
+
+}

@@ -6,7 +6,7 @@ import {
 	Post,
 	Res, UploadedFile, UseInterceptors
 } from '@nestjs/common';
-import { AuthDto } from 'src/dto/auth.dto';
+import { AuthDto, SigninDto } from 'src/dto/auth.dto';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { Injectable } from '@nestjs/common';
@@ -41,7 +41,8 @@ export class AuthController {
 
 	@Post('signin')
 	@HttpCode(HttpStatus.OK)
-	async signin(@Body() dto: AuthDto, @Res() response: Response) {
+	async signin(@Body() dto: SigninDto, @Res() response: Response) {
+		console.log("Aqui");
 		await this.authService.signin(dto, response);
 		response.send();
 	}

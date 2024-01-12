@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import {
     ConnectedSocket,
+    MessageBody,
     OnGatewayConnection,
     OnGatewayDisconnect,
     SubscribeMessage,
@@ -10,11 +11,19 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { Game } from 'src/game/game';
 
-interface UserData {
-    username: string;
-    socketId: string;
+interface GameDto {
+    player1Name: string;
+    player2Name: string;
+    paddle1Y: number;
+    paddle2Y: number;
+    ballX: number;
+    ballY: number;
+    score1: number;
+    score2: number;
 }
+
 
 @WebSocketGateway({
     cors: {
@@ -23,97 +32,282 @@ interface UserData {
     },
     namespace: 'game',
 })
+
 @Injectable()
-export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconnect{
-	constructor(
+export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconnect {
+    constructor(
         private config: ConfigService,
-    ) {}
+    ) { }
+
+    private games = new Map<string, Game>();
+    private players = new Map<string, string>();
 
     @WebSocketServer() server: Server;
-    private queue: UserData[] = [];
 
-    @SubscribeMessage('joinQueue')
-    handleJoinQueue(@ConnectedSocket() client: Socket, payload: any): string {
+    emitErrorAndDisconnect(client: Socket, message: string, event: string) {
+        console.log(message);
+        client.emit(event, { message });
+        client.disconnect();
+    }
+
+    getTokenFromCookie(client: Socket): string | null {
         if (!client.handshake.headers.cookie) {
-            client.disconnect();
-            return;
+            return null;
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
+        const token = client.handshake.headers.cookie.split('accessToken=')[1];
+        if (!token) {
+            return null;
+        }
         const end = token.indexOf(';');
-        const result = token.substring(0, end);
-        try {
-            const decoded = jwt.verify(
-                result,
-                this.config.get('JWT_SECRET_ACCESS'),
-            );
-            if (this.queue[0] != null) {
-                let opponent = this.queue.shift();
-                console.log(opponent.socketId)
-                console.log(client.id)
-                console.log(this.queue);
-                this.server.to(client.id).emit('joinGame', { message: 'Found opponent!', opponentId: opponent.socketId });
-                this.server.to(opponent.socketId).emit('joinGame', { message: 'Found opponent!', opponentId: client.id });
-                return ;
+        return end == -1 ? token : token.substring(0, end);
+    }
+
+    movePaddleUp(game: any, paddle: string): any {
+        if (game[`${paddle}Y`] > 24) {
+            if (game[`${paddle}SpeedY`] > 0) {
+                game[`${paddle}SpeedY`] = 0;
+            } else {
+                game[`${paddle}Y`] -= 2.0 - game[`${paddle}SpeedY`];
+                game[`${paddle}SpeedY`] -= 0.3;
+                if (game[`${paddle}Y`] <= 24) {
+                    game[`${paddle}SpeedY`] = 0;
+                    game[`${paddle}Y`] = 24;
+                }
             }
-            let player = {username: decoded['sub'], socketId: client.id};
-            let userData = player as UserData;
-            this.queue.push(userData);
-        } catch (error) {
-            console.log(error);
-            if (error instanceof jwt.TokenExpiredError) {
-                console.log('JWT expired');
-                client.emit('jwt_error', { message: 'JWT expired' });
-            }
-            client.disconnect();
-            return;
         }
-        return ;
+        return game;
     }
 
     @SubscribeMessage('moveUp')
-    handleMoveUp(@ConnectedSocket() client: Socket, payload: any): string {
-        console.log('moveUp');
-        console.log(client.id);
-        return ;
+    handleMoveUp(@ConnectedSocket() client: Socket, @MessageBody() data: any): void {
+        let game = this.games.get(data.roomId);
+
+        if (!game) return;
+        if (game.player1 === client.id) {
+            game = this.movePaddleUp(game, 'paddle1');
+        } else if (game.player2 === client.id) {
+            game = this.movePaddleUp(game, 'paddle2');
+        }
+        this.games.set(data.roomId, game);
+		const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+        this.server.to(data.roomId).emit('moveUp', { game: gameDto });
+    }
+
+    movePaddleDown(game: any, paddle: string): any {
+        if (game[`${paddle}Y`] < 65) {
+            if (game[`${paddle}SpeedY`] < 0) {
+                game[`${paddle}SpeedY`] = 0;
+            } else {
+                game[`${paddle}Y`] += 2.0 + game[`${paddle}SpeedY`];
+                game[`${paddle}SpeedY`] += 0.3;
+                if (game[`${paddle}Y`] >= 65) {
+                    game[`${paddle}SpeedY`] = 0;
+                    game[`${paddle}Y`] = 65;
+                }
+            }
+        }
+        return game;
     }
 
     @SubscribeMessage('moveDown')
-    handleMoveDown(@ConnectedSocket() client: Socket, payload: any): string {
-        console.log('moveDown');
-        console.log(client.id);
-        return ;
+    handleMoveDown(@ConnectedSocket() client: Socket, @MessageBody() data: any): void {
+        let game = this.games.get(data.roomId);
+
+        if (!game) return;
+        if (game.player1 === client.id) {
+            game = this.movePaddleDown(game, 'paddle1');
+        } else if (game.player2 === client.id) {
+            game = this.movePaddleDown(game, 'paddle2');
+        }
+
+        this.games.set(data.roomId, game);
+		const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+        this.server.to(data.roomId).emit('moveDown', { game: gameDto });
     }
 
-    handleConnection(@ConnectedSocket() client: Socket){
-        if (!client.handshake.headers.cookie) {
-            client.disconnect();
-            return;
+    stopPaddle(game: any, paddle: string): any {
+        game[`${paddle}SpeedY`] = 0;
+        return game;
+    }
+
+    @SubscribeMessage('moveStop')
+    handleMoveStop(@ConnectedSocket() client: Socket, @MessageBody() data: any): void {
+        let game = this.games.get(data.roomId);
+
+        if (!game) return;
+        if (game.player1 === client.id) {
+            game = this.stopPaddle(game, 'paddle1');
+        } else if (game.player2 === client.id) {
+            game = this.stopPaddle(game, 'paddle2');
         }
-        const token = client.handshake.headers.cookie.split('=')[1];
-        const end = token.indexOf(';');
-        const result = token.substring(0, end);
+        this.games.set(data.roomId, game);
+    }
+
+    createGame(client: Socket, data: any, decoded: any): void {
+        const game = new Game(data.roomId);
+        game.player1 = client.id;
+        if (typeof decoded['sub'] === 'string') {
+            game.player1Name = decoded['sub'];
+        }
+        client.join(data.roomId);
+        this.players.set(client.id, data.roomId);
+        this.games.set(data.roomId, game);
+    }
+
+    joinGame(client: Socket, data: any, decoded: any): void {
+        const game = this.games.get(data.roomId);
+        if (game.player1Name === decoded['sub']) {
+            this.server.sockets.sockets[game.player1].leave(data.roomId);
+            game.player1 = client.id;
+            if (typeof decoded['sub'] === 'string') {
+                game.player1Name = decoded['sub'];
+            }
+            this.games.set(data.roomId, game);
+            this.players.set(client.id, data.roomId);
+        } else {
+            client.join(data.roomId);
+            if (game.player2 === "") {
+                game.player2 = client.id;
+                if (typeof decoded['sub'] === 'string') {
+                    game.player2Name = decoded['sub'];
+                }
+                this.games.set(data.roomId, game);
+                this.players.set(client.id, data.roomId);
+				const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+                this.server.to(data.roomId).emit('gameSet', { game: gameDto });
+            }
+        }
+    }
+
+    handleGameJoining(client: Socket, data: any, decoded: any): void {
+        if (!this.games.has(data.roomId)) {
+            this.createGame(client, data, decoded);
+        } else {
+            this.joinGame(client, data, decoded);
+        }
+    }
+
+    @SubscribeMessage('joinRoom')
+    handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() data: any): void {
+        const token = this.getTokenFromCookie(client);
+        if (!token) {
+            this.emitErrorAndDisconnect(client, 'Missing Token', 'missing_token');
+            return ;
+        }
         try {
-            jwt.verify(
-                result,
-                this.config.get('JWT_SECRET_ACCESS'),
-            );
+            const decoded = jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'));
+            this.handleGameJoining(client, data, decoded);
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
-                console.log('JWT expired');
-                client.emit('jwt_error', { message: 'JWT expired' });
+                this.emitErrorAndDisconnect(client, 'JWT expired', 'jwt_error');
             }
-            client.disconnect();
-            return;
         }
-     }
+    }
 
-     handleDisconnect(@ConnectedSocket() client: Socket){
-        const user = this.queue.find(user => user.socketId === client.id);
-        if (user){
-            console.log(this.queue);
-            this.queue.splice(this.queue.indexOf(user), 1);
-            console.log(this.queue);
+    startGameLoop(roomId: string) {
+        const game = this.games.get(roomId);
+        if (!game)
+            return;
+
+        const loop = () => {
+            if (!this.games.has(roomId)) {
+                return ;
+            }
+            if (game.score1 === 5) {
+                this.server.to(roomId).emit('winner', { winner: game.player1Name });
+                return ;
+            } else if (game.score2 === 5) {
+                this.server.to(roomId).emit('winner', { winner: game.player2Name });
+                return ;
+            }
+            game.update();
+            this.games.set(roomId, game);
+			const gameDto: GameDto = {
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
+			paddle1Y: game.paddle1Y,
+			paddle2Y: game.paddle2Y,
+			ballX: game.ballX,
+			ballY: game.ballY,
+			score1: game.score1,
+			score2: game.score2,
+		};
+            this.server.to(roomId).emit('update', { game: gameDto });
+            setTimeout(loop, 1000 / 60);
+        };
+        loop();
+        return;
+    }
+
+    @SubscribeMessage('startGame')
+    handleStartGame(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+        const game = this.games.get(data.roomId);
+        if (!game) return ;
+        if (game.player1 === client.id || game.player2 === client.id)
+            game.ready++;
+        if (game.ready === 2) {
+            this.startGameLoop(data.roomId);
         }
-     }
+    }
+
+    handleConnection(@ConnectedSocket() client: Socket) {
+        const token = this.getTokenFromCookie(client);
+        try {
+            jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'));
+        } catch (error) {
+            console.log(error);
+            if (error instanceof jwt.TokenExpiredError) {
+                this.emitErrorAndDisconnect(client, 'JWT expired', 'jwt_error');
+            } else {
+                client.disconnect();
+            }
+            return ;
+        }
+    }
+
+    handleDisconnect(@ConnectedSocket() client: Socket) {
+        const roomId = this.players.get(client.id);
+
+        if (!roomId) return ;
+        this.players.delete(client.id);
+        client.leave(roomId);
+        const game = this.games.get(roomId);
+        if (!game) return ;
+        if (game.player1 === client.id) {
+            this.server.to(roomId).emit('winner', { winner: game.player2Name });
+        }
+        else if (game.player2 === client.id) {
+            this.server.to(roomId).emit('winner', { winner: game.player1Name });
+        }
+        this.games.delete(roomId);
+        return;
+    }
 }

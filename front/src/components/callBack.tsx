@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 
 export const CallBackUserAndPassword = (user: any) => {
-  const url = "http://localhost:3333/auth/signin";
+  const url = process.env.REACT_APP_API_URL + "/auth/signin";
   const data = {
     user: user.user,
     password: user.password,
@@ -15,6 +15,7 @@ export const CallBackUserAndPassword = (user: any) => {
       return response;
     })
     .catch((error) => {
+      console.log(error);
       throw error;
     });
 };
@@ -25,7 +26,7 @@ interface Check2faResponse {
 
 export const CallBackCheck2fa = async (user: any): Promise<boolean> => {
   try {
-    const url = "http://localhost:3333/authentication-2fa/2fa/checkAtive";
+    const url = process.env.REACT_APP_API_URL + "/authentication-2fa/2fa/checkAtive";
     const data = {
       user: user.user,
       password: user.password,
@@ -50,7 +51,7 @@ export const CallBackCheck2fa = async (user: any): Promise<boolean> => {
 
 export const CallBack2faAuthenticate = async (user: any): Promise<boolean> => {
   try {
-    const url = "http://localhost:3333/authentication-2fa/2fa/authenticate";
+    const url = process.env.REACT_APP_API_URL + "/authentication-2fa/2fa/authenticate";
     const data = {
       user: user.user,
       password: user.password,
