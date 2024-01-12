@@ -96,7 +96,7 @@ function LoginGame() {
     if (validatePassword(formData.password)) {
       //console.log("Senha válida! Pode ser enviada para a API.");
       axios
-        .post("http://localhost:3333/auth/signup", formData, {
+        .post("http://localhost:5555/auth/signup", formData, {
           withCredentials: true,
         })
         .then((response) => {

@@ -17,9 +17,9 @@ export class AuthService {
 	) { }
 
 	async signup(dto: AuthDto, @Res() response: Response) {
+		console.log("dto -> ",dto) 
 		const hash = await argon.hash(dto.password);
-		const imageService = new ImageService();
-		const base64Image = await imageService.convertImageToBase64(dto.profileImage);
+		const imageService = new ImageService(); 
 		 
 		try {
 			const user = await this.prisma.user.create({
@@ -27,7 +27,7 @@ export class AuthService {
 					email: dto.email,
 					hash,
 					user: dto.user,
-					profileImage: base64Image, // Adicione o profileImage aqui		
+					profileImage: dto.profileImage, // Adicione o profileImage aqui		
 				},
 			});
 			const user_token = await this.token.signToken(user.user);

@@ -10,6 +10,8 @@ export const Home = () => {
     profileImage: string;
   }
 
+  const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
+
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const [showBall, setShowBall] = useState(false);
@@ -49,7 +51,8 @@ export const Home = () => {
           email: response.data?.email,
           profileImage: response.data?.profileImage,
         });
-		image = response.data?.profileImage
+        image = response.data?.profileImage;
+		
       } catch (error) {
         console.log(error);
       }
@@ -57,13 +60,42 @@ export const Home = () => {
 
     fetchUserData();
   }, [axiosPrivate, setUserData]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Pega o primeiro arquivo selecionado
+ 
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
     if (file) {
-      console.log("Arquivo selecionado:", file);
+      try {
+        // Obter dados do usuário
+        const userResponse = await axiosPrivate.get("/user/me");
+        const userData = userResponse.data;
+
+        // Extrair o valor do usuário retornado
+        const user = userData.user;
+
+        // Realizar o upload da imagem com o valor do usuário
+		const formData = new FormData();
+		formData.append("profileImage", file); // 'file' é o arquivo de imagem
+		formData.append("user", user); // Adicionar o usuário ao FormData
+  
+		// Enviar a requisição POST para o backend
+		const uploadResponse = await axiosPrivate.post(
+		  "/user/uploadImage",
+		  formData,
+		  {
+			headers: {
+			  "Content-Type": "multipart/form-data",
+			},
+		  }
+		);
+
+        console.log("Imagem enviada com sucesso:", uploadResponse.data);
+      } catch (error) {
+        console.error("Erro ao enviar a imagem:", error);
+      }
     } else {
-      console.log("arquivo n selecionado!");
+      console.log("Nenhum arquivo selecionado!");
     }
   };
 
@@ -81,27 +113,25 @@ export const Home = () => {
               <div className="mb-6">
                 <strong>Email:</strong> {userData.email}
               </div>
-              {userData.profileImage && (
-                <>
-                  <img
-                    src={userData.profileImage} // Aqui, o valor da imagem em base64
-                    alt="Profile" // Adicione um texto alternativo para acessibilidade
-                    className="w-20 h-20 rounded-full mx-auto mb-4"
-                  />
-                  <input
-                    type="file"
-                    id="file"
-                    className="hidden"
-                    onChange={(e) => handleFileChange(e)}
-                  />
-                  <label
-                    htmlFor="file"
-                    className="block text-white rounded-full px-4 py-2 cursor-pointer"
-                  >
-                    Alterar Foto
-                  </label>
-                </>
-              )}
+              <img
+                src=
+                   "https://i.imgur.com/VavB8Rm.png"
+                // Aqui, o valor da imagem em base64
+                alt="Profile" // Adicione um texto alternativo para acessibilidade
+                className="w-20 h-20 rounded-full mx-auto mb-4"
+              />
+              <input
+                type="file"
+                id="file"
+                className="hidden"
+                onChange={(e) => handleFileChange(e)}
+              />
+              <label
+                htmlFor="file"
+                className="block text-white rounded-full px-4 py-2 cursor-pointer"
+              >
+                Alterar Foto
+              </label>
             </div>
           )}
         </div>

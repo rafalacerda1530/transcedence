@@ -14,6 +14,6 @@ export class AuthDto {
   user: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   profileImage: string; // Campo para a imagem de perfil (opcional)
 }
