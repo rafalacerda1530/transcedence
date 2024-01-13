@@ -22,6 +22,31 @@ export class UserService {
 		return userSend;
 	}
 
+	async getUserHistoryInfo(username: string) {
+		const userId = await this.prisma.user.findUnique({
+			where: {
+				user: username,
+			},
+		});
+		const userHistory = await this.prisma.userGameHistory.findMany({
+			where: {
+				userId: userId.id,
+			},
+		});
+		const winCount = userHistory.filter(entry => entry.outcome === true).length;
+		const loseCount = userHistory.filter(entry => entry.outcome === false).length;
+		const score = winCount - loseCount; // Pontuação: 1 ponto por vitória, -1 ponto por derrota
+
+		const userSend = {
+			win: winCount,
+			lose: loseCount,
+			score : score
+		};
+
+
+		return userSend;
+	}
+
 	async saveProfileImage(username: string, filePath: string) {
 		// Atualizar o caminho do arquivo no banco de dados para o usuário específico
 		const updatedUser = await this.prisma.user.update({

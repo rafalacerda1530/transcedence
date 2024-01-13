@@ -5,7 +5,7 @@ import { GetCurrentUser } from 'src/common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import {  EditDto } from 'src/dto/auth.dto';
+import { EditDto } from 'src/dto/auth.dto';
 
 @Controller('user')
 export class UserController {
@@ -15,6 +15,12 @@ export class UserController {
 	@Get('me')
 	async getUserInfo(@GetCurrentUser('sub') user: string) {
 		return await this.userService.getUserInfo(user);
+	}
+
+	@UseGuards(AtGuard)
+	@Get('meHistory')
+	async getUserHistoryInfo(@GetCurrentUser('sub') user: string) {
+		return await this.userService.getUserHistoryInfo(user);
 	}
 
 	@Post('uploadImage')

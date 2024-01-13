@@ -6,7 +6,7 @@ import axios from "axios";
 export const Home = () => {
   interface UserData {
     user: string;
-	nickname: string;
+    nickname: string;
     email: string;
     profileImage: string;
   }
@@ -37,7 +37,7 @@ export const Home = () => {
         userId: userId,
         user: editedName,
         email: editedEmail,
-		nickname: editedNickname
+        nickname: editedNickname,
       };
 
       const userResponse = await axiosPrivate.patch(
@@ -48,7 +48,7 @@ export const Home = () => {
       setUserData({
         user: userResponse.data.user.user,
         email: userResponse.data.user.email,
-		nickname: userResponse.data.user.nickname,
+        nickname: userResponse.data.user.nickname,
         profileImage: userResponse.data?.profileImage,
       });
       // Saia do modo de edição
@@ -67,11 +67,27 @@ export const Home = () => {
   const [username, setUserName] = useState("");
   const axiosPrivate = useAxiosPrivate();
 
+  const [userStats, setUserStats] = useState({
+    win: 0,
+    lose: 0,
+    score: 0,
+  });
+
   useEffect(() => {
     const user = async () => {
       try {
         const response = await axiosPrivate.get("/user/me");
         setUserName(response.data?.user?.toUpperCase() + ",");
+
+        const userHistoryResponse = await axiosPrivate.get("/user/meHistory");
+        const { win, lose, score } = userHistoryResponse.data;
+
+        setUserStats({
+          win: win || 0,
+          lose: lose || 0,
+          score: score || 0,
+        });
+
         return response.data;
       } catch (error) {
         console.log(error);
@@ -97,7 +113,7 @@ export const Home = () => {
         setUserData({
           user: response.data?.user,
           email: response.data?.email,
-		  nickname: response.data?.nickname,
+          nickname: response.data?.nickname,
           profileImage: response.data?.profileImage,
         });
         image = response.data?.profileImage;
@@ -214,7 +230,7 @@ export const Home = () => {
                   <span className="text-gray-500">{userData.email}</span>
                 )}
               </div>
-			  <div className="mb-6">
+              <div className="mb-6">
                 <strong>Nickname:</strong>{" "}
                 {isEditing ? (
                   <>
@@ -286,18 +302,22 @@ export const Home = () => {
                 <h1 className="text-4xl font-bold mb-4">
                   Estatísticas do Usuário
                 </h1>
-                {/* Informações fictícias de estatísticas do usuário */}
                 <div className="mb-4 flex flex-col items-center justify-center">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-green-500 rounded-full mr-2"></div>
-                    <strong>Vitórias:</strong> 25
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-16 h-16 bg-green-500 rounded-full mb-2"></div>
+                    <strong>Vitórias:</strong> {userStats.win}
                   </div>
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-red-500 rounded-full mr-2"></div>
-                    <strong>Derrotas:</strong> 10
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-16 h-16 bg-red-500 rounded-full mb-2"></div>
+                    <strong>Derrotas:</strong> {userStats.lose}
                   </div>
-                  <div className="flex items-center">
-                    <strong className="text-yellow-500">Pontuação:</strong> 500
+                  <div className="flex flex-col items-center">
+                    <strong className="text-yellow-500 text-xl">
+                      Pontuação:
+                    </strong>
+                    <div className="bg-yellow-500 text-black rounded-lg p-4 mt-2 text-2xl font-bold">
+                      {userStats.score}
+                    </div>
                   </div>
                 </div>
               </div>
