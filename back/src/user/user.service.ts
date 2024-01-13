@@ -14,6 +14,7 @@ export class UserService {
 		const userSend = {
 			userId: user.id,
 			user: user.user,
+			nickname: user.nickname,
 			email: user.email,
 			profileImage: user.profileImage
 
@@ -34,6 +35,7 @@ export class UserService {
 	async updateUserProfile(
 		userId: number,
 		newUser: string,
+		newNickname: string,
 		newEmail: string,
 	) {
 		// lógica para obter a nova imagem
@@ -43,6 +45,7 @@ export class UserService {
 			data: {
 				user: newUser,
 				email: newEmail,
+				nickname: newNickname
 			},
 		});
 

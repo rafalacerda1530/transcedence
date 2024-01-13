@@ -43,6 +43,9 @@ export class EditDto {
 	user: string;
 
 	@IsString()
+	nickname: string;
+
+	@IsString()
 	@IsOptional()
 	profileImage: string; // Campo para a imagem de perfil (opcional)
 }

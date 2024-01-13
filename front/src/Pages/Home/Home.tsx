@@ -6,6 +6,7 @@ import axios from "axios";
 export const Home = () => {
   interface UserData {
     user: string;
+	nickname: string;
     email: string;
     profileImage: string;
   }
@@ -16,6 +17,7 @@ export const Home = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [editedEmail, setEditedEmail] = useState("");
+  const [editedNickname, setEditedNickname] = useState("");
   const [isProfileSectionVisible, setIsProfileSectionVisible] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -23,6 +25,7 @@ export const Home = () => {
     setIsEditing(true);
     setEditedName(userData?.user || "");
     setEditedEmail(userData?.email || "");
+    setEditedNickname(userData?.nickname || "");
   };
 
   const handleSaveClick = async () => {
@@ -34,6 +37,7 @@ export const Home = () => {
         userId: userId,
         user: editedName,
         email: editedEmail,
+		nickname: editedNickname
       };
 
       const userResponse = await axiosPrivate.patch(
@@ -44,6 +48,7 @@ export const Home = () => {
       setUserData({
         user: userResponse.data.user.user,
         email: userResponse.data.user.email,
+		nickname: userResponse.data.user.nickname,
         profileImage: userResponse.data?.profileImage,
       });
       // Saia do modo de edição
@@ -92,6 +97,7 @@ export const Home = () => {
         setUserData({
           user: response.data?.user,
           email: response.data?.email,
+		  nickname: response.data?.nickname,
           profileImage: response.data?.profileImage,
         });
         image = response.data?.profileImage;
@@ -206,6 +212,28 @@ export const Home = () => {
                   </>
                 ) : (
                   <span className="text-gray-500">{userData.email}</span>
+                )}
+              </div>
+			  <div className="mb-6">
+                <strong>Nickname:</strong>{" "}
+                {isEditing ? (
+                  <>
+                    <input
+                      type="name"
+                      value={editedNickname}
+                      onChange={(e) => setEditedNickname(e.target.value)}
+                      className="text-black border border-gray-500 rounded p-2"
+                      readOnly={!isEditing}
+                      style={{ width: "100%" }}
+                    />{" "}
+                    {errorMessage && (
+                      <p className="text-red-500 text-center mt-2">
+                        {errorMessage}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-gray-500">{userData.nickname}</span>
                 )}
               </div>
               <div className="mb-4">

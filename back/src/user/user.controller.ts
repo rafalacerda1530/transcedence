@@ -55,6 +55,7 @@ export class UserController {
 			const updatedUserData = await this.userService.updateUserProfile(
 				dto.userId,
 				dto.user,
+				dto.nickname,
 				dto.email,
 			);
 
