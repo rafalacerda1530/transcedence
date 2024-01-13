@@ -236,21 +236,45 @@ export const Home = () => {
 
         {/* Seção para iniciar o jogo */}
         {!isEditing && (
-          <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold mb-4">
-                {username} SEJA BEM-VINDO AO PONG GAME
-              </h1>
-              <p className="mb-4">
-                Desafie seus amigos em uma partida emocionante de Ping Pong!
-              </p>
-              <div className="flex justify-center">
-                <button className="bg-blue-600 text-white rounded-full px-4 py-2 mr-4">
-                  Iniciar Jogo
-                </button>
+          <>
+            <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold mb-4">
+                  {username} SEJA BEM-VINDO AO PONG GAME
+                </h1>
+                <p className="mb-4">
+                  Desafie seus amigos em uma partida emocionante de Ping Pong!
+                </p>
+                <div className="flex justify-center">
+                  <button className="bg-blue-600 text-white rounded-full px-4 py-2 mr-4">
+                    Iniciar Jogo
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+            {/* Seção para estatisticas */}
+            <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
+              <div className="text-center mb-6">
+                <h1 className="text-4xl font-bold mb-4">
+                  Estatísticas do Usuário
+                </h1>
+                {/* Informações fictícias de estatísticas do usuário */}
+                <div className="mb-4 flex flex-col items-center justify-center">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-full mr-2"></div>
+                    <strong>Vitórias:</strong> 25
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-red-500 rounded-full mr-2"></div>
+                    <strong>Derrotas:</strong> 10
+                  </div>
+                  <div className="flex items-center">
+                    <strong className="text-yellow-500">Pontuação:</strong> 500
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
