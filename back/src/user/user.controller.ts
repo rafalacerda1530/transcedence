@@ -1,10 +1,11 @@
-import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AtGuard } from 'src/common/guards';
 import { GetCurrentUser } from 'src/common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import {  EditDto } from 'src/dto/auth.dto';
 
 @Controller('user')
 export class UserController {
@@ -34,10 +35,8 @@ export class UserController {
 		@UploadedFile() file,
 		@Body('user') user: string
 	) {
-		console.log("juuuuu...");
 		try {
 			const filePath = file.path;
-			console.log("Usuário:", user); // Verificação se o usuário está sendo recebido corretamente
 			const updatedUser = await this.userService.saveProfileImage(user, filePath);
 			console.log("Imagem salva com sucesso para o usuário:", user);
 
@@ -47,4 +46,22 @@ export class UserController {
 			// Tratar o erro adequadamente
 		}
 	}
+
+	@Patch('updateProfile')
+	async updateProfile(@Body() dto: EditDto,
+	) {
+
+		try {
+			const updatedUserData = await this.userService.updateUserProfile(
+				dto.userId,
+				dto.user,
+				dto.email,
+			);
+
+			return { message: 'Perfil atualizado com sucesso!', user: updatedUserData };
+		} catch (error) {
+			console.error('Erro ao atualizar o perfil:', error);
+		}
+	}
+
 }

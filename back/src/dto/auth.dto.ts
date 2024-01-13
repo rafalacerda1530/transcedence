@@ -29,3 +29,20 @@ export class SigninDto {
   user: string;
 
 }
+
+export class EditDto {
+	@IsOptional()
+	userId: number; // Campo para userId (opcional)
+
+	@IsEmail()
+	@IsNotEmpty()
+	email: string;
+
+	@IsString()
+	@IsNotEmpty()
+	user: string;
+
+	@IsString()
+	@IsOptional()
+	profileImage: string; // Campo para a imagem de perfil (opcional)
+}

@@ -17,7 +17,6 @@ export class AuthService {
 	) { }
 
 	async signup(dto: AuthDto, @Res() response: Response) {
-		console.log("dto -> ",dto) 
 		const hash = await argon.hash(dto.password);
 		const imageService = new ImageService();
 		const base64Image = await imageService.convertImageToBase64(dto.profileImage);
@@ -46,7 +45,6 @@ export class AuthService {
 	}
 
 	async signin(dto: SigninDto, @Res() response: Response) {
-		console.log("Aqui");
 		const user = await this.prisma.user.findUnique({
 			where: {
 				user: dto.user,
