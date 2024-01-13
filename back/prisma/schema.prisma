@@ -30,6 +30,7 @@ model User {
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")
 
+  UserGameHistory UserGameHistory[]
 }
 
 model Friendship {
@@ -49,4 +50,22 @@ enum UserStatus {
   OFFLINE
   IN_GAME
   IN_QUEUE
+}
+
+model UserGameHistory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Referência ao usuário 
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  // Informações sobre o jogo
+  gameId  Int // Coluna IDJogo
+  date    DateTime // Coluna DataJogo
+  outcome Boolean // Coluna se ganhou ou perdeu esse jogo
+  //opponent   User     @relation("opponent")
+
+  @@index([userId, gameId], name: "unique_user_game")
 }
