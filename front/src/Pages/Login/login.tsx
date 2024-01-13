@@ -14,7 +14,7 @@ function LoginGame() {
     password: "",
     email: "",
     twoFactorAuthenticationCode: "",
-	profileImage: defaultPhoto, // Inclua a URL padrão aqui
+    profileImage: defaultPhoto, // Inclua a URL padrão aqui
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [showBall, setShowBall] = useState(false);
@@ -31,7 +31,7 @@ function LoginGame() {
 
   const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
-    console.log(process.env.REACT_APP_API_URL);
+    console.log("http://localhost:5555");
     const authentication2fa = await CallBackCheck2fa(formData);
     if (authentication2fa && authenticate2factor === false)
       setAuthenticate2faActive(true);
@@ -44,6 +44,7 @@ function LoginGame() {
       ) {
         setErrorMessage("Código Inválido");
       } else {
+        console.log(formData);
         CallBackUserAndPassword(formData)
           .then((response) => {
             console.log(response.data);
@@ -62,7 +63,6 @@ function LoginGame() {
       "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-e4c7b8cd4fb31c268132af823110ef8bdbf90e2df97baf4c1fe0f4a6f93e110b&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2FcallBack&response_type=code";
 
     window.location.href = url;
-    console.log("teste da url: ", url);
   };
   const validatePassword = (senha: string): boolean => {
     const uppercaseRegex = /[A-Z]/;
@@ -95,7 +95,7 @@ function LoginGame() {
     if (validatePassword(formData.password)) {
       //console.log("Senha válida! Pode ser enviada para a API.");
       axios
-        .post(process.env.REACT_APP_API_URL + "/auth/signup", formData, {
+        .post("http://localhost:5555" + "/auth/signup", formData, {
           withCredentials: true,
         })
         .then((response) => {
