@@ -17,26 +17,28 @@ model User {
 
   email                   String   @unique
   user                    String   @unique
+  nickname 				  String? @unique
   hash                    String?
   userIntra               Boolean?
   jwt_token               String?
   authentication2fa       Boolean?
   authentication2faSecret String?
-   profileImage            String?  
+  profileImage            String?
 
-  status  UserStatus?
+  status UserStatus?
 
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")
+
 }
 
 model Friendship {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  followedBy   User @relation("followedBy", fields: [followedById], references: [id])
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  followedBy   User     @relation("followedBy", fields: [followedById], references: [id])
   followedById Int
-  following    User @relation("following", fields: [followingId], references: [id])
+  following    User     @relation("following", fields: [followingId], references: [id])
   followingId  Int
 
   @@unique([followingId, followedById])
