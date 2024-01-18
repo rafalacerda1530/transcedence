@@ -12,6 +12,8 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { Game } from 'src/game/game';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaCommands } from 'src/prisma/prisma.commands';
 
 interface GameDto {
     player1Name: string;
@@ -37,6 +39,8 @@ interface GameDto {
 export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private config: ConfigService,
+        private prismaCommands: PrismaCommands,
+        private prisma: PrismaService,
     ) { }
 
     private games = new Map<string, Game>();
@@ -60,6 +64,19 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         }
         const end = token.indexOf(';');
         return end == -1 ? token : token.substring(0, end);
+    }
+
+    createGameDto(game: Game): GameDto {
+        return {
+            player1Name: game.player1Name,
+            player2Name: game.player2Name,
+            paddle1Y: game.paddle1Y,
+            paddle2Y: game.paddle2Y,
+            ballX: game.ballX,
+            ballY: game.ballY,
+            score1: game.score1,
+            score2: game.score2,
+        };
     }
 
     movePaddleUp(game: any, paddle: string): any {
@@ -89,16 +106,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
             game = this.movePaddleUp(game, 'paddle2');
         }
         this.games.set(data.roomId, game);
-		const gameDto: GameDto = {
-			player1Name: game.player1Name,
-			player2Name: game.player2Name,
-			paddle1Y: game.paddle1Y,
-			paddle2Y: game.paddle2Y,
-			ballX: game.ballX,
-			ballY: game.ballY,
-			score1: game.score1,
-			score2: game.score2,
-		};
+		const gameDto = this.createGameDto(game);
         this.server.to(data.roomId).emit('moveUp', { game: gameDto });
     }
 
@@ -130,16 +138,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         }
 
         this.games.set(data.roomId, game);
-		const gameDto: GameDto = {
-			player1Name: game.player1Name,
-			player2Name: game.player2Name,
-			paddle1Y: game.paddle1Y,
-			paddle2Y: game.paddle2Y,
-			ballX: game.ballX,
-			ballY: game.ballY,
-			score1: game.score1,
-			score2: game.score2,
-		};
+		const gameDto = this.createGameDto(game);
         this.server.to(data.roomId).emit('moveDown', { game: gameDto });
     }
 
@@ -232,20 +231,44 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         }
     }
 
+    async addGameDatabase(game: Game, roomId: string, player1: string, player2: string) {
+        const player1User = await this.prisma.user.findUnique({
+            where: {
+                user: player1,
+            },
+        });
+        const player2User = await this.prisma.user.findUnique({
+            where: {
+                user: player2,
+            },
+        });
+        if (![player1User] || !player2User) return ;
+        await this.prismaCommands.addGame(player1User, player2User, game);
+
+    }
+
+    async asyncEndGame(game: Game, roomId: string, winnerName: string) {
+        const player1 = game.player1Name;
+        const player2 = game.player2Name;
+        this.server.to(roomId).emit('winner', { winner: winnerName });
+        this.games.delete(roomId);
+        await this.addGameDatabase(game, roomId, player1, player2);
+    }
+
     startGameLoop(roomId: string) {
         const game = this.games.get(roomId);
         if (!game)
             return;
 
-        const loop = () => {
+        const loop = async () => {
             if (!this.games.has(roomId)) {
                 return ;
             }
             if (game.score1 === 5) {
-                this.server.to(roomId).emit('winner', { winner: game.player1Name });
+                this.asyncEndGame(game, roomId, game.player1Name);
                 return ;
             } else if (game.score2 === 5) {
-                this.server.to(roomId).emit('winner', { winner: game.player2Name });
+                this.asyncEndGame(game, roomId, game.player2Name);
                 return ;
             }
             game.update();
@@ -293,21 +316,27 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         }
     }
 
+    handlePlayerDisconnect(game: Game, roomId: string, winnerName: string, score1: number, score2: number) {
+        game.score1 = score1;
+        game.score2 = score2;
+        this.games.set(roomId, game);
+        const gameDto: GameDto = this.createGameDto(game);
+        this.server.to(roomId).emit('update', { game: gameDto });
+        this.server.to(roomId).emit('opponentLogout');
+        this.asyncEndGame(game, roomId, winnerName);
+    }
+
     handleDisconnect(@ConnectedSocket() client: Socket) {
         const roomId = this.players.get(client.id);
-
-        if (!roomId) return ;
+        if (!roomId) return;
         this.players.delete(client.id);
         client.leave(roomId);
         const game = this.games.get(roomId);
-        if (!game) return ;
+        if (!game) return;
         if (game.player1 === client.id) {
-            this.server.to(roomId).emit('winner', { winner: game.player2Name });
+            this.handlePlayerDisconnect(game, roomId, game.player2Name, 0, 5);
+        } else if (game.player2 === client.id) {
+            this.handlePlayerDisconnect(game, roomId, game.player1Name, 5, 0);
         }
-        else if (game.player2 === client.id) {
-            this.server.to(roomId).emit('winner', { winner: game.player1Name });
-        }
-        this.games.delete(roomId);
-        return;
     }
 }

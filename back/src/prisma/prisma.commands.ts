@@ -1,6 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from './prisma.service';
+import { User } from '@prisma/client';
+import { Game } from 'src/game/game';
 
 @Injectable()
 export class PrismaCommands {
@@ -40,5 +42,27 @@ export class PrismaCommands {
                 jwt_token: jwtToken,
             },
         });
+    }
+
+    async addGame(player1: User, player2: User, game: Game): Promise<any> {
+        const boolPlayer1Won = game.score1 > game.score2;
+
+        const newGame = await this.prisma.game.create({
+            data: {
+                player1Name: player1.user,
+                player2Name: player2.user,
+                score1: game.score1,
+                score2: game.score2,
+                player1: {
+                    connect: { id: player1.id },
+                },
+                player2: {
+                    connect: { id: player2.id },
+                },
+                player1Won: boolPlayer1Won,
+                player2Won: !boolPlayer1Won,
+            },
+        });
+        return newGame;
     }
 }

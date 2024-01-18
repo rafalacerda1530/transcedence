@@ -28,13 +28,23 @@ export class UserService {
 				user: username,
 			},
 		});
-		const userHistory = await this.prisma.userGameHistory.findMany({
+		const userGames = await this.prisma.game.findMany({
 			where: {
-				userId: userId.id,
+				OR: [
+					{ player1Id: userId.id },
+					{ player2Id: userId.id },
+				],
 			},
 		});
-		const winCount = userHistory.filter(entry => entry.outcome === true).length;
-		const loseCount = userHistory.filter(entry => entry.outcome === false).length;
+		const winCount = userGames.filter(game =>
+			(game.player1Id === userId.id && game.player1Won) ||
+			(game.player2Id === userId.id && game.player2Won)
+		).length;
+
+		const loseCount = userGames.filter(game =>
+			(game.player1Id === userId.id && !game.player1Won) ||
+			(game.player2Id === userId.id && !game.player2Won)
+		).length;
 		const score = winCount - loseCount; // Pontuação: 1 ponto por vitória, -1 ponto por derrota
 
 		const userSend = {

@@ -17,7 +17,7 @@ model User {
 
   email                   String   @unique
   user                    String   @unique
-  nickname 				  String? @unique
+  nickname                String?  @unique
   hash                    String?
   userIntra               Boolean?
   jwt_token               String?
@@ -30,7 +30,8 @@ model User {
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")
 
-  UserGameHistory UserGameHistory[]
+  gamesAsPlayer1 Game[] @relation("player1")
+  gamesAsPlayer2 Game[] @relation("player2")
 }
 
 model Friendship {
@@ -52,20 +53,21 @@ enum UserStatus {
   IN_QUEUE
 }
 
-model UserGameHistory {
+model Game {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Referência ao usuário 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+  player1Name String
+  player2Name String
+  player1Id   Int
+  player2Id   Int
+  player1Won  Boolean
+  player2Won  Boolean
+  score1      Int
+  score2      Int
+  player1     User   @relation("player1", fields: [player1Id], references: [id])
+  player2     User   @relation("player2", fields: [player2Id], references: [id])
 
-  // Informações sobre o jogo
-  gameId  Int // Coluna IDJogo
-  date    DateTime // Coluna DataJogo
-  outcome Boolean // Coluna se ganhou ou perdeu esse jogo
-  //opponent   User     @relation("opponent")
-
-  @@index([userId, gameId], name: "unique_user_game")
+  @@unique([id])
 }
