@@ -37,6 +37,8 @@ export const Game = () => {
         socket.off("moveUp");
         socket.off("moveDown");
 		socket.off("missing_token");
+        socket.off("update");
+        socket.off("opponentLogout");
         socket.disconnect();
     };
 
@@ -112,6 +114,10 @@ export const Game = () => {
 			setTimeout(() => {
                 setDisconnect(true);
             }, 5000);
+        });
+
+        socket.on("opponentLogout", () => {
+            alert("Opponent disconnected");
         });
     };
 
