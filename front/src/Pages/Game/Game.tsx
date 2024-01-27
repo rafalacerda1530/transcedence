@@ -11,6 +11,8 @@ export const Game = () => {
     const [player2, setPlayer2] = useState("");
     const [paddle1Y, setPaddle1Y] = useState("");
     const [paddle2Y, setPaddle2Y] = useState("");
+    const [paddle3Y, setPaddle3Y] = useState("");
+    const [paddle4Y, setPaddle4Y] = useState("");
     const [ballY, setBallY] = useState("");
     const [ballX, setBallX] = useState("");
     const [game, setGame] = useState(false);
@@ -32,7 +34,7 @@ export const Game = () => {
         else window.location.href = "http://localhost:3000/Queue";
 
         if (newmode) setMode(newmode);
-        // else window.location.href = "http://localhost:3000/Queue";
+        else window.location.href = "http://localhost:3000/Queue";
     }, [queryParams]);
 
     const disconnectSocket = () => {
@@ -100,6 +102,10 @@ export const Game = () => {
             setPaddle2Y(body.game.paddle2Y + "vh");
             setBallX(body.game.ballX + "vw");
             setBallY(body.game.ballY + "vh");
+            if (mode === "hard") {
+                setPaddle3Y(body.game.paddle3Y + "vh");
+                setPaddle4Y(body.game.paddle4Y + "vh");
+            }
             setGame(true);
             socket.emit("startGame", { roomId: roomId });
         });
@@ -111,6 +117,10 @@ export const Game = () => {
             setPaddle2Y(body.game.paddle2Y + "vh");
             setBallX(body.game.ballX + "vw");
             setBallY(body.game.ballY + "vh");
+            if (mode === "hard") {
+                setPaddle3Y(body.game.paddle3Y + "vh");
+                setPaddle4Y(body.game.paddle4Y + "vh");
+            }
         });
 
         socket.on("winner", (body) => {
@@ -207,6 +217,18 @@ export const Game = () => {
                             className="w-[0.8vw] h-[10vh] left-[23vw] absolute bg-black rounded-full"
                             style={{ top: paddle1Y }}
                         />
+                        {mode === "hard" && (
+                            <div>
+                                <div
+                                    className="w-[0.8vw] h-[4vh] left-[36.5vw] absolute bg-black rounded-full"
+                                    style={{ top: paddle3Y }}
+                                />
+                                <div
+                                    className="w-[0.8vw] h-[4vh] left-[63.1vw] absolute bg-black rounded-full"
+                                    style={{ top: paddle4Y }}
+                                />
+                            </div>
+                        )}
                         <div
                             className="w-[0.6vw] h-[0.6vw] absolute bg-black rounded-full"
                             style={{ left: ballX, top: ballY }}
