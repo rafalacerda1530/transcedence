@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import {
     ConnectedSocket,
+    MessageBody,
     OnGatewayConnection,
     OnGatewayDisconnect,
     SubscribeMessage,
@@ -24,21 +25,23 @@ interface UserData {
     namespace: 'queue',
 })
 @Injectable()
-export class QueueGatewayService implements OnGatewayConnection, OnGatewayDisconnect{
-	constructor(
+export class QueueGatewayService implements OnGatewayConnection, OnGatewayDisconnect {
+    constructor(
         private config: ConfigService,
-    ) {}
+    ) { }
 
     @WebSocketServer() server: Server;
-    private queue: UserData[] = [];
+    private normalQueue: UserData[] = [];
+    private hardQueue: UserData[] = [];
+    private stickQueue: UserData[] = [];
 
-	emitErrorAndDisconnect(client: Socket, message: string, event: string) {
+    emitErrorAndDisconnect(client: Socket, message: string, event: string) {
         console.log(message);
         client.emit(event, { message });
         client.disconnect();
     }
 
-	getTokenFromCookie(client: Socket): string | null {
+    getTokenFromCookie(client: Socket): string | null {
         if (!client.handshake.headers.cookie) {
             return null;
         }
@@ -50,28 +53,57 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
         return end == -1 ? token : token.substring(0, end);
     }
 
+    getQueue(gameMode: string): UserData[] {
+        switch (gameMode) {
+            case 'normal':
+                return this.normalQueue;
+            case 'hard':
+                return this.hardQueue;
+            case 'stick':
+                return this.stickQueue;
+            default:
+                return [];
+        }
+    }
+
+    removeFromOtherQueues(clientId: string, queue: UserData[]) {
+        const otherQueues = [this.normalQueue, this.hardQueue, this.stickQueue].filter(q => q !== queue);
+        for (const otherQueue of otherQueues) {
+            const index = otherQueue.findIndex(user => user.socketId === clientId);
+            if (index !== -1) {
+                otherQueue.splice(index, 1);
+            }
+        }
+    }
 
     @SubscribeMessage('joinQueue')
-    handleJoinQueue(@ConnectedSocket() client: Socket): string {
+    handleJoinQueue(@ConnectedSocket() client: Socket, @MessageBody() data: { gameModes: string[] }): string {
         const token = this.getTokenFromCookie(client);
-		if (!token) {
+        if (!token) {
             this.emitErrorAndDisconnect(client, 'Missing Token', 'missing_token');
-            return ;
+            return;
         }
         try {
             const decoded = jwt.verify(
                 token,
                 this.config.get('JWT_SECRET_ACCESS'),
             );
-            if (this.queue.length > 0) {
-                const opponent = this.queue.shift();
-                this.server.to(client.id).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
-                this.server.to(opponent.socketId).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id });
-                return ;
-            }
-            const player = {username: decoded['sub'], socketId: client.id};
+            const player = { username: decoded['sub'], socketId: client.id };
             const userData = player as UserData;
-            this.queue.push(userData);
+
+            for (const gameMode of data.gameModes) {
+                const queue = this.getQueue(gameMode);
+
+                if (queue.length > 0) {
+                    const opponent = queue.shift();
+                    this.server.to(client.id).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id, mode: gameMode});
+                    this.server.to(opponent.socketId).emit('joinGame', { message: 'Found opponent!', roomId: opponent.socketId + client.id, mode: gameMode});
+                    this.removeFromOtherQueues(client.id, queue);
+                    return;
+                }
+
+                queue.push(userData);
+            }
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
@@ -80,14 +112,14 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
             client.disconnect();
             return;
         }
-        return ;
+        return;
     }
 
-    handleConnection(@ConnectedSocket() client: Socket){
+    handleConnection(@ConnectedSocket() client: Socket) {
         const token = this.getTokenFromCookie(client);
-		if (!token) {
+        if (!token) {
             this.emitErrorAndDisconnect(client, 'Missing Token', 'missing_token');
-            return ;
+            return;
         }
         try {
             jwt.verify(
@@ -102,12 +134,15 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
             client.disconnect();
             return;
         }
-     }
+    }
 
-     handleDisconnect(@ConnectedSocket() client: Socket){
-        const user = this.queue.find(user => user.socketId === client.id);
-        if (user){
-            this.queue.splice(this.queue.indexOf(user), 1);
+    handleDisconnect(@ConnectedSocket() client: Socket) {
+        const queues = [this.normalQueue, this.hardQueue, this.stickQueue];
+        for (const queue of queues) {
+            const user = queue.find(user => user.socketId === client.id);
+            if (user) {
+                queue.splice(queue.indexOf(user), 1);
+            }
         }
-     }
+    }
 }

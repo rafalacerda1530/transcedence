@@ -45,14 +45,14 @@ export class PrismaCommands {
     }
 
     async addGame(player1: User, player2: User, game: Game): Promise<any> {
-        const boolPlayer1Won = game.score1 > game.score2;
+        const boolPlayer1Won = game.gameMode.score1 > game.gameMode.score2;
 
         const newGame = await this.prisma.game.create({
             data: {
                 player1Name: player1.user,
                 player2Name: player2.user,
-                score1: game.score1,
-                score2: game.score2,
+                score1: game.gameMode.score1,
+                score2: game.gameMode.score2,
                 player1: {
                     connect: { id: player1.id },
                 },

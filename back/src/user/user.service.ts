@@ -50,7 +50,7 @@ export class UserService {
 		const userSend = {
 			win: winCount,
 			lose: loseCount,
-			score : score
+			score: score
 		};
 
 
