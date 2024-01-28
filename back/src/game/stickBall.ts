@@ -82,11 +82,11 @@ export class StickBallMode implements GameMode {
 	}
 
 	releaseBall(id: string) {
-		if (id === this.player2 && this.ballX > 70){
+		if (id === this.player2 && this.ballX > 70) {
 			this.ballSticking = false;
 			this.stickTime = 0;
 		}
-		if (id === this.player1 && this.ballX < 30){
+		if (id === this.player1 && this.ballX < 30) {
 			this.ballSticking = false;
 			this.stickTime = 0;
 		}
@@ -95,9 +95,13 @@ export class StickBallMode implements GameMode {
 	update() {
 		const ballSpeedXNegative = this.ballSpeedX < 0;
 		const ballSpeedYNegative = this.ballSpeedY < 0;
+		const ballUnderSpeedLimit = this.ballSpeedY > -StickBallMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY < StickBallMode.BALL_SPEED_LIMIT_Y;
+
+		this.ballX += this.ballSpeedX;
+		this.ballY += this.ballSpeedY;
+
 		const ballHitPaddle1 = this.ballX <= 23.8 && this.ballX >= 22.4 && this.ballY >= (this.paddle1Y - 1) && this.ballY <= this.paddle1Y + 10;
 		const ballHitPaddle2 = this.ballX <= 76.8 && this.ballX >= 75.6 && this.ballY >= (this.paddle2Y - 1) && this.ballY <= this.paddle2Y + 10;
-		const ballUnderSpeedLimit = this.ballSpeedY > -StickBallMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY < StickBallMode.BALL_SPEED_LIMIT_Y;
 
 		if (this.ballSticking) {
 			this.stickTime += 1 / 60;
@@ -158,9 +162,6 @@ export class StickBallMode implements GameMode {
 			this.ballSpeedY = -this.ballSpeedY;
 			this.ballY = 73.8;
 		}
-
-		this.ballX += this.ballSpeedX;
-		this.ballY += this.ballSpeedY;
 	}
 
 	reset() {
@@ -168,11 +169,11 @@ export class StickBallMode implements GameMode {
 		this.paddle2Y = StickBallMode.INITIAL_PADDLE_Y;
 		this.ballX = StickBallMode.INITIAL_BALL_X;
 		this.ballY = StickBallMode.INITIAL_BALL_Y;
-		if (Math.random() < 0.5)
+		if (this.ballSpeedX > 0)
 			this.ballSpeedX = StickBallMode.INITIAL_BALL_SPEED;
 		else
 			this.ballSpeedX = -StickBallMode.INITIAL_BALL_SPEED;
-		if (this.ballSpeedX < 0)
+		if (Math.random() < 0.5)
 			this.ballSpeedY = -StickBallMode.INITIAL_BALL_SPEED;
 		else
 			this.ballSpeedY = StickBallMode.INITIAL_BALL_SPEED;

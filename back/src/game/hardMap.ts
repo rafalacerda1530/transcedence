@@ -44,7 +44,7 @@ export class HardMode implements GameMode {
 	private static readonly BALL_SPEED_LIMIT_Y = 0.8;
 	private static readonly BALL_SPEED_INCREASE_FACTOR = 0.1;
 	private static readonly PADDLE_SPEED_FACTOR = 0.4;
-	private static readonly OBSTACLE_SPEED = 0.5;
+	private static readonly OBSTACLE_SPEED = 0.3;
 	private static readonly BALL_MIN_X = 22;
 	private static readonly BALL_MAX_X = 77.8;
 
@@ -100,8 +100,6 @@ export class HardMode implements GameMode {
 
 	obstaclesUpdate(paddle: string) {
 		this[`${paddle}Y`] += this[`${paddle}SpeedY`];
-		console.log(this[`${paddle}Y`]);
-		console.log(this[`${paddle}SpeedY`]);
 		if (this[`${paddle}Y`] <= 24) {
 			this[`${paddle}SpeedY`] = -this[`${paddle}SpeedY`];
 			if (this[`${paddle}Y`] < 24) this[`${paddle}Y`] = 24;
@@ -117,11 +115,17 @@ export class HardMode implements GameMode {
 	update() {
 		const ballSpeedXNegative = this.ballSpeedX < 0;
 		const ballSpeedYNegative = this.ballSpeedY < 0;
+		const ballUnderSpeedLimit = this.ballSpeedY >= -HardMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY <= HardMode.BALL_SPEED_LIMIT_Y;
+
+		this.ballX += this.ballSpeedX;
+		this.ballY += this.ballSpeedY;
+		this.obstaclesUpdate("paddle3");
+		this.obstaclesUpdate("paddle4");
+
 		const ballHitPaddle1 = this.ballX <= 23.8 && this.ballX >= 22.4 && this.ballY >= (this.paddle1Y - 1) && this.ballY <= this.paddle1Y + 10;
 		const ballHitPaddle2 = this.ballX <= 76.8 && this.ballX >= 75.6 && this.ballY >= (this.paddle2Y - 1) && this.ballY <= this.paddle2Y + 10;
 		const ballHitPaddle3 = this.ballX <= 36.5 && this.ballX >= 35.1 && this.ballY >= (this.paddle3Y - 1) && this.ballY <= this.paddle3Y + 4;
 		const ballHitPaddle4 = this.ballX <= 63.1 && this.ballX >= 61.7 && this.ballY >= (this.paddle4Y - 1) && this.ballY <= this.paddle4Y + 4;
-		const ballUnderSpeedLimit = this.ballSpeedY >= -HardMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY <= HardMode.BALL_SPEED_LIMIT_Y;
 
 		if (ballSpeedXNegative) {
 			if (ballHitPaddle1) {
@@ -166,11 +170,6 @@ export class HardMode implements GameMode {
 			this.ballSpeedY = -this.ballSpeedY;
 			this.ballY = 73.8;
 		}
-
-		this.ballX += this.ballSpeedX;
-		this.ballY += this.ballSpeedY;
-		this.obstaclesUpdate("paddle3");
-		this.obstaclesUpdate("paddle4");
 	}
 
 	reset() {
@@ -178,14 +177,14 @@ export class HardMode implements GameMode {
 		this.paddle2Y = HardMode.INITIAL_PADDLE_Y;
 		this.ballX = HardMode.INITIAL_BALL_X;
 		this.ballY = HardMode.INITIAL_BALL_Y;
-		if (Math.random() < 0.5)
-			this.ballSpeedX = HardMode.INITIAL_BALL_SPEED;
-		else
-			this.ballSpeedX = -HardMode.INITIAL_BALL_SPEED;
-		if (this.ballSpeedX < 0)
-			this.ballSpeedY = -HardMode.INITIAL_BALL_SPEED;
-		else
-			this.ballSpeedY = HardMode.INITIAL_BALL_SPEED;
+        if (this.ballSpeedX > 0)
+            this.ballSpeedX = HardMode.INITIAL_BALL_SPEED;
+        else
+            this.ballSpeedX = -HardMode.INITIAL_BALL_SPEED;
+        if (Math.random() < 0.5)
+            this.ballSpeedY = -HardMode.INITIAL_BALL_SPEED;
+        else
+            this.ballSpeedY = HardMode.INITIAL_BALL_SPEED;
 		if (Math.random() < 0.5){
 				this.paddle3SpeedY = HardMode.OBSTACLE_SPEED;
 				this.paddle4SpeedY = -HardMode.OBSTACLE_SPEED;

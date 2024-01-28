@@ -82,9 +82,13 @@ export class NormalMode implements GameMode {
     update() {
         const ballSpeedXNegative = this.ballSpeedX < 0;
         const ballSpeedYNegative = this.ballSpeedY < 0;
+        const ballUnderSpeedLimit = this.ballSpeedY > -NormalMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY < NormalMode.BALL_SPEED_LIMIT_Y;
+
+        this.ballX += this.ballSpeedX;
+        this.ballY += this.ballSpeedY;
+
         const ballHitPaddle1 = this.ballX <= 23.8 && this.ballX >= 22.4 && this.ballY >= (this.paddle1Y - 1) && this.ballY <= this.paddle1Y + 10;
 		const ballHitPaddle2 = this.ballX <= 76.8 && this.ballX >= 75.6 && this.ballY >= (this.paddle2Y - 1) && this.ballY <= this.paddle2Y + 10;
-        const ballUnderSpeedLimit = this.ballSpeedY > -NormalMode.BALL_SPEED_LIMIT_Y && this.ballSpeedY < NormalMode.BALL_SPEED_LIMIT_Y;
 
         if (ballSpeedXNegative) {
             if (ballHitPaddle1) {
@@ -117,21 +121,19 @@ export class NormalMode implements GameMode {
             this.ballSpeedY = -this.ballSpeedY;
             this.ballY = 73.8;
         }
-
-        this.ballX += this.ballSpeedX;
-        this.ballY += this.ballSpeedY;
     }
 
     reset() {
+        console.log(this.ballSpeedX);
         this.paddle1Y = NormalMode.INITIAL_PADDLE_Y;
         this.paddle2Y = NormalMode.INITIAL_PADDLE_Y;
         this.ballX = NormalMode.INITIAL_BALL_X;
         this.ballY = NormalMode.INITIAL_BALL_Y;
-        if (Math.random() < 0.5)
+        if (this.ballSpeedX > 0)
             this.ballSpeedX = NormalMode.INITIAL_BALL_SPEED;
         else
             this.ballSpeedX = -NormalMode.INITIAL_BALL_SPEED;
-        if (this.ballSpeedX < 0)
+        if (Math.random() < 0.5)
             this.ballSpeedY = -NormalMode.INITIAL_BALL_SPEED;
         else
             this.ballSpeedY = NormalMode.INITIAL_BALL_SPEED;
