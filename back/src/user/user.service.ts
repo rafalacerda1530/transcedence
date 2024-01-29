@@ -16,8 +16,8 @@ export class UserService {
 			user: user.user,
 			nickname: user.nickname,
 			email: user.email,
-			profileImage: user.profileImage
-
+			profileImage: user.profileImage,
+			status: user.status,
 		};
 		return userSend;
 	}

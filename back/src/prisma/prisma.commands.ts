@@ -1,8 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from './prisma.service';
-import { User } from '@prisma/client';
+import { User, UserStatus } from '@prisma/client';
 import { Game } from 'src/game/game';
+import { use } from 'passport';
 
 @Injectable()
 export class PrismaCommands {
@@ -65,4 +66,14 @@ export class PrismaCommands {
         });
         return newGame;
     }
+
+    async updateUserStatus(username: string, status: UserStatus) {
+        console.log(username);
+        console.log(status);
+		await this.prisma.user.update({
+			where: { user: username },
+			data: { status: status },
+		});
+	}
+
 }

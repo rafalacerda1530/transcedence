@@ -124,7 +124,6 @@ export class NormalMode implements GameMode {
     }
 
     reset() {
-        console.log(this.ballSpeedX);
         this.paddle1Y = NormalMode.INITIAL_PADDLE_Y;
         this.paddle2Y = NormalMode.INITIAL_PADDLE_Y;
         this.ballX = NormalMode.INITIAL_BALL_X;

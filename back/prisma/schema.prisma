@@ -25,7 +25,7 @@ model User {
   authentication2faSecret String?
   profileImage            String?
 
-  status UserStatus?
+  status UserStatus @default(OFFLINE)
 
   followedBy Friendship[] @relation("followedBy")
   following  Friendship[] @relation("following")

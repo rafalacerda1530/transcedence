@@ -15,6 +15,13 @@ import { Game } from 'src/game/game';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaCommands } from 'src/prisma/prisma.commands';
 import { StickBallMode } from 'src/game/stickBall';
+import { UserStatus } from '@prisma/client';
+import { use } from 'passport';
+
+class UserData {
+    username: string;
+    roomId: string;
+}
 
 @WebSocketGateway({
     cors: {
@@ -33,7 +40,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     ) { }
 
     private games = new Map<string, Game>();
-    private players = new Map<string, string>();
+    private players = new Map<string, UserData>();
 
     @WebSocketServer() server: Server;
 
@@ -147,12 +154,14 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
 
     createGame(client: Socket, data: any, decoded: any): void {
         const game = new Game(data.roomId, data.mode);
+        let userData: UserData = { username: "", roomId: "" };
         game.gameMode.player1 = client.id;
         if (typeof decoded['sub'] === 'string') {
+            userData = { username: decoded['sub'], roomId: data.roomId };
             game.gameMode.player1Name = decoded['sub'];
         }
         client.join(data.roomId);
-        this.players.set(client.id, data.roomId);
+        this.players.set(client.id, userData);
         this.games.set(data.roomId, game);
     }
 
@@ -161,20 +170,24 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         if (game.gameMode.player1Name === decoded['sub']) {
             this.server.sockets.sockets[game.gameMode.player1].leave(data.roomId);
             game.gameMode.player1 = client.id;
+            let userData: UserData = { username: "", roomId: "" };
             if (typeof decoded['sub'] === 'string') {
                 game.gameMode.player1Name = decoded['sub'];
+                userData = { username: decoded['sub'], roomId: data.roomId };
             }
             this.games.set(data.roomId, game);
-            this.players.set(client.id, data.roomId);
+            this.players.set(client.id, userData);
         } else {
             client.join(data.roomId);
             if (game.gameMode.player2 === "") {
                 game.gameMode.player2 = client.id;
+                let userData: UserData = { username: "", roomId: "" };
                 if (typeof decoded['sub'] === 'string') {
                     game.gameMode.player2Name = decoded['sub'];
+                    userData = { username: decoded['sub'], roomId: data.roomId };
                 }
                 this.games.set(data.roomId, game);
-                this.players.set(client.id, data.roomId);
+                this.players.set(client.id, userData);
                 const gameDto = game.gameMode.createGameDto();
                 this.server.to(data.roomId).emit('gameSet', { game: gameDto });
             }
@@ -270,7 +283,9 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     handleConnection(@ConnectedSocket() client: Socket) {
         const token = this.getTokenFromCookie(client);
         try {
-            jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'));
+            const decoded = jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'));
+            if (typeof decoded['sub'] === 'string')
+                this.prismaCommands.updateUserStatus(decoded['sub'], UserStatus.IN_GAME);
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
@@ -293,16 +308,17 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
     }
 
     handleDisconnect(@ConnectedSocket() client: Socket) {
-        const roomId = this.players.get(client.id);
-        if (!roomId) return;
+        const userData = this.players.get(client.id);
+        if (!userData) return;
         this.players.delete(client.id);
-        client.leave(roomId);
-        const game = this.games.get(roomId);
+        client.leave(userData.roomId);
+        this.prismaCommands.updateUserStatus(userData.username, UserStatus.OFFLINE);
+        const game = this.games.get(userData.roomId);
         if (!game) return;
         if (game.gameMode.player1 === client.id) {
-            this.handlePlayerDisconnect(game, roomId, game.gameMode.player2Name, 0, 5);
+            this.handlePlayerDisconnect(game, userData.roomId, game.gameMode.player2Name, 0, 5);
         } else if (game.gameMode.player2 === client.id) {
-            this.handlePlayerDisconnect(game, roomId, game.gameMode.player1Name, 5, 0);
+            this.handlePlayerDisconnect(game, userData.roomId, game.gameMode.player1Name, 5, 0);
         }
     }
 }

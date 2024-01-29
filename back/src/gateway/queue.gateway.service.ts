@@ -11,6 +11,8 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { PrismaCommands } from 'src/prisma/prisma.commands';
+import { UserStatus } from '@prisma/client';
 
 interface UserData {
     username: string;
@@ -28,12 +30,14 @@ interface UserData {
 export class QueueGatewayService implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private config: ConfigService,
+        private prismaCommands: PrismaCommands,
     ) { }
 
     @WebSocketServer() server: Server;
     private normalQueue: UserData[] = [];
     private hardQueue: UserData[] = [];
     private stickQueue: UserData[] = [];
+    private players = new Map<string, string>();
 
     emitErrorAndDisconnect(client: Socket, message: string, event: string) {
         console.log(message);
@@ -122,10 +126,14 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
             return;
         }
         try {
-            jwt.verify(
+            const decoded = jwt.verify(
                 token,
                 this.config.get('JWT_SECRET_ACCESS'),
             );
+            if (typeof decoded['sub'] === 'string'){
+                this.prismaCommands.updateUserStatus(decoded['sub'], UserStatus.IN_QUEUE);
+                this.players.set(client.id, decoded['sub']);
+            }
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
@@ -144,5 +152,9 @@ export class QueueGatewayService implements OnGatewayConnection, OnGatewayDiscon
                 queue.splice(queue.indexOf(user), 1);
             }
         }
+        const username = this.players.get(client.id);
+        if (username)
+            this.prismaCommands.updateUserStatus(username, UserStatus.OFFLINE);
+        this.players.delete(client.id);
     }
 }
