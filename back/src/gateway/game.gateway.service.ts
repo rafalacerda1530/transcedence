@@ -284,8 +284,12 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
         const token = this.getTokenFromCookie(client);
         try {
             const decoded = jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'));
-            if (typeof decoded['sub'] === 'string')
+            if (typeof decoded['sub'] === 'string'){
                 this.prismaCommands.updateUserStatus(decoded['sub'], UserStatus.IN_GAME);
+                let userData: UserData = { username: "", roomId: "" };
+                userData = { username: decoded['sub'], roomId: "" };
+                this.players.set(client.id, userData);
+            }
         } catch (error) {
             console.log(error);
             if (error instanceof jwt.TokenExpiredError) {
