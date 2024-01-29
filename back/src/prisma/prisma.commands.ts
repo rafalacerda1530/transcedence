@@ -68,8 +68,6 @@ export class PrismaCommands {
     }
 
     async updateUserStatus(username: string, status: UserStatus) {
-        console.log(username);
-        console.log(status);
 		await this.prisma.user.update({
 			where: { user: username },
 			data: { status: status },
