@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { CreateGroupDto, GroupActionsDto, InviteToGroupDto } from "./dto/chat.dto";
+import { CreateGroupDto, GroupActionsDto, InviteToGroupDto, PassowordChannel, SetAdm } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 
@@ -13,7 +13,7 @@ export class ChatService {
         private readonly groupService: GroupService,
     ) { }
 
-    //TODO:later -- ver se é nescessario o uso de id
+    // TODO:later -- ver se é nescessario o uso de id
     async saveMessage(messageToServer: messageToServer) {
         const user = await this.groupService.getUserByUsername(messageToServer.username,);
         const chat = await this.groupService.getGroupByName(messageToServer.groupName,);
@@ -78,6 +78,7 @@ export class ChatService {
     /**
     * @brief when create a group in controller the front end should use this socket to join the owner socket in group
     */
+    //TODO 2024 1- precisa verificar se ja esta criando a role de adm e a partir disso criar comandos para certas acoes
     async joinOwnerInGroup(groupActionsDto: GroupActionsDto): Promise<boolean> {
         const group = await this.groupService.getGroupByName(groupActionsDto.groupName,);
         const target = await this.groupService.getUserByUsername(groupActionsDto.username,);
@@ -111,5 +112,84 @@ export class ChatService {
                 invitedByUserId: admUser.id,
             },
         })
+    }
+
+    // TEST
+    async setUserAsAdm(setAdm: SetAdm){
+        const group = await this.groupService.getGroupByName(setAdm.groupName);
+        const adm = await this.groupService.getUserByUsername(setAdm.admUsername);
+        const user = await this.groupService.getUserByUsername(setAdm.userToBeAdm);
+
+        const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
+        const isUserAdm = await this.groupService.isAdmInGroup(user.id, group.id)
+        const isMember = await this.groupService.isMemberInGroup(user.id, group.id);
+
+        if (!isMember)
+            throw new BadRequestException(`User ${setAdm.userToBeAdm} in not a member in group`)
+        if (isUserAdm)
+            throw new BadRequestException(`User ${setAdm.userToBeAdm} alredy is a adm in Group`)
+        if (!isAdm)
+            throw new BadRequestException(`User ${setAdm.admUsername} is not a adm in Group`)
+
+        await this.prisma.groupAdmin.create({
+            data: {
+                userId: user.id,
+                groupId: group.id,
+            }
+        });
+    }
+
+    // TEST 1.2 talves nao precise disso
+    async removeAdm(setAdm: SetAdm){
+        const group = await this.groupService.getGroupByName(setAdm.groupName);
+        const adm = await this.groupService.getUserByUsername(setAdm.admUsername);
+        const user = await this.groupService.getUserByUsername(setAdm.userToBeAdm);
+
+        const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
+        const isUserAdm = await this.groupService.isAdmInGroup(user.id, group.id)
+        const isMember = await this.groupService.isMemberInGroup(user.id, group.id);
+
+        if (!isMember)
+            throw new BadRequestException(`User ${setAdm.userToBeAdm} in not a member in group`)
+        if (!isUserAdm)
+            throw new BadRequestException(`User ${setAdm.userToBeAdm} is not a adm in Group`)
+        if (!isAdm)
+            throw new BadRequestException(`User ${setAdm.admUsername} is not a adm in Group`)
+
+        await this.prisma.groupAdmin.deleteMany({
+            where: {
+                userId: user.id,
+                groupId: group.id,
+            }
+        });
+    }
+    //1.3 esse aqui antes owner definir mudar e remover a senha de um canal ver como fica o status do channel se continua protect ou muda
+    //1.5.1 definir um leave the channel
+
+    //1.4 assim que owner sair passar o adm
+    //1.5.2 kick ban mute
+    //
+    //convidar para jogar
+    //acessar perfil
+
+    //TEST com e sem senha
+    async changeChannelPass(passwordChannel: PassowordChannel){
+        const owner = await this.groupService.getUserByUsername(passwordChannel.ownerUsername);
+        const group = await this.groupService.getGroupByName(passwordChannel.groupName);
+
+        if (group.ownerId !== owner.id)
+            throw new BadRequestException(`user ${owner.user} is not the owner in channel ${group.name}`);
+
+        if (passwordChannel.password){
+            await this.prisma.group.update({
+                where: { id:group.id},
+                data: {password: passwordChannel.password}
+            });
+        } else {
+            await this.prisma.group.update({
+                where: {id: group.id},
+                data: { password: null},
+            });
+        }
     }
 }

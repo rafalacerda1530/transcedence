@@ -14,7 +14,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     private logger: Logger = new Logger(ChatGateway.name);
 
-    //TODO:later -- usar jwt para verificao de auth para permitir a coneccao
+    //TODO:later ????????? -- usar jwt para verificao de auth para permitir a coneccao
     afterInit() {
         this.logger.log('Chat websocket initialized');
     }
@@ -32,8 +32,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
 
-    //TODO:later -- ver como fica a logica para direct
-    //TODO:later -- criar o metodo de direct message
+    //TODO:later -- 2. ver como fica a logica para direct
+    //TODO:later -- 2 .criar o metodo de direct message
     @SubscribeMessage('messageToServer')
     async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
         const messageToClient: messageToClient = await this.chatService.saveMessage(message);
@@ -63,6 +63,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         client.join(groupActionsDto.groupName);
         this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
+    }
+
+    //TEST verificar se o user esta no grupo antes
+    @SubscribeMessage('leaveGroup')
+    async handleLeaveGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
+        try {
+            const { username, groupName } = groupActionsDto;
+            client.leave(groupName);
+            this.server.to(groupName).emit('messageToClient', {
+                username: username,
+                message : `${username} left the group.`,
+                date: new Date(),
+            });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
     }
 
 }

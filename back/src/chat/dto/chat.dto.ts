@@ -31,3 +31,23 @@ export class InviteToGroupDto {
     @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
 }
+
+export class SetAdm {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    admUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    userToBeAdm: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
+}
+
+export class PassowordChannel {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    ownerUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
+    //TEST  empty para ver se da para remover a senha
+    @IsNotEmpty({ message: "mensagem de debug remover depois" })
+    password: string;
+
+}
