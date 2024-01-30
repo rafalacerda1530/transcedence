@@ -32,12 +32,11 @@ export class InviteToGroupDto {
     groupName: string;
 }
 
-// TODO colocar nomes mais abrasivos
 export class SetAdm {
     @IsNotEmpty({ message: "Insert a valid user" })
     admUsername: string;
     @IsNotEmpty({ message: "Insert a valid user" })
-    userToBeAdm: string;
+    targetUsername: string;
     @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
 }
@@ -55,6 +54,15 @@ export class PassowordChannel {
 export class SetOnlyInvite {
     @IsNotEmpty({ message: "Insert a valid user" })
     ownerUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
+}
+
+export class KickUser {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    admUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    targetUsername: string;
     @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
 }

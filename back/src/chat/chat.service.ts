@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { CreateGroupDto, GroupActionsDto, InviteToGroupDto, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
+import { CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 import { Group, User } from "@prisma/client";
@@ -117,16 +117,16 @@ export class ChatService {
     async setUserAsAdm(setAdm: SetAdm){
         const group = await this.groupService.getGroupByName(setAdm.groupName);
         const adm = await this.groupService.getUserByUsername(setAdm.admUsername);
-        const user = await this.groupService.getUserByUsername(setAdm.userToBeAdm);
+        const user = await this.groupService.getUserByUsername(setAdm.targetUsername);
 
         const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
         const isUserAdm = await this.groupService.isAdmInGroup(user.id, group.id)
         const isMember = await this.groupService.isMemberInGroup(user.id, group.id);
 
         if (!isMember)
-            throw new BadRequestException(`User ${setAdm.userToBeAdm} in not a member in group`)
+            throw new BadRequestException(`User ${setAdm.targetUsername} in not a member in group`)
         if (isUserAdm)
-            throw new BadRequestException(`User ${setAdm.userToBeAdm} alredy is a adm in Group`)
+            throw new BadRequestException(`User ${setAdm.targetUsername} alredy is a adm in Group`)
         if (!isAdm)
             throw new BadRequestException(`User ${setAdm.admUsername} is not a adm in Group`)
 
@@ -143,16 +143,16 @@ export class ChatService {
     async removeAdm(setAdm: SetAdm){
         const group = await this.groupService.getGroupByName(setAdm.groupName);
         const adm = await this.groupService.getUserByUsername(setAdm.admUsername);
-        const user = await this.groupService.getUserByUsername(setAdm.userToBeAdm);
+        const user = await this.groupService.getUserByUsername(setAdm.targetUsername);
 
         const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
         const isUserAdm = await this.groupService.isAdmInGroup(user.id, group.id)
         const isMember = await this.groupService.isMemberInGroup(user.id, group.id);
 
         if (!isMember)
-            throw new BadRequestException(`${setAdm.userToBeAdm} in not a member in group`)
+            throw new BadRequestException(`${setAdm.targetUsername} in not a member in group`)
         if (!isUserAdm)
-            throw new BadRequestException(`${setAdm.userToBeAdm} is not a adm in Group`)
+            throw new BadRequestException(`${setAdm.targetUsername} is not a adm in Group`)
         if (!isAdm)
             throw new BadRequestException(`${setAdm.admUsername} is not a adm in Group`)
 
@@ -272,4 +272,40 @@ export class ChatService {
         }
         return false;
     }
+
+    //TODO TEST owner kick adm
+    async kickUser(kickUser: KickUser){
+        const group = await this.groupService.getGroupByName(kickUser.groupName);
+        const adm = await this.groupService.getUserByUsername(kickUser.admUsername);
+        const target = await this.groupService.getUserByUsername(kickUser.targetUsername);
+
+        const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
+        const isTargetAdm = await this.groupService.isAdmInGroup(target.id, group.id)
+        const isMember = await this.groupService.isMemberInGroup(target.id, group.id);
+        if (!isAdm)
+            throw new BadRequestException(`${adm.user} is not a adm in ${group.name}`)
+        if(isTargetAdm && group.ownerId !== adm.id)
+            throw new BadRequestException(`${target.user} is a adm in ${group.name}`)
+        if (!isMember)
+            throw new BadRequestException(`${target.user} is not a member in ${group.name}`)
+        if (group.ownerId == target.id)
+            throw new BadRequestException(`${target.user} is the owner from ${group.name}`)
+        if (adm.id == target.id)
+            throw new BadRequestException(`you can't kick your self'`)
+
+        await this.prisma.groupMembership.deleteMany({
+            where: {
+                userId: target.id,
+                groupId: group.id,
+            },
+        });
+        await this.prisma.groupAdmin.deleteMany({
+            where: {
+                userId: target.id,
+                groupId: group.id,
+            },
+        });
+    }
+
+    //TODO ban mute for limited time; Precisa de volume no db e adaptar algumas funcoes para aceitar isso como mensagem e join
 }
