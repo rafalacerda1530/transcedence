@@ -32,6 +32,7 @@ export class InviteToGroupDto {
     groupName: string;
 }
 
+// TODO colocar nomes mais abrasivos
 export class SetAdm {
     @IsNotEmpty({ message: "Insert a valid user" })
     admUsername: string;
@@ -46,8 +47,14 @@ export class PassowordChannel {
     ownerUsername: string;
     @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
-    //TEST  empty para ver se da para remover a senha
-    @IsNotEmpty({ message: "mensagem de debug remover depois" })
-    password: string;
+    @IsOptional()
+    password?: string;
 
+}
+
+export class SetOnlyInvite {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    ownerUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
 }

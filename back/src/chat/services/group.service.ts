@@ -66,7 +66,7 @@ export class GroupService {
             return true;
         if (type === "PRIVATE" && !password)
             return await this.checkUserPermissionPrivate(user.id, group.id);
-        if (type === "PROTECT" && password)
+        if (type === "PROTECT" && password )
             return await this.checkUserPermissionProtect(group, password);
         return false;
     }

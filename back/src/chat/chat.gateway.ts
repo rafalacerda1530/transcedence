@@ -65,17 +65,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
     }
 
-    //TEST verificar se o user esta no grupo antes
     @SubscribeMessage('leaveGroup')
     async handleLeaveGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
         try {
             const { username, groupName } = groupActionsDto;
+            await this.chatService.leaveChannel(username, groupName);
             client.leave(groupName);
             this.server.to(groupName).emit('messageToClient', {
                 username: username,
                 message : `${username} left the group.`,
                 date: new Date(),
             });
+            console.log('o mano foi de berco confere la no prisma primo')
         } catch (error) {
             throw new BadRequestException(error.message);
         }
