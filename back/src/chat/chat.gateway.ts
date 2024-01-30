@@ -76,7 +76,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 message : `${username} left the group.`,
                 date: new Date(),
             });
-            console.log('o mano foi de berco confere la no prisma primo')
         } catch (error) {
             throw new BadRequestException(error.message);
         }
