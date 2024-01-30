@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body, Patch, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AtGuard } from 'src/common/guards';
 import { GetCurrentUser } from 'src/common/decorators';
@@ -6,6 +6,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { EditDto } from 'src/dto/auth.dto';
+import { Logger } from '@nestjs/common/services';
 
 @Controller('user')
 export class UserController {
@@ -70,5 +71,18 @@ export class UserController {
 			console.error('Erro ao atualizar o perfil:', error);
 		}
 	}
+
+	@Get('getUserHistoryComplete')
+	async getUserHistoryComplete(@Query('user') user: string) {
+    try {
+        //Logger.log("Fetching user history information...");
+        const userHistoryInfo = await this.userService.getUserHistoryComplete(user);
+        console.log("User History Information: ", userHistoryInfo.history[0]);
+		return(userHistoryInfo)
+    } catch (error) {
+        Logger.error("Error fetching user history information", error);
+        return("Usuário não localizado")
+    }
+}
 
 }

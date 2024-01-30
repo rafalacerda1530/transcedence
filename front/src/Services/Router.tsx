@@ -11,6 +11,7 @@ import { GameProvider, gameSocket } from "../context/GameContext";
 import { QueueGame } from "../Pages/Queue/Queue";
 import { Game } from "../Pages/Game/Game";
 import { QueueProvider, queueSocket } from "../context/QueueContext";
+import { MatchHistoryComplete } from "../Pages/MatchHistory/MatchHistory";
 
 export const Router = () => {
     return (
@@ -43,6 +44,10 @@ export const Router = () => {
                 </Routes>
                 <Routes>
                     <Route path="/user/:username" element={<FriendsList />} />
+                </Routes>
+
+                <Routes>
+                    <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
                 </Routes>
 
             </BrowserRouter>

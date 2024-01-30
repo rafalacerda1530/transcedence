@@ -67,4 +67,5 @@ export class Authentication2faService {
             data: { authentication2fa: false },
         });
     }
+
 }

@@ -1,7 +1,9 @@
 import {
     Body,
     Controller,
+    Get,
     HttpCode,
+    Logger,
     Post,
     Req,
     UseGuards,
@@ -33,6 +35,9 @@ export class Authentication2faController {
             secret['secret'],
             user['user'],
         );
+        this.service2fa.setTwoFactorOn(
+            user['user'],
+        );
         const qrCode = {
             qrCode: await this.service2fa.generateQrCodeDataURL(
                 secret['otpAuthUrl'],
@@ -41,6 +46,7 @@ export class Authentication2faController {
         console.log(qrCode);
         return qrCode;
     }
+
 
     @Post('2fa/authenticate')
     @HttpCode(200)
@@ -53,13 +59,13 @@ export class Authentication2faController {
         if (!isCodeValid) {
             return { success: 'false' };
         }
-        console.log(body.twoFactorAuthenticationCode);
         return { success: 'true' };
     }
-
+p
     @Post('2fa/checkAtive')
     @HttpCode(200)
     async isActive2faAuthenticate(@Body() body) {
+        console.log(body.user,)
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -69,9 +75,33 @@ export class Authentication2faController {
             if (user.authentication2fa == true) {
                 return { success: 'true' };
             }
-            return { success: 'false' };
+            else{
+                return { success: 'false' };
+            }
         } catch (error) {
             return { success: 'false' };
+        }
+    }
+
+    @UseGuards(AtGuard)
+    @Post('2fa/checkIfAtive')
+    @HttpCode(200)
+    async isActive2faAuthentication(@GetCurrentUser('sub') username: string) {
+        console.log(username,)
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    user: username,
+                },
+            });
+            if (user.authentication2fa == true) {
+                return { success: true };
+            }
+            else{
+                return { success: false };
+            }
+        } catch (error) {
+            return { success: false };
         }
     }
 
@@ -82,9 +112,9 @@ export class Authentication2faController {
         console.log(username);
         try {
             await this.service2fa.setTwoFactorOn(username);
-            return { success: 'true' };
+            return { success: true };
         } catch (error) {
-            return { success: 'false' };
+            return { success: false };
         }
     }
 
@@ -92,12 +122,11 @@ export class Authentication2faController {
     @Post('2fa/desactivate')
     @HttpCode(200)
     async desactivate2faAuthenticate(@GetCurrentUser('sub') username: string) {
-        console.log(username);
         try {
             await this.service2fa.setTwoFactorOf(username);
-            return { success: 'true' };
+            return { success: true };
         } catch (error) {
-            return { success: 'false' };
+            return { success: false };
         }
     }
 }

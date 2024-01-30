@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -85,6 +85,63 @@ export class UserService {
 		});
 
 		return updatedUser;
+	}
+
+	async getUserHistoryComplete(username: string) {
+
+		const user = await this.prisma.user.findUnique({
+			where: {
+				user: username,
+			},
+		});
+	
+		if (!user) {
+			// Handle the case where the user is not found
+			Logger.warn(`User with username '${username}' not found.`);
+			return null; // Or handle it according to your needs
+		}
+	
+		const userGames = await this.prisma.game.findMany({
+			where: {
+			  OR: [
+				{ player1Id: user.id },
+				{ player2Id: user.id },
+			  ],
+			},
+		  });
+	
+		const history = await userGames.filter(game =>
+			(game.player1Id === user.id ) ||
+			(game.player2Id === user.id )
+		);
+		//console.log(history)
+		let historyLenght = history.length;
+		if (historyLenght > 5){
+			historyLenght = 5;
+		}
+		console.log("lenght: ", historyLenght)
+		const historyComplete = {}
+		for (let i = 0; i < historyLenght; i++){
+			historyComplete[i] = {'Partida': history[i].player1Name + ' VS ' + history[i].player2Name, 
+				 'Pontos_Player1': 'Pontuação ' + history[i].player1Name + ': ' + history[i].score1 ,
+				 'Pontos_Player2': 'Pontuação ' + history[i].player2Name + ': ' + history[i].score2 ,
+				 'Tamanho_Array' : historyLenght
+			}
+			if (history[i].player1Won === true){
+				historyComplete[i]['Vencedor'] = 'Vencedor: ' + history[i].player1Name
+			}
+			else{
+				historyComplete[i]['Vencedor'] = 'Vencedor: ' + history[i].player2Name
+			};
+			console.log("i : ", i)
+			console.log(historyComplete[i])
+	}
+		const userSend = {
+			
+			history: historyComplete
+		};
+	
+		return userSend;
 	}
 
 }

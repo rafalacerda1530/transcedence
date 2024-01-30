@@ -12,6 +12,7 @@ import { Response } from 'express';
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import fetch from 'node-fetch'; // Importe o módulo 'node-fetch'
+import { Get } from '@nestjs/common/decorators';
 
 @Injectable()
 export class ImageService {
@@ -45,4 +46,5 @@ export class AuthController {
 		await this.authService.signin(dto, response);
 		response.send();
 	}
+
 }

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
-import { Link } from "react-router-dom"; // Importe Link para navegar entre as páginas
 import axios from "axios";
+import ToggleSwitch from "./button/toggle";
+
+
 
 export const Home = () => {
   interface UserData {
@@ -12,7 +14,6 @@ export const Home = () => {
   }
 
   const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
-
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -20,13 +21,32 @@ export const Home = () => {
   const [editedNickname, setEditedNickname] = useState("");
   const [isProfileSectionVisible, setIsProfileSectionVisible] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [ativo, setAtivo] = useState(false);
 
+  const handleToggle = () => {
+    setAtivo(!ativo);
+  };
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedName(userData?.user || "");
     setEditedEmail(userData?.email || "");
     setEditedNickname(userData?.nickname || "");
   };
+
+  const handlePesquisarHistorico = async (user?: string) => {
+    if (user === '')
+      window.location.href = `/matchHistoryComplete/$+ `;
+    else
+      window.location.href = `/matchHistoryComplete/${user}`;
+  }
+
+  const handleGerarQrCode =  () => {
+    window.location.href = `/generate2fa`;
+  }
+
+  const handleIniciarJogo = async (user?: string) => {
+    window.location.href = `/Queue`;
+  }
 
   const handleSaveClick = async () => {
     try {
@@ -66,7 +86,7 @@ export const Home = () => {
   const [showBall, setShowBall] = useState(false);
   const [username, setUserName] = useState("");
   const axiosPrivate = useAxiosPrivate();
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [userStats, setUserStats] = useState({
     win: 0,
     lose: 0,
@@ -162,6 +182,10 @@ export const Home = () => {
       console.log("Nenhum arquivo selecionado!");
     }
   };
+
+  function MatchHistoryAll(searchTerm: string): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center">
@@ -273,29 +297,59 @@ export const Home = () => {
                     Alterar Foto
                   </label>
                 )}
-              </div>
-            </div>
-          )}
-        </div>
+                {/* Seção do Toggle button de autenticação 2fa */}
+                <div className="flex items-center mb-2 font-bold text-sm"> 
+                  <div className="mr-2  mb-7 ">
+                  <ToggleSwitch />
+                  </div>
+                  2FA - AUTHENTICATION
+                </div>
+                <div className=" ">
+                  <button className="bg-blue-600 text-white rounded-full px-2 py-2 "
+                    onClick={() => handleGerarQrCode()}> 
+                    Novo Qr-Code 
+                  </button>
+                  </div>
+                </div>
+                </div>
 
+              )}
+              </div>
         {/* Seção para iniciar o jogo */}
         {!isEditing && (
           <>
             <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <h1 className="text-4xl font-bold mb-4">
                   {username} SEJA BEM-VINDO AO PONG GAME
                 </h1>
                 <p className="mb-4">
                   Desafie seus amigos em uma partida emocionante de Ping Pong!
                 </p>
-                <div className="flex justify-center">
-                  <button className="bg-blue-600 text-white rounded-full px-4 py-2 mr-4">
-                    Iniciar Jogo
-                  </button>
+          
+                <div className="flex flex-col items-center">
+                <button
+                      className="bg-blue-600 text-white rounded-full px-4 py-2 mb-4"
+                      onClick={() => handleIniciarJogo()}>
+                      Iniciar Jogo
+                    </button>
+                  <div className="text-black">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Digite o Player"
+                    className="border border-gray-400 p-2 mb-4 rounded-md w-full"/>
+                    <button
+                      className="bg-blue-600 text-white rounded-full px-4 py-2 mb-4"
+                      onClick={() => handlePesquisarHistorico(searchTerm)}>
+                      Pesquisar Histórico
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+
             {/* Seção para estatisticas */}
             <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
               <div className="text-center mb-6">
