@@ -5,6 +5,7 @@ import { StatusContext } from "../../context/StatusContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import ToggleSwitch from "./button/toggle";
 
+
 export const Home = () => {
   interface UserData {
     user: string;
@@ -94,6 +95,15 @@ export const Home = () => {
 
   const handleIniciarJogo = async (user?: string) => {
     window.location.href = `/Queue`;
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await axiosPrivate.post("/user/logout");
+      window.location.href = `/login`;
+    }catch (error){
+      console.log(error)
+    }
   }
 
   const handleSaveClick = async () => {
@@ -369,6 +379,7 @@ export const Home = () => {
                     Novo Qr-Code
                   </button>
                 </div>
+
               </div>
             </div>
 
@@ -408,6 +419,21 @@ export const Home = () => {
                   </div>
                 </div>
               </div>
+              <div className="flex items-center ">
+                <div className="ml-5 ">
+                  <button onClick={() => handleLogout()}>
+                    <div className="flex items-center w-8 h-8 rounded-full mx-auto ">
+                      <img
+                        src="https://png.pngtree.com/png-clipart/20191120/original/pngtree-exit-door-glyph-icon-vector-png-image_5079301.jpg"
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full mx-auto mr-6"
+                      />
+                      <span className=" font-bold  text-base">Logout</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
             </div>
 
             {/* Seção para estatisticas */}

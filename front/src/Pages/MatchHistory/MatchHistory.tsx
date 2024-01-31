@@ -204,11 +204,11 @@ export const MatchHistoryComplete = () => {
         </div>
         {/*SEÇÃO hISTÓRICO DE PARTIDAS*/}
         <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
-          <div className="text-center mb-6">
+          <div className="text-center">
             <h1 className="text-blue-500 text text-4xl font-bold mb-4">
               Histórico de partidas
             </h1>
-            <div className="mb-4 flex flex-col items-center justify-center">
+            <div className=" flex flex-col items-center justify-center">
               {Object.keys(history).map((key) => (
                 <div key={key} className="mb-5 font-bold">
                   <p >Partida: {history[key].Partida}</p>
