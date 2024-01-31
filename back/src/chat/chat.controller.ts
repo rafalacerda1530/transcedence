@@ -1,13 +1,17 @@
 import { Body, Controller, Post } from '@nestjs/common'
 import { ChatService } from './chat.service';
-import { BanUser, CreateGroupDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
-import { Mute } from '@prisma/client';
+import { BanUser, BlockUser, CreateGroupDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { GroupService } from './services/group.service';
 
 @Controller('api/chat')
 // @UseGuards(AuthGuard('jwt'))
 // TODO MUDAR OS METODOS POST PARA O IDEAL
 export class ChatController {
-    constructor(private readonly chatService: ChatService) { }
+    constructor(
+        private readonly chatService: ChatService,
+        private readonly groupService: GroupService,
+
+    ) { }
 
     @Post('createGroup')
     async createGroup(@Body() createGroupDto: CreateGroupDto) {
@@ -65,4 +69,18 @@ export class ChatController {
         return await this.chatService.removeMute(muteUser);
     }
 
+    @Post('blockUser')
+    async blockUser(@Body() blockUser: BlockUser) {
+        return await this.chatService.blockUser(blockUser);
+    }
+
+    @Post('removeBlock')
+    async removeBlock(@Body() blockUser: BlockUser) {
+        return await this.chatService.removeBlock(blockUser);
+    }
+
+    @Post('isUserBlocked')
+    async isUserBlocked(@Body() blockUser: BlockUser) {
+        return await this.groupService.isUserBlocked(blockUser.userUsername, blockUser.targetUsername);
+    }
 }

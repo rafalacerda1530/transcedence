@@ -1,162 +1,180 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 enum GroupStatus {
-  PUBLIC
-  PRIVATE
-  PROTECT
+    PUBLIC
+    PRIVATE
+    PROTECT
 }
 
 enum UserStatus {
-  ONLINE
-  OFFLINE
-  IN_GAME
-  IN_QUEUE
+    ONLINE
+    OFFLINE
+    IN_GAME
+    IN_QUEUE
 }
 
 model Friendship {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  followedBy   User     @relation("followedBy", fields: [followedById], references: [id])
-  followedById Int
-  following    User     @relation("following", fields: [followingId], references: [id])
-  followingId  Int
+    id           Int      @id @default(autoincrement())
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+    followedBy   User     @relation("followedBy", fields: [followedById], references: [id])
+    followedById Int
+    following    User     @relation("following", fields: [followingId], references: [id])
+    followingId  Int
 
-  @@unique([followingId, followedById])
+    @@unique([followingId, followedById])
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  date     DateTime
-  content  String
-  sender   User     @relation(fields: [senderId], references: [id])
-  senderId Int
+    date     DateTime
+    content  String
+    sender   User     @relation(fields: [senderId], references: [id])
+    senderId Int
 
-  group   Group? @relation(fields: [groupId], references: [id])
-  groupId Int?
+    group   Group? @relation(fields: [groupId], references: [id])
+    groupId Int?
 }
 
 model Group {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  name     String      @unique
-  type     GroupStatus
-  password String?
+    name     String      @unique
+    type     GroupStatus
+    password String?
 
-  owner   User @relation("owner", fields: [ownerId], references: [id])
-  ownerId Int
+    owner   User @relation("owner", fields: [ownerId], references: [id])
+    ownerId Int
 
-  members     GroupMembership[]
-  admins      GroupAdmin[]
-  Message     Message[]
-  GroupInvite GroupInvite[]
-  bans        Ban[]
-  mutes       Mute[]
+    members     GroupMembership[]
+    admins      GroupAdmin[]
+    Message     Message[]
+    GroupInvite GroupInvite[]
+    bans        Ban[]
+    mutes       Mute[]
 }
 
 model GroupMembership {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
 
-  group   Group @relation(fields: [groupId], references: [id])
-  groupId Int
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
 }
 
 model GroupAdmin {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
 
-  group   Group @relation(fields: [groupId], references: [id])
-  groupId Int
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  email                   String   @unique
-  user                    String   @unique
-  hash                    String?
-  userIntra               Boolean?
-  jwt_token               String?
-  authentication2fa       Boolean?
-  authentication2faSecret String?
+    email                   String   @unique
+    user                    String   @unique
+    hash                    String?
+    userIntra               Boolean?
+    jwt_token               String?
+    authentication2fa       Boolean?
+    authentication2faSecret String?
 
-  status UserStatus?
+    status UserStatus?
 
-  followedBy Friendship[] @relation("followedBy")
-  following  Friendship[] @relation("following")
-  ownedGroup Group[]      @relation("owner")
+    followedBy Friendship[] @relation("followedBy")
+    following  Friendship[] @relation("following")
+    ownedGroup Group[]      @relation("owner")
 
-  Message         Message[]
-  memberInGroups  GroupMembership[]
-  adminInGroup    GroupAdmin[]
-  invitesSent     GroupInvite[]     @relation("invitedByUser")
-  invitesReceived GroupInvite[]     @relation("invitedUser")
-  bans            Ban[]
-  mute   Mute[]
+    Message         Message[]
+    memberInGroups  GroupMembership[]
+    adminInGroup    GroupAdmin[]
+    invitesSent     GroupInvite[]     @relation("invitedByUser")
+    invitesReceived GroupInvite[]     @relation("invitedUser")
+    bans            Ban[]
+    mute            Mute[]
+    blockedUser Block[] @relation("user")
+    userWhoBlocked  Block[] @relation("blockedUser")
+
 }
 
 model GroupInvite {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  group   Group @relation(fields: [groupId], references: [id])
-  groupId Int
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
 
-  invitedUser     User @relation("invitedUser", fields: [invitedUserId], references: [id])
-  invitedUserId   Int
-  invitedByUser   User @relation("invitedByUser", fields: [invitedByUserId], references: [id])
-  invitedByUserId Int
+    invitedUser     User @relation("invitedUser", fields: [invitedUserId], references: [id])
+    invitedUserId   Int
+    invitedByUser   User @relation("invitedByUser", fields: [invitedByUserId], references: [id])
+    invitedByUserId Int
 }
 
 model Ban {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
 
-  group   Group @relation(fields: [groupId], references: [id])
-  groupId Int
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
 
-  expirationDate DateTime?
-  @@unique([userId, groupId])
+    expirationDate DateTime?
+
+    @@unique([userId, groupId])
 }
 
 model Mute {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-  group   Group @relation(fields: [groupId], references: [id])
-  groupId Int
+    user    User  @relation(fields: [userId], references: [id])
+    userId  Int
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
 
-  expirationDate DateTime?
-  @@unique([userId, groupId])
+    expirationDate DateTime?
+
+    @@unique([userId, groupId])
+}
+
+model Block {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user    User  @relation("user", fields: [userId], references: [id])
+    userId  Int
+    blockedUser   User @relation("blockedUser", fields: [blockedUserId], references: [id])
+    blockedUserId Int
+
+    @@unique([userId, blockedUserId])
 }

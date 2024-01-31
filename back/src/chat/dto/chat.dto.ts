@@ -89,3 +89,10 @@ export class MuteUser {
     @IsNumber()
     muteDuration?: number
 }
+
+export class BlockUser {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    userUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    targetUsername: string;
+}

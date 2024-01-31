@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { BanUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
+import { BanUser, BlockUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 
@@ -249,7 +249,7 @@ export class ChatService {
         }
     }
 
-    async muteUser(muteUser: MuteUser){
+    async muteUser(muteUser: MuteUser) {
         const { admUsername, targetUsername, groupName, muteDuration } = muteUser;
         const adm = await this.groupService.getUserByUsername(admUsername);
         const target = await this.groupService.getUserByUsername(targetUsername);
@@ -279,4 +279,31 @@ export class ChatService {
             },
         });
     }
+
+    async blockUser(blockUser: BlockUser) {
+        const { userUsername, targetUsername } = blockUser;
+        const user = await this.groupService.getUserByUsername(userUsername);
+        const target = await this.groupService.getUserByUsername(targetUsername);
+
+        await this.prisma.block.create({
+            data: {
+                userId: user.id,
+                blockedUserId: target.id,
+            }
+        })
+    }
+
+    async removeBlock(blockUser: BlockUser) {
+        const { userUsername, targetUsername } = blockUser;
+        const user = await this.groupService.getUserByUsername(userUsername);
+        const target = await this.groupService.getUserByUsername(targetUsername);
+
+        await this.prisma.block.deleteMany({
+            where: {
+                userId: user.id,
+                blockedUserId: target.id,
+            }
+        })
+    }
+
 }

@@ -224,4 +224,17 @@ export class GroupService {
         }
         return true;
     }
+
+    async isUserBlocked(userUsername: string, targetName: string ): Promise<boolean> {
+        const user = await this.getUserByUsername(userUsername);
+        const target = await this.getUserByUsername(targetName);
+        const block = await this.prisma.block.findFirst({
+            where: {
+                userId: user.id,
+                blockedUserId: target.id,
+            },
+        });
+        return !!block;
+    }
+
 }
