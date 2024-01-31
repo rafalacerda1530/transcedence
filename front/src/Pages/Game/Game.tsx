@@ -11,6 +11,8 @@ export const Game = () => {
     const [player2, setPlayer2] = useState("");
     const [paddle1Y, setPaddle1Y] = useState("");
     const [paddle2Y, setPaddle2Y] = useState("");
+    const [paddle3Y, setPaddle3Y] = useState("");
+    const [paddle4Y, setPaddle4Y] = useState("");
     const [ballY, setBallY] = useState("");
     const [ballX, setBallX] = useState("");
     const [game, setGame] = useState(false);
@@ -21,11 +23,17 @@ export const Game = () => {
         return new URLSearchParams(window.location.search);
     }, []);
     const [roomId, setRoomId] = useState("");
+    const [mode, setMode] = useState("");
     const refreshToken = useRefreshToken();
 
     useEffect(() => {
         const newroomId = queryParams.get("roomId");
+        const newmode = queryParams.get("mode");
+
         if (newroomId) setRoomId(newroomId);
+        else window.location.href = "http://localhost:3000/Queue";
+
+        if (newmode) setMode(newmode);
         else window.location.href = "http://localhost:3000/Queue";
     }, [queryParams]);
 
@@ -36,7 +44,7 @@ export const Game = () => {
         socket.off("jwt_error");
         socket.off("moveUp");
         socket.off("moveDown");
-		socket.off("missing_token");
+        socket.off("missing_token");
         socket.off("update");
         socket.off("opponentLogout");
         socket.disconnect();
@@ -45,7 +53,7 @@ export const Game = () => {
     const connectSocket = () => {
         socket.connect();
         socket.on("connect", () => {
-            socket.emit("joinRoom", { roomId: roomId });
+            socket.emit("joinRoom", { roomId: roomId, mode: mode });
             setTimeout(() => {
                 setDisconnect(true);
             }, 3000);
@@ -64,13 +72,13 @@ export const Game = () => {
             connectSocket();
         });
 
-		socket.on("missing_token", async (error) => {
-			disconnectSocket();
-			try {
+        socket.on("missing_token", async (error) => {
+            disconnectSocket();
+            try {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = 'http://localhost:3000/login';
+                window.location.href = "http://localhost:3000/login";
             }
             connectSocket();
         });
@@ -94,6 +102,10 @@ export const Game = () => {
             setPaddle2Y(body.game.paddle2Y + "vh");
             setBallX(body.game.ballX + "vw");
             setBallY(body.game.ballY + "vh");
+            if (mode === "hard") {
+                setPaddle3Y(body.game.paddle3Y + "vh");
+                setPaddle4Y(body.game.paddle4Y + "vh");
+            }
             setGame(true);
             socket.emit("startGame", { roomId: roomId });
         });
@@ -105,13 +117,17 @@ export const Game = () => {
             setPaddle2Y(body.game.paddle2Y + "vh");
             setBallX(body.game.ballX + "vw");
             setBallY(body.game.ballY + "vh");
+            if (mode === "hard") {
+                setPaddle3Y(body.game.paddle3Y + "vh");
+                setPaddle4Y(body.game.paddle4Y + "vh");
+            }
         });
 
         socket.on("winner", (body) => {
             setGame(false);
             setWinnerBool(true);
             setWinner(body.winner);
-			setTimeout(() => {
+            setTimeout(() => {
                 setDisconnect(true);
             }, 5000);
         });
@@ -126,14 +142,12 @@ export const Game = () => {
             disconnectSocket();
             alert("Time expired");
             window.location.href = "/home";
-        }
-        else if (disconnect && winnerBool && !game) {
+        } else if (disconnect && winnerBool && !game) {
             disconnectSocket();
             window.location.href = "/home";
+        } else {
+            setDisconnect(false);
         }
-		else{
-			setDisconnect(false);
-		}
     }, [disconnect]);
 
     useEffect(() => {
@@ -146,42 +160,43 @@ export const Game = () => {
         }
     }, [socket, roomId]);
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "w") {
-				socket.emit("moveUp", { roomId: roomId });
-			} else if (event.key === "s") {
-				socket.emit("moveDown", { roomId: roomId });
-			}
-		};
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "w") {
+                socket.emit("moveUp", { roomId: roomId });
+            } else if (event.key === "s") {
+                socket.emit("moveDown", { roomId: roomId });
+            } else if (event.key === "r") {
+                socket.emit("releaseBall", { roomId: roomId });
+            }
+        };
 
-		const handleKeyUp = (event: KeyboardEvent) => {
-			if (event.key === "w" || event.key === "s") {
-				socket.emit("moveStop", { roomId: roomId });
-			}
-		};
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "w" || event.key === "s") {
+                socket.emit("moveStop", { roomId: roomId });
+            }
+        };
 
-		window.addEventListener("keydown", handleKeyDown);
-		window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
 
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("keyup", handleKeyUp);
-		};
-	}, [roomId, socket]);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
+    }, [roomId, socket]);
 
     return (
         <>
-            { !game && !winnerBool && (
-                    <>
-                        <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
-                                  <div className="absolute top-0 left-0 right-0 w-32 h-32 mx-auto mt-52 mb-0 bg-white rounded-full animate-bounce ">
-                                  </div>
-                                  <h1 className="text-4xl font-bold text-center text-white mb-4">
-                                      WAITING FOR OPPONENT
-                                  </h1>
-                        </div>
-                      </>
+            {!game && !winnerBool && (
+                <>
+                    <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center relative">
+                        <div className="absolute top-0 left-0 right-0 w-32 h-32 mx-auto mt-52 mb-0 bg-white rounded-full animate-bounce "></div>
+                        <h1 className="text-4xl font-bold text-center text-white mb-4">
+                            WAITING FOR OPPONENT
+                        </h1>
+                    </div>
+                </>
             )}
             <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex relative">
                 {game && (
@@ -202,6 +217,18 @@ export const Game = () => {
                             className="w-[0.8vw] h-[10vh] left-[23vw] absolute bg-black rounded-full"
                             style={{ top: paddle1Y }}
                         />
+                        {mode === "hard" && (
+                            <div>
+                                <div
+                                    className="w-[0.8vw] h-[4vh] left-[36.5vw] absolute bg-black rounded-full"
+                                    style={{ top: paddle3Y }}
+                                />
+                                <div
+                                    className="w-[0.8vw] h-[4vh] left-[63.1vw] absolute bg-black rounded-full"
+                                    style={{ top: paddle4Y }}
+                                />
+                            </div>
+                        )}
                         <div
                             className="w-[0.6vw] h-[0.6vw] absolute bg-black rounded-full"
                             style={{ left: ballX, top: ballY }}

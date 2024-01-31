@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-pascal-case */
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginGame from "../Pages/Login/login";
 import { Home } from "../Pages/Home/Home";
 import { CallBack } from "../Pages/Callback/Callback";
@@ -12,6 +12,7 @@ import { QueueGame } from "../Pages/Queue/Queue";
 import { Game } from "../Pages/Game/Game";
 import { QueueProvider, queueSocket } from "../context/QueueContext";
 import { MatchHistoryComplete } from "../Pages/MatchHistory/MatchHistory";
+import { StatusProvider, statusSocket } from "../context/StatusContext";
 
 export const Router = () => {
     return (
@@ -30,10 +31,12 @@ export const Router = () => {
                         <Route path="/Game" element={<Game />} />
                     </Routes>
                 </GameProvider>
-                <Routes>
+                <StatusProvider value={statusSocket}>
+                    <Routes>
                         <Route path="/Home" element={<Home />} />
-                </Routes>
-				<Routes>
+                    </Routes>
+                </StatusProvider>
+                <Routes>
                     <Route path="/Profile" element={<Profile />} />
                 </Routes>
                 <Routes>
