@@ -43,6 +43,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
+    // TODO @post //usario + alvo true false
+
     /**
     * @brief when create a group join the owner socket in the group
     */

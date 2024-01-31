@@ -1,7 +1,6 @@
 import { GroupStatus } from "@prisma/client";
-import { IsNotEmpty, IsOptional, MaxLength } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, MaxLength } from "class-validator";
 
-// type: public private protect
 export class CreateGroupDto {
     @IsNotEmpty({ message: "Insert a valid type" })
     type: GroupStatus;
@@ -65,4 +64,16 @@ export class KickUser {
     targetUsername: string;
     @IsNotEmpty({ message: "Insert a valid chat name" })
     groupName: string;
+}
+
+export class BanUser {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    admUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    targetUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
+    @IsOptional()
+    @IsNumber()
+    banDuration?: number
 }
