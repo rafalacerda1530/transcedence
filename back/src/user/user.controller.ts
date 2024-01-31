@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Post, UseInterceptors, UploadedFile, Query, Body, Patch, Param, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AtGuard } from 'src/common/guards';
 import { GetCurrentUser } from 'src/common/decorators';
@@ -7,6 +7,8 @@ import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { EditDto } from 'src/dto/auth.dto';
 import { Logger } from '@nestjs/common/services';
+import { Response } from 'express';
+
 
 @Controller('user')
 export class UserController {
@@ -23,6 +25,13 @@ export class UserController {
 	async getUserHistoryInfo(@GetCurrentUser('sub') user: string) {
 		return await this.userService.getUserHistoryInfo(user);
 	}
+
+	@UseGuards(AtGuard)
+    @Post('logout')
+    async userLogout(@GetCurrentUser('sub') user: string, @Res() res: Response) {
+		await this.userService.userLogout(user, res);
+		res.send({message: "User logged out successfully"});
+    }
 
 	@Post('uploadImage')
 	@UseInterceptors(

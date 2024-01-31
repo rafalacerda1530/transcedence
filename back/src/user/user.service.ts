@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Res } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -57,6 +58,19 @@ export class UserService {
 		return userSend;
 	}
 
+	async userLogout(username: string, @Res() res: Response){
+        const user = await this.prisma.user.update({
+            where: {
+                user: username,
+            },
+            data: {
+                jwt_token: '',
+            },
+        });
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+    }
+
 	async saveProfileImage(username: string, filePath: string) {
 		// Atualizar o caminho do arquivo no banco de dados para o usuário específico
 		const updatedUser = await this.prisma.user.update({
@@ -94,13 +108,13 @@ export class UserService {
 				user: username,
 			},
 		});
-	
+
 		if (!user) {
 			// Handle the case where the user is not found
 			Logger.warn(`User with username '${username}' not found.`);
 			return null; // Or handle it according to your needs
 		}
-	
+
 		const userGames = await this.prisma.game.findMany({
 			where: {
 			  OR: [
@@ -109,7 +123,7 @@ export class UserService {
 			  ],
 			},
 		  });
-	
+
 		const history = await userGames.filter(game =>
 			(game.player1Id === user.id ) ||
 			(game.player2Id === user.id )
@@ -122,7 +136,7 @@ export class UserService {
 		console.log("lenght: ", historyLenght)
 		const historyComplete = {}
 		for (let i = 0; i < historyLenght; i++){
-			historyComplete[i] = {'Partida': history[i].player1Name + ' VS ' + history[i].player2Name, 
+			historyComplete[i] = {'Partida': history[i].player1Name + ' VS ' + history[i].player2Name,
 				 'Pontos_Player1': 'Pontuação ' + history[i].player1Name + ': ' + history[i].score1 ,
 				 'Pontos_Player2': 'Pontuação ' + history[i].player2Name + ': ' + history[i].score2 ,
 				 'Tamanho_Array' : historyLenght
@@ -137,10 +151,10 @@ export class UserService {
 			console.log(historyComplete[i])
 	}
 		const userSend = {
-			
+
 			history: historyComplete
 		};
-	
+
 		return userSend;
 	}
 
