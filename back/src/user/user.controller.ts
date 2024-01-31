@@ -72,6 +72,20 @@ export class UserController {
 		}
 	}
 
+	
+
+	@UseGuards(AtGuard)
+	@Get('meInfo')
+	async getUserInformation(@Query('user') user: string) {
+		return await this.userService.getUserInfo(user);
+	}
+
+	@UseGuards(AtGuard)
+	@Get('matchHistory')
+	async getUserHistoryMatch(@Query('user') user: string) {
+		return await this.userService.getUserHistoryInfo(user);
+	}
+
 	@Get('getUserHistoryComplete')
 	async getUserHistoryComplete(@Query('user') user: string) {
     try {
@@ -82,7 +96,5 @@ export class UserController {
     } catch (error) {
         Logger.error("Error fetching user history information", error);
         return("Usuário não localizado")
-    }
-}
-
+    }}
 }

@@ -74,10 +74,6 @@ export const Home = () => {
 
   const [ativo, setAtivo] = useState(false);
 
-  const handleToggle = () => {
-    setAtivo(!ativo);
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedName(userData?.user || "");
