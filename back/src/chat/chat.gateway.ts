@@ -4,13 +4,16 @@ import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Logger } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
 import { GroupActionsDto } from './dto/chat.dto';
+import { GroupService } from './services/group.service';
 
 @WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
 
     @WebSocketServer() server: Namespace;
-
-    constructor(private readonly chatService: ChatService) { }
+    constructor(
+        private readonly chatService: ChatService,
+        private readonly groupService: GroupService,
+    ) { }
 
     private logger: Logger = new Logger(ChatGateway.name);
 
@@ -36,14 +39,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //TODO:later -- 2 .criar o metodo de direct message
     @SubscribeMessage('messageToServer')
     async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
+        const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
+        if (isMutted)
+            throw new BadRequestException('you are mutted in this channel');
+
         const messageToClient: messageToClient = await this.chatService.saveMessage(message);
         if (messageToClient) {
             this.server.to(message.groupName).emit('messageToClient', messageToClient);
             this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
         }
     }
-
-    // TODO @post //usario + alvo true false
 
     /**
     * @brief when create a group join the owner socket in the group

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { BanUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
+import { BanUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 
@@ -219,15 +219,12 @@ export class ChatService {
 
         await this.groupService.validateAdmActions(adm, target, group);
         await this.groupService.deleteUserFromGroup(target.id, group.id);
-        console.log('DEBUG: apos as validacoes se nao houve throw esta funcionando se nao deu merda')
 
-        const expirationDate = banDuration !== null && banDuration !== undefined ?
-            new Date(new Date().getTime() + banDuration * 60000) : null;
         await this.prisma.ban.create({
             data: {
                 userId: target.id,
                 groupId: group.id,
-                expirationDate: expirationDate,
+                expirationDate: banDuration ? new Date(new Date().getTime() + banDuration * 60000) : null,
             },
         });
     }
@@ -238,9 +235,7 @@ export class ChatService {
         const target = await this.groupService.getUserByUsername(targetUsername);
         const group = await this.groupService.getGroupByName(groupName);
 
-        const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
-        if (!isAdm)
-            throw new BadRequestException(`${adm.user} is not a adm in ${group.name}`)
+        await this.groupService.validateAdmActions(adm, target, group);
         const isBanned = await this.groupService.isUserBanned(target.id, group.id);
         if (isBanned) {
             await this.prisma.ban.deleteMany({
@@ -252,5 +247,36 @@ export class ChatService {
         } else {
             throw new BadRequestException(`${targetUsername} is not banned from ${groupName}`)
         }
+    }
+
+    async muteUser(muteUser: MuteUser){
+        const { admUsername, targetUsername, groupName, muteDuration } = muteUser;
+        const adm = await this.groupService.getUserByUsername(admUsername);
+        const target = await this.groupService.getUserByUsername(targetUsername);
+        const group = await this.groupService.getGroupByName(groupName);
+        await this.groupService.validateAdmActions(adm, target, group);
+
+        await this.prisma.mute.create({
+            data: {
+                userId: target.id,
+                groupId: group.id,
+                expirationDate: muteDuration ? new Date(new Date().getTime() + muteDuration * 60000) : null,
+            },
+        });
+    }
+
+    async removeMute(muteUser: MuteUser) {
+        const { admUsername, targetUsername, groupName } = muteUser;
+        const adm = await this.groupService.getUserByUsername(admUsername);
+        const target = await this.groupService.getUserByUsername(targetUsername);
+        const group = await this.groupService.getGroupByName(groupName);
+        await this.groupService.validateAdmActions(adm, target, group);
+
+        await this.prisma.mute.deleteMany({
+            where: {
+                userId: target.id,
+                groupId: group.id,
+            },
+        });
     }
 }

@@ -207,4 +207,21 @@ export class GroupService {
         }
         return false;
     }
+
+    async isUserMutted(targetName: string,  groupName: string): Promise<boolean> {
+        const target = await this.getUserByUsername(targetName);
+        const group = await this.getGroupByName(groupName);
+        const mute = await this.prisma.mute.findFirst({
+            where: { userId: target.id, groupId: group.id, },
+        });
+        if (!mute)
+            return false;
+        if (mute.expirationDate === null)
+            return true;
+        if (mute.expirationDate <= new Date()) {
+            await this.prisma.mute.delete({ where: { id: mute.id, }, });
+            return false;
+        }
+        return true;
+    }
 }

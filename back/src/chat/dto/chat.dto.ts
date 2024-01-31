@@ -77,3 +77,15 @@ export class BanUser {
     @IsNumber()
     banDuration?: number
 }
+
+export class MuteUser {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    admUsername: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    targetUsername: string;
+    @IsNotEmpty({ message: "Insert a valid chat name" })
+    groupName: string;
+    @IsOptional()
+    @IsNumber()
+    muteDuration?: number
+}

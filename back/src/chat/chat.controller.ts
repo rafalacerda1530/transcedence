@@ -1,6 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common'
 import { ChatService } from './chat.service';
-import { BanUser, CreateGroupDto, InviteToGroupDto, KickUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { BanUser, CreateGroupDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { Mute } from '@prisma/client';
 
 @Controller('api/chat')
 // @UseGuards(AuthGuard('jwt'))
@@ -52,6 +53,16 @@ export class ChatController {
     @Post('removeBan')
     async removeBan(@Body() banUser: BanUser) {
         return await this.chatService.removeBanCommand(banUser);
+    }
+
+    @Post('muteUser')
+    async muteUser(@Body() muteUser: MuteUser) {
+        return await this.chatService.muteUser(muteUser);
+    }
+
+    @Post('removeMute')
+    async removeMute(@Body() muteUser: MuteUser) {
+        return await this.chatService.removeMute(muteUser);
     }
 
 }
