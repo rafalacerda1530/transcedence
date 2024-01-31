@@ -32,6 +32,8 @@ model User {
 
   gamesAsPlayer1 Game[] @relation("player1")
   gamesAsPlayer2 Game[] @relation("player2")
+
+  @@index([user])
 }
 
 model Friendship {
@@ -70,4 +72,6 @@ model Game {
   player2     User   @relation("player2", fields: [player2Id], references: [id])
 
   @@unique([id])
+  @@index([player1Id])
+  @@index([player2Id])
 }

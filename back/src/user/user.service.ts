@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Res } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -57,6 +58,19 @@ export class UserService {
 		return userSend;
 	}
 
+	async userLogout(username: string, @Res() res: Response){
+        await this.prisma.user.update({
+            where: {
+                user: username,
+            },
+            data: {
+                jwt_token: '',
+            },
+        });
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+    }
+
 	async saveProfileImage(username: string, filePath: string) {
 		// Atualizar o caminho do arquivo no banco de dados para o usuário específico
 		const updatedUser = await this.prisma.user.update({
@@ -89,18 +103,20 @@ export class UserService {
 
 	async getUserHistoryComplete(username: string) {
 
+		console.log(username);
+
 		const user = await this.prisma.user.findUnique({
 			where: {
 				user: username,
 			},
 		});
-	
+
 		if (!user) {
 			// Handle the case where the user is not found
 			Logger.warn(`User with username '${username}' not found.`);
 			return null; // Or handle it according to your needs
 		}
-	
+
 		const userGames = await this.prisma.game.findMany({
 			where: {
 			  OR: [
@@ -109,38 +125,33 @@ export class UserService {
 			  ],
 			},
 		  });
-	
-		const history = await userGames.filter(game =>
-			(game.player1Id === user.id ) ||
-			(game.player2Id === user.id )
-		);
+
 		//console.log(history)
-		let historyLenght = history.length;
+		let historyLenght = userGames.length;
 		if (historyLenght > 5){
 			historyLenght = 5;
 		}
 		console.log("lenght: ", historyLenght)
 		const historyComplete = {}
 		for (let i = 0; i < historyLenght; i++){
-			historyComplete[i] = {'Partida': history[i].player1Name + ' VS ' + history[i].player2Name, 
-				 'Pontos_Player1': 'Pontuação ' + history[i].player1Name + ': ' + history[i].score1 ,
-				 'Pontos_Player2': 'Pontuação ' + history[i].player2Name + ': ' + history[i].score2 ,
+			historyComplete[i] = {'Partida': userGames[i].player1Name + ' VS ' + userGames[i].player2Name,
+				 'Pontos_Player1': 'Pontuação ' + userGames[i].player1Name + ': ' + userGames[i].score1 ,
+				 'Pontos_Player2': 'Pontuação ' + userGames[i].player2Name + ': ' + userGames[i].score2 ,
 				 'Tamanho_Array' : historyLenght
 			}
-			if (history[i].player1Won === true){
-				historyComplete[i]['Vencedor'] = 'Vencedor: ' + history[i].player1Name
+			if (userGames[i].player1Won === true){
+				historyComplete[i]['Vencedor'] = 'Vencedor: ' + userGames[i].player1Name
 			}
 			else{
-				historyComplete[i]['Vencedor'] = 'Vencedor: ' + history[i].player2Name
+				historyComplete[i]['Vencedor'] = 'Vencedor: ' + userGames[i].player2Name
 			};
 			console.log("i : ", i)
 			console.log(historyComplete[i])
 	}
 		const userSend = {
-			
 			history: historyComplete
 		};
-	
+
 		return userSend;
 	}
 
