@@ -38,7 +38,6 @@ export const CallBackDesactive2fa = async () => {
   }
 };
 
-
 const ToggleSwitch = () => {
   const [ativo, setAtivo] = useState(false)
   
@@ -69,7 +68,6 @@ const ToggleSwitch = () => {
     } catch (error) {
       alert("Erro ao localizar")
     }
-    
   };
 
   return (

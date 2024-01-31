@@ -61,7 +61,7 @@ export class Authentication2faController {
         }
         return { success: 'true' };
     }
-p
+
     @Post('2fa/checkAtive')
     @HttpCode(200)
     async isActive2faAuthenticate(@Body() body) {

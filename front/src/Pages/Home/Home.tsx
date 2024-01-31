@@ -3,8 +3,6 @@ import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 import axios from "axios";
 import ToggleSwitch from "./button/toggle";
 
-
-
 export const Home = () => {
   interface UserData {
     user: string;
@@ -26,6 +24,7 @@ export const Home = () => {
   const handleToggle = () => {
     setAtivo(!ativo);
   };
+  
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedName(userData?.user || "");
