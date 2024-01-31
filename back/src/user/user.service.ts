@@ -59,7 +59,7 @@ export class UserService {
 	}
 
 	async userLogout(username: string, @Res() res: Response){
-        const user = await this.prisma.user.update({
+        await this.prisma.user.update({
             where: {
                 user: username,
             },
