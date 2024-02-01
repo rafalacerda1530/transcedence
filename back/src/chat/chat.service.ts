@@ -8,11 +8,16 @@ import { ChatGateway } from "./chat.gateway";
 
 @Injectable()
 export class ChatService {
-    private chatGateway: ChatGateway;
+    private _chatGateway: ChatGateway;
+
+    set chatGateway(chatGateway: ChatGateway) {
+        this._chatGateway = chatGateway;
+    }
+
     constructor(
         private readonly prisma: PrismaService,
         private readonly groupService: GroupService,
-    ) { }
+    ) {}
 
     async saveMessage(messageToServer: messageToServer) {
         const user = await this.groupService.getUserByUsername(messageToServer.username,);
@@ -193,7 +198,6 @@ export class ChatService {
         }
     }
 
-    // TODO TEST leaveroom
     async kickUser(kickUser: KickUser) {
         const group = await this.groupService.getGroupByName(kickUser.groupName);
         const adm = await this.groupService.getUserByUsername(kickUser.admUsername);
@@ -203,14 +207,12 @@ export class ChatService {
         await this.groupService.deleteUserFromGroup(target.id, group.id);
 
         const userIdFromJWT = target.user;
-        if (this.chatGateway){
-            console.log('entrou')
-            const socketId = this.chatGateway.getUserSocketId(userIdFromJWT);
+        if (this._chatGateway){
+            const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
             if (socketId) {
-                this.chatGateway.leaveUserFromGroup(socketId, group.name)
+                this._chatGateway.leaveUserFromGroup(socketId, group.name)
             }
         }
-        console.log('deu ruim')
     }
 
     async banUser(banUser: BanUser) {
@@ -229,6 +231,15 @@ export class ChatService {
                 expirationDate: banDuration ? new Date(new Date().getTime() + banDuration * 60000) : null,
             },
         });
+
+        const userIdFromJWT = target.user;
+        if (this._chatGateway){
+            const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
+            if (socketId) {
+                this._chatGateway.leaveUserFromGroup(socketId, group.name)
+            }
+        }
+
     }
 
     async removeBanCommand(banUser: BanUser) {
@@ -307,7 +318,4 @@ export class ChatService {
             }
         })
     }
-
-    //TODO refatorar pois quando alguem é desligado o socket connectado no room deve ser cortado tbm....
-
 }

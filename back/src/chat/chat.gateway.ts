@@ -1,16 +1,17 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, ConnectedSocket } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
 import { GroupActionsDto } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
+import { OpenAsBlobOptions } from 'fs';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'chat' })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, OnModuleInit {
 
     @WebSocketServer() server: Namespace;
     constructor(
@@ -21,6 +22,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     private logger: Logger = new Logger(ChatGateway.name);
     private userSocketMap: Map<string, string> = new Map();
+
+    onModuleInit() {
+        this.chatService.chatGateway = this;
+    }
 
     afterInit() {
         this.logger.log('Chat websocket initialized');
@@ -129,32 +134,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
-    @SubscribeMessage('leftGroup')
-    async handleleftGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
+    getUserSocketId(primaryKey: string): string {
+        return this.userSocketMap.get(primaryKey);
+    }
+
+    leaveUserFromGroup(socketId: string, groupName: string) {
         try {
-            const { username, groupName } = groupActionsDto;
-            client.leave(groupName);
+            const socket = this.server.sockets.get(socketId)
+            socket.leave(groupName);
             this.server.to(groupName).emit('messageToClient', {
-                username: username,
-                message: `${username} left the group.`,
+                username: socketId,
+                message: `${socketId} left the group.`,
                 date: new Date(),
             });
         } catch (error) {
             throw new BadRequestException(error.message);
         }
-    }
-
-    getUserSocketId(primaryKey: string): string {
-        console.log('-------')
-       const teste =  this.userSocketMap.get(primaryKey);
-        console.log(teste)
-        return teste
-    }
-
-    leaveUserFromGroup(socketId: string, groupName: string) {
-        const socket = this.server.sockets.get(socketId)
-        if (socket)
-            socket.leave(groupName);
     }
 
 }
