@@ -4,9 +4,11 @@ import { messageToClient, messageToServer } from "./dto/chat.interface";
 import { BanUser, BlockUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
+import { ChatGateway } from "./chat.gateway";
 
 @Injectable()
 export class ChatService {
+    private chatGateway: ChatGateway;
     constructor(
         private readonly prisma: PrismaService,
         private readonly groupService: GroupService,
@@ -185,23 +187,13 @@ export class ChatService {
             var emptyGroup = await this.groupService.passOwner(user, group);
         }
 
-        await this.prisma.groupMembership.deleteMany({
-            where: {
-                userId: user.id,
-                groupId: group.id,
-            },
-        });
-        await this.prisma.groupAdmin.deleteMany({
-            where: {
-                userId: user.id,
-                groupId: group.id,
-            },
-        });
+        await this.groupService.deleteUserFromGroup(user.id, group.id);
         if (emptyGroup) {
             await this.prisma.group.delete({ where: { id: group.id } });
         }
     }
 
+    // TODO TEST leaveroom
     async kickUser(kickUser: KickUser) {
         const group = await this.groupService.getGroupByName(kickUser.groupName);
         const adm = await this.groupService.getUserByUsername(kickUser.admUsername);
@@ -209,6 +201,12 @@ export class ChatService {
 
         await this.groupService.validateAdmActions(adm, target, group);
         await this.groupService.deleteUserFromGroup(target.id, group.id);
+
+        const userIdFromJWT = target.jwt_token;
+        const socketId = this.chatGateway.getUserSocketId(userIdFromJWT);
+        if (socketId) {
+            this.chatGateway.leaveUserFromGroup(socketId, group.name)
+        }
     }
 
     async banUser(banUser: BanUser) {
@@ -305,5 +303,7 @@ export class ChatService {
             }
         })
     }
+
+    //TODO refatorar pois quando alguem é desligado o socket connectado no room deve ser cortado tbm....
 
 }
