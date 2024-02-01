@@ -202,11 +202,15 @@ export class ChatService {
         await this.groupService.validateAdmActions(adm, target, group);
         await this.groupService.deleteUserFromGroup(target.id, group.id);
 
-        const userIdFromJWT = target.jwt_token;
-        const socketId = this.chatGateway.getUserSocketId(userIdFromJWT);
-        if (socketId) {
-            this.chatGateway.leaveUserFromGroup(socketId, group.name)
+        const userIdFromJWT = target.user;
+        if (this.chatGateway){
+            console.log('entrou')
+            const socketId = this.chatGateway.getUserSocketId(userIdFromJWT);
+            if (socketId) {
+                this.chatGateway.leaveUserFromGroup(socketId, group.name)
+            }
         }
+        console.log('deu ruim')
     }
 
     async banUser(banUser: BanUser) {

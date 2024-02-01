@@ -26,6 +26,6 @@ import { ChatModule } from './chat/chat.module';
         Authentication2faModule,
         FriendshipModule,
         GatewayModule,
-    , ChatModule],
+        ChatModule],
 })
 export class AppModule {}

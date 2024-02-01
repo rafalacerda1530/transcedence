@@ -38,6 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             if (typeof decoded['sub'] === 'string') {
                 const userId = decoded['sub'];
                 this.userSocketMap.set(userId, client.id);
+                console.log(this.userSocketMap)
             }
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
@@ -143,8 +144,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
-    getUserSocketId(primaryKey: string): string | undefined {
-        return this.userSocketMap[primaryKey];
+    getUserSocketId(primaryKey: string): string {
+        console.log('-------')
+       const teste =  this.userSocketMap.get(primaryKey);
+        console.log(teste)
+        return teste
     }
 
     leaveUserFromGroup(socketId: string, groupName: string) {
