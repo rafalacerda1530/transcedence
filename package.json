@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@heroicons/react": "^2.1.1",
+    "react-router-dom": "^6.21.3",
+    "react-switch": "^7.0.0",
+    "react-toggle": "^4.1.3"
+  }
+}

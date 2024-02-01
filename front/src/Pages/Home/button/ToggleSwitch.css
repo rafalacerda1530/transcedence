@@ -1,0 +1,34 @@
+.toggle-switch {
+  background-color: #ccc;
+  border-radius: 15px;
+  display: flex;
+  cursor: pointer;
+  overflow: hidden; /* Adicionei para esconder a parte do switch que se move para fora do container */
+}
+
+.switch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle-switch.ativo {
+  width: 45px;
+  height: 20px;
+  background-color: green; /* Cor verde quando ligado */
+  margin: 30px 0 0 10px;
+}
+
+.toggle-switch.inativo {
+  width: 45px;
+  height: 20px;
+  background-color: red; /* Cor vermelha quando desligado */
+  margin: 30px 0 0 10px;
+}
+
+.toggle-switch.ativo .switch {
+  transform: translateX(25px);
+}
+

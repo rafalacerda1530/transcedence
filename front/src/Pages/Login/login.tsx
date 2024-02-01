@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { CallBack2faAuthenticate, CallBackCheck2fa, CallBackUserAndPassword } from "../../components/callBack";
+import {
+  CallBack2faAuthenticate,
+  CallBackCheck2fa,
+  CallBackUserAndPassword,
+} from "../../components/callBack";
 import axios from "axios";
+
+const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
 
 function LoginGame() {
   const [formData, setFormData] = useState({
     user: "",
     password: "",
     email: "",
-    twoFactorAuthenticationCode: ""
+    twoFactorAuthenticationCode: "",
+    profileImage: defaultPhoto, // Inclua a URL padrão aqui
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [showBall, setShowBall] = useState(false);
@@ -24,26 +31,29 @@ function LoginGame() {
 
   const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
-    formData.email = "teste@teste.com";
-    const  authentication2fa = await CallBackCheck2fa(formData)
-    if (authentication2fa && authenticate2factor == false)
-      setAuthenticate2faActive(true)
+    console.log("http://localhost:5555");
+    const authentication2fa = await CallBackCheck2fa(formData);
+    if (authentication2fa && authenticate2factor === false)
+      setAuthenticate2faActive(true);
     else if (!formData.user || !formData.password) {
       setErrorMessage("Campos não podem estar vazios");
     } else {
-      if (authentication2fa === true && await CallBack2faAuthenticate(formData) === false){
-          setErrorMessage("Código Inválido");
-      }
-      else{
+      if (
+        authentication2fa === true &&
+        (await CallBack2faAuthenticate(formData)) === false
+      ) {
+        setErrorMessage("Código Inválido");
+      } else {
+        console.log(formData);
         CallBackUserAndPassword(formData)
-              .then((response) => {
-                console.log(response.data);
-                window.location.href = "http://localhost:3000/Home";
-              })
-              .catch((error) => {
-                console.log("erro:", error.response.data.message);
-                setErrorMessage(error.response.data.message);
-            });
+          .then((response) => {
+            console.log(response.data);
+            window.location.href = "http://localhost:3000/Home";
+          })
+          .catch((error) => {
+            console.log("erro:", error.response.data.message);
+            setErrorMessage(error.response.data.message);
+          });
       }
     }
   };
@@ -53,7 +63,26 @@ function LoginGame() {
       "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-e4c7b8cd4fb31c268132af823110ef8bdbf90e2df97baf4c1fe0f4a6f93e110b&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2FcallBack&response_type=code";
 
     window.location.href = url;
-    console.log("teste da url: ", url);
+  };
+  const validatePassword = (senha: string): boolean => {
+    const uppercaseRegex = /[A-Z]/;
+    const lowercaseRegex = /[a-z]/;
+    const numberRegex = /[0-9]/;
+    const specialCharRegex = /[!?@#$%^&*()-+_]/; // Adicione outros caracteres especiais conforme necessário
+
+    const hasUppercase = uppercaseRegex.test(senha);
+    const hasLowercase = lowercaseRegex.test(senha);
+    const hasNumber = numberRegex.test(senha);
+    const hasSpecialChar = specialCharRegex.test(senha);
+
+    const isValid =
+      hasUppercase &&
+      hasLowercase &&
+      hasNumber &&
+      hasSpecialChar &&
+      senha.length >= 8; // Mínimo de 8 caracteres
+
+    return isValid;
   };
 
   const handleRegister = (event: { preventDefault: () => void }) => {
@@ -63,19 +92,23 @@ function LoginGame() {
     // 	password: "1234",
     // 	email: "julia@julia.com",
     //   };
-    axios
-      .post("http://localhost:3333/auth/signup", formData,
-      {
-        withCredentials: true,
-      })
-      .then((response) => {
-        console.log(response.data);
-        window.location.href = "http://localhost:3000/Home";
-      })
-      .catch((error) => {
-        console.log("erro:", error.response.data.message);
-        setErrorMessage(error.response.data.message);
-      });
+    if (validatePassword(formData.password)) {
+      //console.log("Senha válida! Pode ser enviada para a API.");
+      axios
+        .post(process.env.REACT_APP_API_URL + "/auth/signup", formData, {
+          withCredentials: true,
+        })
+        .then((response) => {
+          console.log(response.data);
+          window.location.href = "http://localhost:3000/Home";
+        })
+        .catch((error) => {
+          console.log("erro:", error.response.data.message, formData);
+          setErrorMessage(error.response.data.message);
+        });
+    } else {
+      setErrorMessage("A senha não atende aos critérios.");
+    }
   };
 
   useEffect(() => {
@@ -129,7 +162,12 @@ function LoginGame() {
                   setErrorMessage(""); // Limpa a mensagem de erro
                   handleInputChange(event); // Chama a função handleInputChange original
                 }}
-              />
+              />{" "}
+              <p className="text-xs text-gray-400 mb-1 mt-1">
+                A senha deve conter pelo menos 8 caracteres, incluindo pelo
+                menos uma letra maiúscula, uma letra minúscula, um número e um
+                caractere especial.
+              </p>
               {errorMessage && (
                 <p className="text-red-500 text-center mt-2">{errorMessage}</p>
               )}
@@ -165,8 +203,8 @@ function LoginGame() {
                 }}
               />
             </div>
-              {authenticate2factor && (
-                <div className="mb-4">
+            {authenticate2factor && (
+              <div className="mb-4">
                 <input
                   type="text"
                   name="twoFactorAuthenticationCode"
@@ -178,7 +216,7 @@ function LoginGame() {
                   }}
                 />
               </div>
-              )}
+            )}
             <div className="mb-4">
               <input
                 type="password"

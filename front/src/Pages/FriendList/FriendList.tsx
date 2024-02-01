@@ -14,7 +14,7 @@ const FriendsList: React.FC = () => {
     useEffect(() => {
         const fetchFriends = async () => {
             try {
-                const response = await fetch(`http://localhost:3333/friendship/${username}`);
+                const response = await fetch(process.env.REACT_APP_API_URL + `/friendship/${username}`);
                 const data = await response.json();
                 setFriends(data);
             } catch (error) {

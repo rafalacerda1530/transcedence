@@ -1,39 +1,54 @@
 /* pong.css */
 
 .pong-container {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100vh;
-	background: #000;
-	color: #fff;
-	position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #000;
+  color: #fff;
+  position: relative;
+}
+
+.ball {
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  animation: bounce 2s linear infinite;
+}
+
+.barrier {
+  width: 10px;
+  height: 100px;
+  background: #fff;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  
-  .ball {
-	width: 20px;
-	height: 20px;
-	background: #fff;
-	border-radius: 50%;
-	position: absolute;
-	animation: bounce 2s linear infinite;
+  50% {
+    transform: translateY(-100px);
   }
-  
-  .barrier {
-	width: 10px;
-	height: 100px;
-	background: #fff;
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-  }
-  
-  @keyframes bounce {
-	0%, 100% {
-	  transform: translateY(0);
-	}
-	50% {
-	  transform: translateY(-100px);
-	}
-  }
-  
+}
+
+.center-profile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.center-profile-editing {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
