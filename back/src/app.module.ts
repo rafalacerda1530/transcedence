@@ -10,6 +10,7 @@ import { Authentication2faModule } from './2fa-authentication/authentication-2fa
 import { FriendshipModule } from './Friendship/Friendship.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { Game } from './game/game';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
     imports: [
@@ -25,6 +26,6 @@ import { Game } from './game/game';
         Authentication2faModule,
         FriendshipModule,
         GatewayModule,
-    ],
+    , ChatModule],
 })
 export class AppModule {}
