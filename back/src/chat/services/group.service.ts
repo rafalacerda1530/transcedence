@@ -275,7 +275,6 @@ export class GroupService {
         return users;
     }
 
-    //TODO TEST com Dm e Grupos normais
     async getUserGroupAndDm(userUsername: string) {
         const user = await this.getUserByUsername(userUsername);
 

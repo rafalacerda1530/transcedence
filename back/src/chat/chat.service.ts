@@ -348,7 +348,6 @@ export class ChatService {
         });
     }
 
-    //TODO TEST talves nao seja necessario ver logica do front com implementacao
     async joinDmGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
         const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
         const group = await this.groupService.getDmGroupByName(groupActionsDto.groupName,);

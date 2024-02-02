@@ -5,7 +5,6 @@ import { GroupService } from './services/group.service';
 
 @Controller('api/chat')
 // @UseGuards(AuthGuard('jwt'))
-// TODO MUDAR OS METODOS POST PARA O IDEAL
 export class ChatController {
     constructor(
         private readonly chatService: ChatService,
@@ -18,7 +17,6 @@ export class ChatController {
         return await this.chatService.createGroup(createGroupDto);
     }
 
-    //TODO ??????? FIX TALVES o ACCEPT NAO SEJA A MELHOR MANEIRA POR HTTP MELHOR FAZER POR SOCKET
     @Put('inviteToGroup')
     async inviteToGroup(@Body() inviteToGroupDto: InviteToGroupDto) {
         return await this.chatService.inviteToGroup(inviteToGroupDto);

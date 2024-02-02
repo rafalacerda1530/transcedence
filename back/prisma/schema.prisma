@@ -181,7 +181,7 @@ model Message {
     group   Group? @relation(fields: [groupId], references: [id])
     groupId Int?
 
-    groupDM   GroupDM? @relation(fields: [groupDMId], references: [id])
+    groupDM   GroupDM? @relation(fields: [groupDMId], references: [id], onDelete: Cascade)
     groupDMId Int?
 }
 

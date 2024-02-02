@@ -95,8 +95,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
 
-    //TODO:later -- 2. ver como fica a logica para direct
-    //TODO:later -- 2 .criar o metodo de direct message
     @SubscribeMessage('messageToServer')
     async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
         const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
@@ -132,7 +130,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
     }
 
-    //TODO TEST
     @SubscribeMessage('DmMessageToServer')
     async DmHandleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
         const isUserBlocked = await this.groupService.DmIsUserBlocked(message.groupName);
@@ -146,7 +143,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
-    // TODO TEST
     @SubscribeMessage('joinDmGroup')
     async handleJoinDmGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
         const messageToClient: messageToClient = await this.chatService.joinDmGroup(groupActionsDto);

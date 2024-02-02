@@ -26,10 +26,10 @@ CREATE TABLE "GroupDM" (
 CREATE UNIQUE INDEX "GroupDM_name_key" ON "GroupDM"("name");
 
 -- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_groupDMId_fkey" FOREIGN KEY ("groupDMId") REFERENCES "GroupDM"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Message" ADD CONSTRAINT "Message_groupDMId_fkey" FOREIGN KEY ("groupDMId") REFERENCES "GroupDM"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "GroupMembership" ADD CONSTRAINT "GroupMembership_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "GroupMembership" ADD CONSTRAINT "GroupMembership_groupDMId_fkey" FOREIGN KEY ("groupDMId") REFERENCES "GroupDM"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "GroupMembership" ADD CONSTRAINT "GroupMembership_groupDMId_fkey" FOREIGN KEY ("groupDMId") REFERENCES "GroupDM"("id") ON DELETE CASCADE ON UPDATE CASCADE;

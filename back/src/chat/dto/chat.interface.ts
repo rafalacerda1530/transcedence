@@ -1,7 +1,6 @@
 
-//TODO:later-- REMOVER ? quando direct estiver pronto
 export interface messageToServer {
-    groupName?: string;
+    groupName: string;
     username: string;
     message: string;
 }
