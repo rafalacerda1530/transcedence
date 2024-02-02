@@ -96,3 +96,20 @@ export class BlockUser {
     @IsNotEmpty({ message: "Insert a valid user" })
     targetUsername: string;
 }
+
+export class CreateDmGroup {
+    @IsNotEmpty({ message: "Insert a valid user" })
+    userA: string;
+    @IsNotEmpty({ message: "Insert a valid user" })
+    userB: string;
+    @IsNotEmpty({ message: "Insert a valid type" })
+    @MaxLength(20, { message: "Group name should be in max 20 characters" })
+    groupName: string;
+    @IsNotEmpty({ message: "Insert a valid type" })
+    type: GroupStatus;
+}
+
+export class DeleteDmGroup {
+    @IsNotEmpty({ message: "Insert a valid group name" })
+    groupName: string;
+}

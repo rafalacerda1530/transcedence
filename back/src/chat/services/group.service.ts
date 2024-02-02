@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Group, User } from "@prisma/client";
+import { Group, GroupDM, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
 
@@ -27,6 +27,19 @@ export class GroupService {
             });
             if (!group)
                 throw new BadRequestException(`Group ${chatName} not found`);
+            return group;
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    async getDmGroupByName(groupName: string): Promise<GroupDM> {
+        try {
+            const group = await this.prisma.groupDM.findUnique({
+                where: { name: groupName },
+            });
+            if (!group)
+                throw new BadRequestException(`Group ${groupName} not found`);
             return group;
         } catch (error) {
             throw new BadRequestException(error.message);
@@ -208,7 +221,7 @@ export class GroupService {
         return false;
     }
 
-    async isUserMutted(targetName: string,  groupName: string): Promise<boolean> {
+    async isUserMutted(targetName: string, groupName: string): Promise<boolean> {
         const target = await this.getUserByUsername(targetName);
         const group = await this.getGroupByName(groupName);
         const mute = await this.prisma.mute.findFirst({
@@ -237,4 +250,48 @@ export class GroupService {
         return !!block;
     }
 
+    async DmIsUserBlocked(groupName: string): Promise<boolean> {
+        const [userA, userB] = await this.getUserByDmGroup(groupName)
+
+        const block = await this.prisma.block.findFirst({
+            where: {
+                OR: [
+                    { userId: userA, blockedUserId: userB },
+                    { userId: userB, blockedUserId: userA },
+                ],
+            },
+        });
+        return !!block;
+    }
+
+    async getUserByDmGroup(groupName: string){
+        const groupDm = await this.prisma.groupDM.findUnique({
+            where:{
+                name: groupName,
+            },
+            include: { members: true},
+        });
+        const users = groupDm.members.map(member => member.userId)
+        return users;
+    }
+
+    async getUserGroupAndDm(userUsername: string) {
+        const user = await this.getUserByUsername(userUsername);
+
+        const groupMembership = await this.prisma.groupMembership.findMany({
+            where: { userId: user.id, },
+            include: { group: true, groupDM: true}
+        });
+
+        if (groupMembership.length === 0) {
+            return;
+        }
+        const groupNames: string[] = [];
+        for (const membership of groupMembership) {
+            const targetGroupName = membership.group?.name ?? membership.groupDM?.name;
+            if (targetGroupName)
+                groupNames.push(targetGroupName);
+        }
+        return groupNames;
+    }
 }
