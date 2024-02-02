@@ -44,16 +44,26 @@ export class FriendshipService {
     }
 
     async deleteFriendship(userId: number, friendId: number): Promise<void> {
-        await this.prisma.$transaction([
-            this.prisma.friendship.deleteMany({
-                where: {
-                    OR: [
-                        { followedById: userId, followingId: friendId },
-                        { followedById: friendId, followingId: userId },
-                    ],
-                },
-            }),
-        ]);
+        const existingFriendship = await this.prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { followedById: userId, followingId: friendId },
+                    { followedById: friendId, followingId: userId },
+                ],
+            },
+        });
+        if (!existingFriendship) {
+            throw new BadRequestException('Friendship does not exist');
+        }
+
+        await this.prisma.friendship.update({
+            where: {
+                id: existingFriendship.id,
+            },
+            data: {
+                friendshipStatus: 3,
+            },
+        });
     }
 
     async getFriends(username: string): Promise<Friend[]> {
