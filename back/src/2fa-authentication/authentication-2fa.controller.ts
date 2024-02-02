@@ -43,7 +43,6 @@ export class Authentication2faController {
                 secret['otpAuthUrl'],
             ),
         };
-        console.log(qrCode);
         return qrCode;
     }
 
@@ -65,7 +64,6 @@ export class Authentication2faController {
     @Post('2fa/checkAtive')
     @HttpCode(200)
     async isActive2faAuthenticate(@Body() body) {
-        console.log(body.user,)
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -87,7 +85,6 @@ export class Authentication2faController {
     @Post('2fa/checkIfAtive')
     @HttpCode(200)
     async isActive2faAuthentication(@GetCurrentUser('sub') username: string) {
-        console.log(username,)
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -109,7 +106,6 @@ export class Authentication2faController {
     @Post('2fa/activate')
     @HttpCode(200)
     async activate2faAuthenticate(@GetCurrentUser('sub') username: string) {
-        console.log(username);
         try {
             await this.service2fa.setTwoFactorOn(username);
             return { success: true };

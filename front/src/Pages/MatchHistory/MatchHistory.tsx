@@ -1,8 +1,9 @@
 import { AxiosResponse } from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { axiosPrivate } from "../../hooks/useAxiosPrivate";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
+import { StatusContext } from "../../context/StatusContext";
 
 interface MatchHistoryItem {
   Partida: string;
@@ -30,13 +31,62 @@ export const MatchHistoryComplete = () => {
   const { user } = useParams<{ user: string }>();
   const [history, setHistory] = useState<Record<string, MatchHistoryItem>>({});
   const [showBall, setShowBall] = useState(true);
-  const refreshToken = useRefreshToken(); const [userData, setUserData] = useState<UserData | null>(null);
+  const statusSocket = useContext(StatusContext);
+  const refreshToken = useRefreshToken();
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState({
     win: 0,
     lose: 0,
     score: 0,
   });
   const [username, setUserName] = useState("");
+
+  const connectSocket = () => {
+    statusSocket.connect();
+    statusSocket.on("connect", () => {
+      console.log("Conectado ao socket");
+    });
+
+    statusSocket.on("jwt_error", async (error) => {
+      console.log(`Connection failed due to ${error.message}`);
+      console.log("Tentando Reautenticar");
+      disconnectSocket();
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.log(error);
+        window.location.href = "http://localhost:3000/login";
+      }
+      connectSocket();
+    });
+
+    statusSocket.on("missing_token", async () => {
+      disconnectSocket();
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.log(error);
+        window.location.href = "http://localhost:3000/login";
+      }
+      connectSocket();
+    });
+
+  };
+
+  const disconnectSocket = () => {
+    statusSocket.off("connect");
+    statusSocket.off("jwt_error");
+    statusSocket.off("missing_cookie");
+    statusSocket.disconnect();
+  };
+
+  useEffect(() => {
+    connectSocket();
+    return () => {
+      console.log("Desconectando do socket");
+      disconnectSocket();
+    };
+  }, [statusSocket]);
 
   let image = "";
   const fetchUserData = async (response: AxiosResponse<UserData>) => {
@@ -162,7 +212,7 @@ export const MatchHistoryComplete = () => {
               className="w-20 h-20 rounded-full mx-auto mb-4"
             />
           </div>
-         
+
         </div>
 
         {/* Seção para estatísticas */}
@@ -222,7 +272,7 @@ export const MatchHistoryComplete = () => {
         </div>
       </div>
     </div>
-    
+
   );
 
 };

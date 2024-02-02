@@ -49,9 +49,11 @@ export const Router = () => {
                     <Route path="/user/:username" element={<FriendsList />} />
                 </Routes>
 
-                <Routes>
-                    <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
-                </Routes>
+                <StatusProvider value={statusSocket}>
+                    <Routes>
+                        <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
+                    </Routes>
+                </StatusProvider>
 
             </BrowserRouter>
         </>

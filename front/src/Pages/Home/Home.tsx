@@ -16,7 +16,8 @@ export const Home = () => {
 
   const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
   const statusSocket = useContext(StatusContext);
-  const refreshToken = useRefreshToken(); const [userData, setUserData] = useState<UserData | null>(null);
+  const refreshToken = useRefreshToken();
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [editedEmail, setEditedEmail] = useState("");

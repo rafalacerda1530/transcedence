@@ -124,8 +124,8 @@ export class HardMode implements GameMode {
 
 		const ballHitPaddle1 = this.ballX <= 23.8 && this.ballX >= 22.4 && this.ballY >= (this.paddle1Y - 1) && this.ballY <= this.paddle1Y + 10;
 		const ballHitPaddle2 = this.ballX <= 76.8 && this.ballX >= 75.6 && this.ballY >= (this.paddle2Y - 1) && this.ballY <= this.paddle2Y + 10;
-		const ballHitPaddle3 = this.ballX <= 36.5 && this.ballX >= 35.1 && this.ballY >= (this.paddle3Y - 1) && this.ballY <= this.paddle3Y + 4;
-		const ballHitPaddle4 = this.ballX <= 63.1 && this.ballX >= 61.7 && this.ballY >= (this.paddle4Y - 1) && this.ballY <= this.paddle4Y + 4;
+		const ballHitPaddle3 = this.ballX <= 37.1 && this.ballX >= 35.7 && this.ballY >= (this.paddle3Y - 1) && this.ballY <= this.paddle3Y + 4;
+		const ballHitPaddle4 = this.ballX <= 63.7 && this.ballX >= 62.3 && this.ballY >= (this.paddle4Y - 1) && this.ballY <= this.paddle4Y + 4;
 
 		if (ballSpeedXNegative) {
 			if (ballHitPaddle1) {
@@ -138,10 +138,10 @@ export class HardMode implements GameMode {
 				this.reset();
 			} else if (ballHitPaddle3) {
 				this.ballSpeedX = -this.ballSpeedX;
-				this.ballX = 36.5;
+				this.ballX = 37.1;
 			} else if (ballHitPaddle4) {
 				this.ballSpeedX = -this.ballSpeedX;
-				this.ballX = 63.1;
+				this.ballX = 63.7;
 			}
 		} else {
 			if (ballHitPaddle2) {
@@ -154,10 +154,10 @@ export class HardMode implements GameMode {
 				this.reset();
 			} else if (ballHitPaddle3) {
 				this.ballSpeedX = -this.ballSpeedX;
-				this.ballX = 35.1;
+				this.ballX = 35.7;
 			} else if (ballHitPaddle4) {
 				this.ballSpeedX = -this.ballSpeedX;
-				this.ballX = 61.7;
+				this.ballX = 62.3;
 			}
 		}
 

@@ -103,8 +103,6 @@ export class UserService {
 
 	async getUserHistoryComplete(username: string) {
 
-		console.log(username);
-
 		const user = await this.prisma.user.findUnique({
 			where: {
 				user: username,
