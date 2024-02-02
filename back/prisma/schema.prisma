@@ -21,13 +21,14 @@ enum UserStatus {
 }
 
 model Friendship {
-    id           Int      @id @default(autoincrement())
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
-    followedBy   User     @relation("followedBy", fields: [followedById], references: [id])
-    followedById Int
-    following    User     @relation("following", fields: [followingId], references: [id])
-    followingId  Int
+    id               Int      @id @default(autoincrement())
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+    followedBy       User     @relation("followedBy", fields: [followedById], references: [id])
+    followedById     Int
+    following        User     @relation("following", fields: [followingId], references: [id])
+    followingId      Int
+    friendshipStatus Int
 
     @@unique([followingId, followedById])
 }
@@ -95,17 +96,17 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-  email                   String   @unique
-  user                    String   @unique
-  nickname                String?  @unique
-  hash                    String?
-  userIntra               Boolean?
-  jwt_token               String?
-  authentication2fa       Boolean?
-  authentication2faSecret String?
-  profileImage            String?
+    email                   String   @unique
+    user                    String   @unique
+    nickname                String?  @unique
+    hash                    String?
+    userIntra               Boolean?
+    jwt_token               String?
+    authentication2fa       Boolean?
+    authentication2faSecret String?
+    profileImage            String?
 
-  status UserStatus @default(OFFLINE)
+    status UserStatus @default(OFFLINE)
 
     followedBy Friendship[] @relation("followedBy")
     following  Friendship[] @relation("following")
@@ -118,10 +119,10 @@ model User {
     invitesReceived GroupInvite[]     @relation("invitedUser")
     bans            Ban[]
     mute            Mute[]
-    blockedUser Block[] @relation("user")
-    userWhoBlocked  Block[] @relation("blockedUser")
-  gamesAsPlayer1 Game[] @relation("player1")
-  gamesAsPlayer2 Game[] @relation("player2")
+    blockedUser     Block[]           @relation("user")
+    userWhoBlocked  Block[]           @relation("blockedUser")
+    gamesAsPlayer1  Game[]            @relation("player1")
+    gamesAsPlayer2  Game[]            @relation("player2")
 
     @@index([user])
 }
@@ -176,8 +177,8 @@ model Block {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    user    User  @relation("user", fields: [userId], references: [id])
-    userId  Int
+    user          User @relation("user", fields: [userId], references: [id])
+    userId        Int
     blockedUser   User @relation("blockedUser", fields: [blockedUserId], references: [id])
     blockedUserId Int
 
@@ -185,23 +186,22 @@ model Block {
 }
 
 model Game {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  player1Name String
-  player2Name String
-  player1Id   Int
-  player2Id   Int
-  player1Won  Boolean
-  player2Won  Boolean
-  score1      Int
-  score2      Int
-  player1     User   @relation("player1", fields: [player1Id], references: [id])
-  player2     User   @relation("player2", fields: [player2Id], references: [id])
+    player1Name String
+    player2Name String
+    player1Id   Int
+    player2Id   Int
+    player1Won  Boolean
+    player2Won  Boolean
+    score1      Int
+    score2      Int
+    player1     User    @relation("player1", fields: [player1Id], references: [id])
+    player2     User    @relation("player2", fields: [player2Id], references: [id])
 
-  @@unique([id])
-  @@index([player1Id])
-  @@index([player2Id])
+    @@unique([id])
+    @@index([player1Id])
+    @@index([player2Id])
 }
-

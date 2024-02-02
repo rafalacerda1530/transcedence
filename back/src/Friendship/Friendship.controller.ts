@@ -4,10 +4,8 @@ import {
     Delete,
     Param,
     Get,
-    UseGuards,
 } from '@nestjs/common';
 import { FriendshipService } from './Friendship.service';
-import { User } from '@prisma/client';
 // import { AuthGuard } from '@nestjs/passport';
 
 const statusMappings = {
@@ -21,6 +19,35 @@ const statusMappings = {
 // @UseGuards(AuthGuard('jwt'))
 export class FriendshipController {
     constructor(private readonly friendshipService: FriendshipService) {}
+
+    @Post(':userId/status/:friendId')
+    async getFriendshipStatus( @Param('userId') userId: string, @Param('friendId') friendId: string,) {
+        const friendshipStatus = await this.friendshipService.getFriendshipStatus( parseInt(userId, 10), parseInt(friendId, 10),);
+        console.log(friendshipStatus);
+        return friendshipStatus;
+    }
+
+    @Post(':userId/accept/:friendId')
+    async acceptFriendship(
+        @Param('userId') userId: string,
+        @Param('friendId') friendId: string,
+    ): Promise<void> {
+        await this.friendshipService.acceptFriendship(
+            parseInt(userId, 10),
+            parseInt(friendId, 10),
+        );
+    }
+
+    @Post(':userId/reject/:friendId')
+    async rejectFriendship(
+        @Param('userId') userId: string,
+        @Param('friendId') friendId: string,
+    ): Promise<void> {
+        await this.friendshipService.rejectFriendship(
+            parseInt(userId, 10),
+            parseInt(friendId, 10),
+        );
+    }
 
     @Post(':userId/add/:friendId')
     async addFriendship(

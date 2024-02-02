@@ -5,7 +5,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClient, Friendship, UserStatus } from '@prisma/client';
+import { UserStatus } from '@prisma/client';
 interface Friend {
     id: number;
     user: string;
@@ -14,7 +14,7 @@ interface Friend {
 
 @Injectable()
 export class FriendshipService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     async addFriendship(userId: number, friendId: number): Promise<void> {
         if (userId === friendId)
@@ -27,15 +27,19 @@ export class FriendshipService {
                 ],
             },
         });
-        if (!existingFriendship) {
-            await this.prisma.$transaction([
-                this.prisma.friendship.create({
-                    data: {
-                        followedById: userId,
-                        followingId: friendId,
-                    },
-                }),
-            ]);
+        if (existingFriendship) {
+            this.prisma.friendship.update({
+                where: { id: existingFriendship.id, },
+                data: { friendshipStatus: 2 },
+            });
+        } else {
+            this.prisma.friendship.create({
+                data: {
+                    followedById: userId,
+                    followingId: friendId,
+                    friendshipStatus: 2,
+                },
+            })
         }
     }
 
@@ -90,5 +94,64 @@ export class FriendshipService {
         } catch (error) {
             throw new InternalServerErrorException('Error fetching user');
         }
+    }
+
+    async getFriendshipStatus(userId: number, friendId: number) {
+        const friendship = await this.prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { followedById: userId, followingId: friendId },
+                    { followedById: friendId, followingId: userId },
+                ],
+            },
+        });
+        return friendship.friendshipStatus;
+    }
+
+    async acceptFriendship(userId: number, friendId: number): Promise<void> {
+        const existingFriendship = await this.prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { followedById: userId, followingId: friendId },
+                    { followedById: friendId, followingId: userId },
+                ],
+            },
+        });
+        if (!existingFriendship) {
+            throw new BadRequestException('Friendship does not exist');
+        }
+
+        await this.prisma.friendship.update({
+            where: {
+                id: existingFriendship.id,
+            },
+            data: {
+                friendshipStatus: 1,
+            },
+        });
+    }
+
+    async rejectFriendship(userId: number, friendId: number): Promise<void> {
+        const existingFriendship = await this.prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { followedById: userId, followingId: friendId },
+                    { followedById: friendId, followingId: userId },
+                ],
+            },
+        });
+
+        if (!existingFriendship) {
+            throw new BadRequestException('Friendship does not exist');
+        }
+
+        await this.prisma.friendship.update({
+            where: {
+                id: existingFriendship.id,
+            },
+            data: {
+                friendshipStatus: 0,
+            },
+        });
     }
 }
