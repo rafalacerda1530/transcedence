@@ -11,6 +11,7 @@ enum GroupStatus {
     PUBLIC
     PRIVATE
     PROTECT
+    DIRECT
 }
 
 enum UserStatus {
@@ -32,80 +33,22 @@ model Friendship {
     @@unique([followingId, followedById])
 }
 
-model Message {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    date     DateTime
-    content  String
-    sender   User     @relation(fields: [senderId], references: [id])
-    senderId Int
-
-    group   Group? @relation(fields: [groupId], references: [id])
-    groupId Int?
-}
-
-model Group {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    name     String      @unique
-    type     GroupStatus
-    password String?
-
-    owner   User @relation("owner", fields: [ownerId], references: [id])
-    ownerId Int
-
-    members     GroupMembership[]
-    admins      GroupAdmin[]
-    Message     Message[]
-    GroupInvite GroupInvite[]
-    bans        Ban[]
-    mutes       Mute[]
-}
-
-model GroupMembership {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    user   User @relation(fields: [userId], references: [id])
-    userId Int
-
-    group   Group @relation(fields: [groupId], references: [id])
-    groupId Int
-}
-
-model GroupAdmin {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    user   User @relation(fields: [userId], references: [id])
-    userId Int
-
-    group   Group @relation(fields: [groupId], references: [id])
-    groupId Int
-}
-
 model User {
     id        Int      @id @default(autoincrement())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-  email                   String   @unique
-  user                    String   @unique
-  nickname                String?  @unique
-  hash                    String?
-  userIntra               Boolean?
-  jwt_token               String?
-  authentication2fa       Boolean?
-  authentication2faSecret String?
-  profileImage            String?
+    email                   String   @unique
+    user                    String   @unique
+    nickname                String?  @unique
+    hash                    String?
+    userIntra               Boolean?
+    jwt_token               String?
+    authentication2fa       Boolean?
+    authentication2faSecret String?
+    profileImage            String?
 
-  status UserStatus @default(OFFLINE)
+    status UserStatus @default(OFFLINE)
 
     followedBy Friendship[] @relation("followedBy")
     following  Friendship[] @relation("following")
@@ -118,10 +61,10 @@ model User {
     invitesReceived GroupInvite[]     @relation("invitedUser")
     bans            Ban[]
     mute            Mute[]
-    blockedUser Block[] @relation("user")
-    userWhoBlocked  Block[] @relation("blockedUser")
-  gamesAsPlayer1 Game[] @relation("player1")
-  gamesAsPlayer2 Game[] @relation("player2")
+    blockedUser     Block[]           @relation("user")
+    userWhoBlocked  Block[]           @relation("blockedUser")
+    gamesAsPlayer1  Game[]            @relation("player1")
+    gamesAsPlayer2  Game[]            @relation("player2")
 
     @@index([user])
 }
@@ -176,8 +119,8 @@ model Block {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    user    User  @relation("user", fields: [userId], references: [id])
-    userId  Int
+    user          User @relation("user", fields: [userId], references: [id])
+    userId        Int
     blockedUser   User @relation("blockedUser", fields: [blockedUserId], references: [id])
     blockedUserId Int
 
@@ -185,23 +128,97 @@ model Block {
 }
 
 model Game {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  player1Name String
-  player2Name String
-  player1Id   Int
-  player2Id   Int
-  player1Won  Boolean
-  player2Won  Boolean
-  score1      Int
-  score2      Int
-  player1     User   @relation("player1", fields: [player1Id], references: [id])
-  player2     User   @relation("player2", fields: [player2Id], references: [id])
+    player1Name String
+    player2Name String
+    player1Id   Int
+    player2Id   Int
+    player1Won  Boolean
+    player2Won  Boolean
+    score1      Int
+    score2      Int
+    player1     User    @relation("player1", fields: [player1Id], references: [id])
+    player2     User    @relation("player2", fields: [player2Id], references: [id])
 
-  @@unique([id])
-  @@index([player1Id])
-  @@index([player2Id])
+    @@unique([id])
+    @@index([player1Id])
+    @@index([player2Id])
 }
 
+model Group {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name     String      @unique
+    type     GroupStatus
+    password String?
+
+    owner   User @relation("owner", fields: [ownerId], references: [id])
+    ownerId Int
+
+    members     GroupMembership[]
+    admins      GroupAdmin[]
+    Message     Message[]
+    GroupInvite GroupInvite[]
+    bans        Ban[]
+    mutes       Mute[]
+}
+
+model Message {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    date     DateTime
+    content  String
+    sender   User     @relation(fields: [senderId], references: [id])
+    senderId Int
+
+    group   Group? @relation(fields: [groupId], references: [id])
+    groupId Int?
+
+    groupDM   GroupDM? @relation(fields: [groupDMId], references: [id])
+    groupDMId Int?
+}
+
+model GroupDM {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name    String            @unique
+    type    GroupStatus
+    members GroupMembership[]
+    Message Message[]
+}
+
+model GroupMembership {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
+
+    group   Group? @relation(fields: [groupId], references: [id])
+    groupId Int?
+
+    groupDM   GroupDM? @relation(fields: [groupDMId], references: [id], onDelete: Cascade)
+    groupDMId Int?
+}
+
+model GroupAdmin {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
+
+    group   Group @relation(fields: [groupId], references: [id])
+    groupId Int
+}

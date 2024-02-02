@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { messageToClient, messageToServer } from "./dto/chat.interface";
-import { BanUser, BlockUser, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from "./dto/chat.dto";
+import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite, DeleteDmGroup } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 import { ChatGateway } from "./chat.gateway";
+import { GroupStatus } from "@prisma/client";
 
 @Injectable()
 export class ChatService {
@@ -17,7 +18,7 @@ export class ChatService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly groupService: GroupService,
-    ) {}
+    ) { }
 
     async saveMessage(messageToServer: messageToServer) {
         const user = await this.groupService.getUserByUsername(messageToServer.username,);
@@ -207,7 +208,7 @@ export class ChatService {
         await this.groupService.deleteUserFromGroup(target.id, group.id);
 
         const userIdFromJWT = target.user;
-        if (this._chatGateway){
+        if (this._chatGateway) {
             const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
             if (socketId) {
                 this._chatGateway.leaveUserFromGroup(socketId, group.name)
@@ -233,7 +234,7 @@ export class ChatService {
         });
 
         const userIdFromJWT = target.user;
-        if (this._chatGateway){
+        if (this._chatGateway) {
             const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
             if (socketId) {
                 this._chatGateway.leaveUserFromGroup(socketId, group.name)
@@ -317,5 +318,71 @@ export class ChatService {
                 blockedUserId: target.id,
             }
         })
+    }
+
+    async createDmGroup(groupDm: CreateDmGroup) {
+        const userA = await this.groupService.getUserByUsername(groupDm.userA);
+        const userB = await this.groupService.getUserByUsername(groupDm.userB);
+        await this.prisma.groupDM.create({
+            data: {
+                name: groupDm.groupName,
+                type: GroupStatus.DIRECT,
+                members: {
+                    createMany: {
+                        data: [
+                            { userId: userA.id },
+                            { userId: userB.id },
+                        ],
+                    },
+                },
+            },
+        });
+    }
+
+    async deleteDmGroup(deleteDmGroup: DeleteDmGroup) {
+        const dmGroup = await this.groupService.getDmGroupByName(deleteDmGroup.groupName);
+        if (!dmGroup)
+            throw new BadRequestException('group not found');
+        await this.prisma.groupDM.delete({
+            where: { id: dmGroup.id },
+        });
+    }
+
+    //TODO TEST talves nao seja necessario ver logica do front com implementacao
+    async joinDmGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
+        const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
+        const group = await this.groupService.getDmGroupByName(groupActionsDto.groupName,);
+
+        const messageToClient: messageToClient = {
+            groupName: user.user,
+            username: group.name,
+            message: "Has connected in the group",
+            date: new Date(Date.now()),
+        };
+        return messageToClient;
+    }
+
+    async DmSaveMessage(messageToServer: messageToServer) {
+        const user = await this.groupService.getUserByUsername(messageToServer.username,);
+        const chat = await this.groupService.getDmGroupByName(messageToServer.groupName,);
+        if (!messageToServer.message)
+            throw new BadRequestException("Invalid request - message");
+
+        const messageDB = await this.prisma.message.create({
+            data: {
+                sender: { connect: { id: user.id } },
+                groupDM: { connect: { id: chat.id } },
+                date: new Date(),
+                content: messageToServer.message,
+            },
+        });
+        const messageToClient: messageToClient = {
+            id: messageDB.id,
+            groupName: chat.name,
+            username: user.user,
+            message: messageDB.content,
+            date: messageDB.date,
+        };
+        return messageToClient;
     }
 }

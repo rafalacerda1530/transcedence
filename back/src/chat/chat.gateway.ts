@@ -7,7 +7,6 @@ import { GroupActionsDto } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
-import { OpenAsBlobOptions } from 'fs';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'chat' })
@@ -31,7 +30,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.logger.log('Chat websocket initialized');
     }
 
-    handleConnection(client: Socket) {
+    async handleConnection(client: Socket) {
         const sockets = this.server.sockets;
         const token = this.getTokenFromCookie(client);
         if (!token) {
@@ -44,6 +43,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 const userId = decoded['sub'];
                 this.userSocketMap.set(userId, client.id);
                 console.log(this.userSocketMap)
+
+                const userGroupAndDm = await this.groupService.getUserGroupAndDm(userId);
+                if (userGroupAndDm){
+                    for ( const room of userGroupAndDm) {
+                        client.join(room);
+                    }
+                }
             }
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
@@ -76,6 +82,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     handleDisconnect(client: Socket) {
         const sockets = this.server.sockets;
+        const socketId = client.id;
+        this.userSocketMap.forEach((storedSocketId, userId ) => {
+            if (storedSocketId === socketId){
+                this.userSocketMap.delete(userId);
+                return;
+            }
+        });
+        console.log(this.userSocketMap)
         this.logger.log(`Client with id ${client.id} has disconnected from chat-socket`);
         this.logger.debug(`Number of connected in chat-sockets ${sockets.size}`);
     }
@@ -113,6 +127,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @SubscribeMessage('joinChat')
     async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
         const messageToClient: messageToClient = await this.chatService.joinGroup(groupActionsDto);
+        client.join(groupActionsDto.groupName);
+        this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
+        this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
+    }
+
+    //TODO TEST
+    @SubscribeMessage('DmMessageToServer')
+    async DmHandleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
+        const isUserBlocked = await this.groupService.DmIsUserBlocked(message.groupName);
+        if (isUserBlocked)
+            throw new BadRequestException('you are blocked and cannot send message for this person');
+
+        const messageToClient: messageToClient = await this.chatService.DmSaveMessage(message);
+        if (messageToClient) {
+            this.server.to(message.groupName).emit('messageToClient', messageToClient);
+            this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+        }
+    }
+
+    // TODO TEST
+    @SubscribeMessage('joinDmGroup')
+    async handleJoinDmGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
+        const messageToClient: messageToClient = await this.chatService.joinDmGroup(groupActionsDto);
         client.join(groupActionsDto.groupName);
         this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
