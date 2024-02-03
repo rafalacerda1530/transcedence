@@ -113,3 +113,10 @@ export class DeleteDmGroup {
     @IsNotEmpty({ message: "Insert a valid group name" })
     groupName: string;
 }
+
+export class GetMembers {
+    @IsNotEmpty({ message: "Insert a valid group name" })
+    groupName: string;
+    @IsNotEmpty({ message: "Insert a valid type" })
+    type: GroupStatus;
+}

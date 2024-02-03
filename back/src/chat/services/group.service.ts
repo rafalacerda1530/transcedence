@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Group, GroupDM, User } from "@prisma/client";
+import { Group, GroupDM, GroupStatus, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
+import { GetMembers } from "../dto/chat.dto";
 
 @Injectable()
 export class GroupService {
@@ -238,7 +239,7 @@ export class GroupService {
         return true;
     }
 
-    async isUserBlocked(userUsername: string, targetName: string ): Promise<boolean> {
+    async isUserBlocked(userUsername: string, targetName: string): Promise<boolean> {
         const user = await this.getUserByUsername(userUsername);
         const target = await this.getUserByUsername(targetName);
         const block = await this.prisma.block.findFirst({
@@ -264,12 +265,12 @@ export class GroupService {
         return !!block;
     }
 
-    async getUserByDmGroup(groupName: string){
+    async getUserByDmGroup(groupName: string) {
         const groupDm = await this.prisma.groupDM.findUnique({
-            where:{
+            where: {
                 name: groupName,
             },
-            include: { members: true},
+            include: { members: true },
         });
         const users = groupDm.members.map(member => member.userId)
         return users;
@@ -280,18 +281,52 @@ export class GroupService {
 
         const groupMembership = await this.prisma.groupMembership.findMany({
             where: { userId: user.id, },
-            include: { group: true, groupDM: true}
+            include: { group: true, groupDM: true }
         });
 
         if (groupMembership.length === 0) {
             return;
         }
-        const groupNames: string[] = [];
+        const groupNames: { name: string, type: GroupStatus }[] = [];
         for (const membership of groupMembership) {
             const targetGroupName = membership.group?.name ?? membership.groupDM?.name;
+            const targetType = membership.group ? membership.group.type : membership.groupDM.type;
             if (targetGroupName)
-                groupNames.push(targetGroupName);
+                groupNames.push({ name: targetGroupName, type: targetType });
         }
         return groupNames;
+    }
+
+    async getMembersInChat(getMembers: GetMembers) {
+        const { groupName, type } = getMembers;
+        if (type == 'DIRECT') {
+            const DmMembers = await this.prisma.groupDM.findUnique({ where: { name: groupName } }).members();
+            if (DmMembers) {
+                const dmMemberUsernames = await Promise.all(
+                    DmMembers.map(async (member) => {
+                        const user = await this.prisma.user.findUnique({
+                            where: { id: member.userId },
+                            select: { user: true },
+                        });
+                        return user?.user;
+                    })
+                );
+                return dmMemberUsernames.filter((username) => username); // Filtra quaisquer valores nulos
+            }
+        } else {
+            const groupMembers = await this.prisma.group.findUnique({ where: { name: groupName } }).members();
+            if (groupMembers) {
+                const groupMemberUsernames = await Promise.all(
+                    groupMembers.map(async (member) => {
+                        const user = await this.prisma.user.findUnique({
+                            where: { id: member.userId },
+                            select: { user: true },
+                        });
+                        return user?.user;
+                    })
+                );
+                return groupMemberUsernames.filter((username) => username);
+            }
+        }
     }
 }

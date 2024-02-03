@@ -1,0 +1,153 @@
+.chatPageContainer {
+    display: flex;
+    height: 100vh;
+}
+
+.groupDmsContainer {
+    flex: 1;
+    padding: 20px;
+    background-color: #f0f0f0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.groupDmsContainer h1 {
+    margin-bottom: 10px;
+}
+
+.groupDmsContainer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 700px; /* Defina a altura máxima desejada */
+    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+}
+
+.groupDmsContainer ul.scrollable {
+  max-height: 700px; /* Defina a altura máxima desejada */
+  overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+}
+
+.groupDmsContainer li {
+    cursor: pointer;
+    padding: 8px;
+    margin-bottom: 4px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+.groupDmsContainer li:hover {
+    background-color: #ccc;
+}
+
+.chatContainer {
+    flex: 3;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.chatContainer h1 {
+    margin-bottom: 10px;
+}
+
+.membersContainer {
+    flex: 1;
+    padding: 20px;
+    background-color: #f0f0f0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.membersContainer h1 {
+    margin-bottom: 10px;
+}
+
+.membersContainer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.membersContainer li {
+    padding: 8px;
+    margin-bottom: 4px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+.membersContainer li:hover {
+    background-color: #ccc;
+}
+
+.messageInputContainer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+.messageInputContainer form {
+    display: flex;
+    align-items: center;
+}
+
+.messageInputContainer input {
+    flex: 1;
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+.messageInputContainer button {
+    padding: 10px 20px;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.messageInputContainer button:hover {
+    background-color: #0056b3;
+}
+
+.groupTypeIndicator {
+    font-size: 12px;
+    color: gray;
+    margin-left: 5px;
+}
+
+
+/* testando */
+
+.groupDmsContainer form {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.groupDmsContainer input[type="text"],
+.groupDmsContainer input[type="password"] {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 200px;
+}
+
+.groupDmsContainer button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.groupDmsContainer button:hover {
+  background-color: #0056b3;
+}

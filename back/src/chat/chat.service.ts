@@ -45,6 +45,7 @@ export class ChatService {
     }
 
     async createGroup({ type, groupName, ownerUsername, password }: CreateGroupDto) {
+        console.log(type, groupName,ownerUsername,password)
         const userOwner = await this.groupService.getUserByUsername(ownerUsername);
         this.groupService.validatePasswordForGroupType(type, password);
         if (type === "PROTECT" && password)

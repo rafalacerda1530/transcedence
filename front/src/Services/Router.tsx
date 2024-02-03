@@ -13,6 +13,9 @@ import { Game } from "../Pages/Game/Game";
 import { QueueProvider, queueSocket } from "../context/QueueContext";
 import { MatchHistoryComplete } from "../Pages/MatchHistory/MatchHistory";
 import { StatusProvider, statusSocket } from "../context/StatusContext";
+import { ChatProvider, chatSocket } from "../context/ChatContext";
+import {ChatPage} from "../Pages/Chat/ChatPage";
+
 
 export const Router = () => {
     return (
@@ -54,6 +57,12 @@ export const Router = () => {
                         <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
                     </Routes>
                 </StatusProvider>
+
+                <ChatProvider value={chatSocket}>
+                <Routes>
+                    <Route path="/chat" element={<ChatPage/>} />
+                </Routes>
+                </ChatProvider>
 
             </BrowserRouter>
         </>

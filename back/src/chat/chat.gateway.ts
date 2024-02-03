@@ -42,13 +42,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             if (typeof decoded['sub'] === 'string') {
                 const userId = decoded['sub'];
                 this.userSocketMap.set(userId, client.id);
-                console.log(this.userSocketMap)
 
                 const userGroupAndDm = await this.groupService.getUserGroupAndDm(userId);
                 if (userGroupAndDm){
-                    for ( const room of userGroupAndDm) {
-                        client.join(room);
+                    for ( const {name} of userGroupAndDm) {
+                        client.join(name);
                     }
+                    console.log(userGroupAndDm)
+                    client.emit('GroupsAndDms', userGroupAndDm)
                 }
             }
         } catch (error) {

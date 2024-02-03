@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ChatService } from './chat.service';
-import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, DeleteDmGroup, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, DeleteDmGroup, GetMembers, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 
 @Controller('api/chat')
@@ -90,5 +90,18 @@ export class ChatController {
     @Delete('deleteDmGroup')
     async deleteDmGroup(@Body() groupDm: DeleteDmGroup) {
         return await this.chatService.deleteDmGroup(groupDm);
+    }
+
+    @Get('getUserGroups/:username')
+    async getUserGroups(@Param('username') username: string ){
+        return await this.groupService.getUserGroupAndDm(username);
+    }
+
+    //TODO TEST
+    @Post('membersInChat')
+    async getMembersInChat(@Body() getMembers: GetMembers) {
+        const teste = await this.groupService.getMembersInChat(getMembers);
+        console.log(teste);
+        return teste;
     }
 }
