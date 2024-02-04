@@ -1,17 +1,20 @@
+/* Estilos gerais */
 .chatPageContainer {
     display: flex;
     height: 100vh;
 }
 
+/* Estilos do contêiner de grupos e mensagens diretas */
 .groupDmsContainer {
-    flex: 1;
+    flex: 1; /* Ajuste a proporção de acordo com suas preferências */
     padding: 20px;
     background-color: #f0f0f0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+    max-height: none; /* Remova a altura máxima para permitir que ele cresça conforme necessário */
 }
-
 .groupDmsContainer h1 {
-    margin-bottom: 10px;
+    margin-bottom: 2px;
 }
 
 .groupDmsContainer ul {
@@ -20,11 +23,6 @@
     margin: 0;
     max-height: 700px; /* Defina a altura máxima desejada */
     overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
-}
-
-.groupDmsContainer ul.scrollable {
-  max-height: 700px; /* Defina a altura máxima desejada */
-  overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
 }
 
 .groupDmsContainer li {
@@ -39,26 +37,31 @@
     background-color: #ccc;
 }
 
+/* Estilos do contêiner de mensagens */
 .chatContainer {
-    flex: 3;
-    padding: 20px;
+    flex: 4;
+    padding: 10px;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+    max-height: 800px; /* Defina a altura máxima desejada */
 }
 
 .chatContainer h1 {
-    margin-bottom: 10px;
+    margin-bottom: 1px;
 }
 
+/* Estilos do contêiner de membros */
 .membersContainer {
-    flex: 1;
-    padding: 20px;
+    flex: 1; /* Ajuste a proporção de acordo com suas preferências */
+    padding: 10px;
     background-color: #f0f0f0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
 }
 
 .membersContainer h1 {
-    margin-bottom: 10px;
+    margin-bottom: 1px;
 }
 
 .membersContainer ul {
@@ -68,8 +71,8 @@
 }
 
 .membersContainer li {
-    padding: 8px;
-    margin-bottom: 4px;
+    padding: 3px;
+    margin-bottom: 6px;
     background-color: #ddd;
     border-radius: 4px;
 }
@@ -78,11 +81,13 @@
     background-color: #ccc;
 }
 
+/* Estilos do campo de entrada de mensagem */
 .messageInputContainer {
+    flex: 2;
     position: fixed;
     bottom: 0;
     width: 100%;
-    padding: 20px;
+    padding: 30px;
     background-color: #f0f0f0;
 }
 
@@ -114,40 +119,39 @@
     background-color: #0056b3;
 }
 
+/* Indicador de tipo de grupo */
 .groupTypeIndicator {
     font-size: 12px;
     color: gray;
     margin-left: 5px;
 }
 
-
-/* testando */
-
+/* Estilos específicos do formulário de criação de grupo */
 .groupDmsContainer form {
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .groupDmsContainer input[type="text"],
 .groupDmsContainer input[type="password"] {
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 200px;
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 200px;
 }
 
 .groupDmsContainer button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .groupDmsContainer button:hover {
-  background-color: #0056b3;
+    background-color: #0056b3;
 }

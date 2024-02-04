@@ -120,3 +120,11 @@ export class GetMembers {
     @IsNotEmpty({ message: "Insert a valid type" })
     type: GroupStatus;
 }
+
+export class JoinGroupDto {
+    @IsNotEmpty({ message: "Insert a valid group name" })
+    groupName: string;
+    @IsNotEmpty({ message: "Insert a valid type" })
+    user: string
+    type: GroupStatus;
+}

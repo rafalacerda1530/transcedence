@@ -5,7 +5,7 @@ import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, GroupActionsDto, Inv
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 import { ChatGateway } from "./chat.gateway";
-import { GroupStatus } from "@prisma/client";
+import { Group, GroupStatus } from "@prisma/client";
 
 @Injectable()
 export class ChatService {
@@ -385,4 +385,6 @@ export class ChatService {
         };
         return messageToClient;
     }
+
+    
 }

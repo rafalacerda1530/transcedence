@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Group, GroupDM, GroupStatus, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
-import { GetMembers } from "../dto/chat.dto";
+import { GetMembers, JoinGroupDto } from "../dto/chat.dto";
 
 @Injectable()
 export class GroupService {
@@ -329,4 +329,48 @@ export class GroupService {
             }
         }
     }
+
+    async getPublicGroups () {
+        const groupsOfType: Group[] = await this.prisma.group.findMany({
+            where: {
+              type: GroupStatus.PUBLIC,
+            },
+          });
+          console.log(groupsOfType)
+        return groupsOfType;
+    }
+
+    //async joinGroup(joinGroupDto: JoinGroupDto, prisma: PrismaService = this.prisma) {
+    //    try {
+    //        const { groupName, type } = joinGroupDto;
+    //        const userId = joinGroupDto.user;
+    //
+    //        // Use uma transação para garantir atomicidade
+    //        await prisma.$transaction(async (prisma) => {
+    //            // Verifique se o grupo existe
+    //            const group = await prisma.group.findUnique({ where: { name: groupName } });
+    //            if (!group) {
+    //                throw new NotFoundException('Group not found');
+    //            }
+    //
+    //            // Verifique se o usuário já é membro do grupo
+    //            const existingMembership = await prisma.groupMembership.findFirst({
+    //                where: { groupId: group.id}, // Converta userId para número
+    //            });
+    //            if (existingMembership) {
+    //                throw new ConflictException('User is already a member of the group');
+    //            }
+    //
+    //            // Crie uma nova entrada na tabela GroupMembership para representar a associação do usuário ao grupo
+    //            await prisma.groupMembership.create({
+    //                data: { groupId: group.id, userId: Number(userId) }, // Converta userId para número
+    //            });
+    //        });
+    //
+    //        return { message: 'User joined the group successfully' };
+    //    } catch (error) {
+    //        console.error('Error joining group:', error);
+    //        throw new InternalServerErrorException('Internal Server Error');
+    //    }
+    //}
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserStatus } from '@prisma/client';
+
 interface Friend {
     id: number;
     user: string;

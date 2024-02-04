@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ChatService } from './chat.service';
-import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, DeleteDmGroup, GetMembers, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, DeleteDmGroup, GetMembers, GroupActionsDto, InviteToGroupDto, JoinGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 
 @Controller('api/chat')
@@ -93,7 +93,7 @@ export class ChatController {
     }
 
     @Get('getUserGroups/:username')
-    async getUserGroups(@Param('username') username: string ){
+    async getUserGroups(@Param('username') username: string) {
         return await this.groupService.getUserGroupAndDm(username);
     }
 
@@ -101,7 +101,17 @@ export class ChatController {
     @Post('membersInChat')
     async getMembersInChat(@Body() getMembers: GetMembers) {
         const teste = await this.groupService.getMembersInChat(getMembers);
-        console.log(teste);
         return teste;
     }
+
+    @Get('allPublicsGroups')
+    async getPublicGroups() {
+        return await this.groupService.getPublicGroups();
+    }
+
+    @Post('joinGroup')
+    async joinGroup(@Body() joinGroupDto: GroupActionsDto) {
+        return await this.chatService.joinGroup(joinGroupDto);
+    }
+
 }

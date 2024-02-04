@@ -3,6 +3,7 @@ import './style.css'
 import { ChatContext } from '../../context/ChatContext';
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import { axiosPrivate } from '../../hooks/useAxiosPrivate';
+import { CallBackAllPublicGroups } from './CallBack/CallBack';
 
 interface Group {
     name: string;
@@ -22,8 +23,13 @@ export const ChatPage = () => {
     const [maxHeight, setMaxHeight] = useState<number>(0);
     const [groupType, setGroupType] = useState<string>('PUBLIC'); // Inicializado como "PUBLIC"
     const [selectedGroupType, setSelectedGroupType] = useState<string>(''); // Inicializado como "PUBLIC"
+    const [chatMessages, setChatMessages] = useState<{ [groupName: string]: string[] }>({});
+    const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>(''); // Estado para armazenar a seleção do filtro
+    const [isMember, setIsMember] = useState<boolean>(false);
 
-
+    const handleChangeMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setMessage(event.target.value);
+    };
 
     const connectSocket = () => {
         chatSocket.connect();
@@ -95,11 +101,25 @@ export const ChatPage = () => {
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // Lógica para enviar a mensagem
-        console.log('Message:', message);
-        // Limpar o campo de mensagem após o envio
-        setMessage('');
+
+        if (currentChat) {
+            const newMessage = `${username}: ${message}`;
+
+            chatSocket.emit("sendMessage", {
+                groupName: currentChat,
+                message: newMessage
+            });
+
+            const updatedMessages = {
+                ...chatMessages,
+                [currentChat]: [...(chatMessages[currentChat] || []), newMessage],
+            };
+
+            setChatMessages(updatedMessages);
+            setMessage('');
+        }
     };
+
 
     const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -170,6 +190,86 @@ export const ChatPage = () => {
         getGroupType();
     }, [currentChat, groupsAndDms]);
 
+    
+
+    useEffect(() => {
+        // Adicionar um manipulador de eventos para lidar com mensagens recebidas
+        chatSocket.on("receiveMessage", (data) => {
+            const { groupName, message } = data;
+
+            // Atualizar localmente o estado das mensagens
+            const updatedMessages = {
+                ...chatMessages,
+                [groupName]: [...(chatMessages[groupName] || []), message],
+            };
+
+            setChatMessages(updatedMessages);
+        });
+
+        // ... (restante do código)
+
+        return () => {
+            // Remover o manipulador de eventos ao desmontar o componente
+            chatSocket.off("receiveMessage");
+        };
+    }, [chatSocket, chatMessages]);
+
+    useEffect(() => {
+        const getMembersInGroup = async () => {
+            try {
+                if (currentChat) {
+                    console.log(selectedGroupType);
+                    const response = await axiosPrivate.post('/api/chat/membersInChat', {
+                        groupName: currentChat,
+                        type: selectedGroupType,
+                    });
+                    setMembers(response.data);
+                    setIsMember(response.data.includes(username));
+                } else {
+                    setMembers([]);
+                    setIsMember(false);
+                }
+            } catch (error) {
+                console.error('Error fetching group members:', error);
+            }
+        };
+
+        getMembersInGroup();
+    }, [currentChat, groupType, username]);
+
+    const handleJoinGroup = async () => {
+        
+        try {
+            if (currentChat) {
+            await axiosPrivate.post('/api/chat/joinGroup', {
+                groupName: currentChat,
+                username: username
+            });}
+
+            // Atualize o estado para refletir que o usuário agora é um membro do grupo
+            setIsMember(true);
+        } catch (error) {
+            alert(error)
+            alert("erro")
+            console.error('Error joining group:', error);
+        }
+    };
+
+    useEffect(() => {
+        // Função assíncrona para chamar a API e definir os grupos iniciais
+        const fetchInitialGroups = async () => {
+            try {
+                const response = await CallBackAllPublicGroups();
+                setGroupAndDms(response.data); // ou ajuste de acordo com a estrutura da resposta
+            } catch (error) {
+                console.error('Error fetching initial groups:', error);
+            }
+        };
+
+        // Chamada da função para buscar os grupos ao montar o componente
+        fetchInitialGroups();
+    }, []); // Array vazio para garantir que seja chamado apenas uma vez ao montar o componente
+    
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -187,7 +287,6 @@ export const ChatPage = () => {
                         onChange={(e) => setNewGroupName(e.target.value)}
                         className="groupNameInput"
                     />
-                    {/* Renderizar campo de senha somente se o tipo de grupo for "Private" */}
                     {groupType === "PROTECT" && (
                         <input
                             type="password"
@@ -197,27 +296,48 @@ export const ChatPage = () => {
                             className="groupPasswordInput"
                         />
                     )}
-                    <button type="submit" className="createGroupButton">Create</button>
+                    <button type="submit" className="createGroupButton" onClick={() => selectedGroupType === 'PUBLIC' && !isMember && handleJoinGroup()}>
+                        {selectedGroupType === 'PUBLIC' ? (isMember ? 'Joined' : 'Join') : 'Create'}
+                    </button>
+
                 </form>
+                <label htmlFor="groupTypeFilter">Filter by Group Type:</label>
+                <select
+                    id="groupTypeFilter"
+                    value={selectedGroupTypeFilter}
+                    onChange={(e) => setSelectedGroupTypeFilter(e.target.value)}
+                >
+                    <option value="">All</option>
+                    <option value="PUBLIC">Public</option>
+                    <option value="PROTECT">Protected</option>
+                    <option value="PRIVATE">Private</option>
+                </select>
                 <ul>
-                    {groupsAndDms.map((group, index) => (
-                        <li key={index} onClick={() => {
-                            setCurrentChat(group.name);
-                            setSelectedGroupType(group.type);
-                        }}>
-                            {group.name}
-                            <span className="groupTypeIndicator">({group.type})</span>
-                        </li>
-                    ))}
+                    {groupsAndDms
+                        .filter(group => !selectedGroupTypeFilter || group.type === selectedGroupTypeFilter)
+                        .map((group, index) => (
+                            <li key={index} onClick={() => {
+                                setCurrentChat(group.name);
+                                setSelectedGroupType(group.type);
+                            }}>
+                                {group.name}
+                                <span className="groupTypeIndicator">({group.type})</span>
+                            </li>
+                        ))}
                 </ul>
             </div>
             <div className="chatContainer">
-                <h1>{currentChat ? `Chat with ${currentChat}` : 'Select a chat'}</h1>
-                {/* Renderizar o conteúdo do chat aqui */}
+                {currentChat && chatMessages[currentChat] ? (
+                    chatMessages[currentChat].map((msg, index) => (
+                        <div key={index}>{msg}</div>
+                    ))
+                ) : (
+                    <p>No messages.</p>
+                )}
             </div>
             {currentChat && (
                 <div className="membersContainer">
-                    <h1>Members</h1>
+                    <h1>Members: </h1>
                     <ul>
                         {members.map((member, index) => (
                             <li key={index}>{member}</li>
@@ -240,5 +360,5 @@ export const ChatPage = () => {
                 </div>
             )}
         </div>
-    )
-};
+    );
+}    

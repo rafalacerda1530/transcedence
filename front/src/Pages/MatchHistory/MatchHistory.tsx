@@ -272,7 +272,5 @@ export const MatchHistoryComplete = () => {
         </div>
       </div>
     </div>
-
   );
-
 };
