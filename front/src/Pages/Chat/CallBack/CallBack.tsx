@@ -1,8 +1,8 @@
 import { axiosPrivate } from "../../../hooks/useAxiosPrivate";
 
-export const CallBackAllPublicGroups = () => {
+export const CallBackAllGroups  = () => {
     return axiosPrivate
-      .get('/api/chat/allPublicsGroups', {
+      .get('/api/chat/allGroups', {
         withCredentials: true,
       })
       .then((response) => {

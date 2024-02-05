@@ -3,7 +3,7 @@ import './style.css'
 import { ChatContext } from '../../context/ChatContext';
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import { axiosPrivate } from '../../hooks/useAxiosPrivate';
-import { CallBackAllPublicGroups } from './CallBack/CallBack';
+import { CallBackAllGroups } from './CallBack/CallBack';
 
 interface Group {
     name: string;
@@ -23,13 +23,15 @@ export const ChatPage = () => {
     const [maxHeight, setMaxHeight] = useState<number>(0);
     const [groupType, setGroupType] = useState<string>('PUBLIC'); // Inicializado como "PUBLIC"
     const [selectedGroupType, setSelectedGroupType] = useState<string>(''); // Inicializado como "PUBLIC"
-    const [chatMessages, setChatMessages] = useState<{ [groupName: string]: string[] }>({});
     const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>(''); // Estado para armazenar a seleção do filtro
-    const [isMember, setIsMember] = useState<boolean>(false);
 
-    const handleChangeMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setMessage(event.target.value);
-    };
+    const [chatMessages, setChatMessages] = useState<{ [groupName: string]: string[] }>({});
+    const [allGroups, setAllGroups] = useState<Group[]>([]);
+    const [joinPassword, setJoinPassword] = useState<string>('')
+
+    // const handleChangeMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    //     setMessage(event.target.value);
+    // };
 
     const connectSocket = () => {
         chatSocket.connect();
@@ -130,11 +132,11 @@ export const ChatPage = () => {
                 ownerUsername: username,
                 password: groupType == "PROTECT" ? password : null
             });
-            console.log(response)
             console.log('Group created:', response.data);
-            // Adicionar o novo grupo à lista de grupos
+            // atualiza os grupos no qual user faz parte
             setGroupAndDms([...groupsAndDms, { name: newGroupName, type: groupType }]);
-            // Limpar o campo de nome do grupo
+            //atualiza o global
+            setAllGroups([...allGroups, { name: newGroupName, type: groupType }]);
             setNewGroupName('');
             setPassword('')
         } catch (error) {
@@ -142,9 +144,9 @@ export const ChatPage = () => {
         }
     };
 
+    // Talvez isso nao seja necessario
     const calculateMaxHeight = () => {
         const windowHeight = window.innerHeight;
-        // Defina uma margem superior e inferior para garantir que haja espaço suficiente
         const margin = 100;
         const calculatedMaxHeight = windowHeight - margin;
         setMaxHeight(calculatedMaxHeight);
@@ -158,28 +160,6 @@ export const ChatPage = () => {
     }, []);
 
     useEffect(() => {
-        const getMembersInGroup = async () => {
-            try {
-                if (currentChat) {
-                    console.log(selectedGroupType)
-                    const response = await axiosPrivate.post('/api/chat/membersInChat', {
-                        groupName: currentChat,
-                        type: selectedGroupType
-                    });
-                    setMembers(response.data);
-                } else {
-                    setMembers([]);
-                }
-            } catch (error) {
-                console.error('Error fetching group members:', error);
-            }
-        };
-
-        getMembersInGroup();
-    }, [currentChat, groupType]);
-
-    // Nova função para atualizar groupType ao selecionar um novo grupo
-    useEffect(() => {
         const getGroupType = async () => {
             const selectedGroup = groupsAndDms.find(group => group.name === currentChat);
             if (selectedGroup) {
@@ -190,7 +170,7 @@ export const ChatPage = () => {
         getGroupType();
     }, [currentChat, groupsAndDms]);
 
-    
+
 
     useEffect(() => {
         // Adicionar um manipulador de eventos para lidar com mensagens recebidas
@@ -217,18 +197,16 @@ export const ChatPage = () => {
     useEffect(() => {
         const getMembersInGroup = async () => {
             try {
-                if (currentChat) {
-                    console.log(selectedGroupType);
-                    const response = await axiosPrivate.post('/api/chat/membersInChat', {
-                        groupName: currentChat,
-                        type: selectedGroupType,
-                    });
-                    setMembers(response.data);
-                    setIsMember(response.data.includes(username));
-                } else {
-                    setMembers([]);
-                    setIsMember(false);
+                if (!currentChat) {
+                    return; // Se não houver um chat selecionado, saia da função
                 }
+                console.log(selectedGroupType);
+                const response = await axiosPrivate.post('/api/chat/membersInChat', {
+                    groupName: currentChat,
+                    type: selectedGroupType,
+                });
+                setMembers(response.data);
+                // setIsMember(response.data.includes(username));
             } catch (error) {
                 console.error('Error fetching group members:', error);
             }
@@ -237,30 +215,12 @@ export const ChatPage = () => {
         getMembersInGroup();
     }, [currentChat, groupType, username]);
 
-    const handleJoinGroup = async () => {
-        
-        try {
-            if (currentChat) {
-            await axiosPrivate.post('/api/chat/joinGroup', {
-                groupName: currentChat,
-                username: username
-            });}
-
-            // Atualize o estado para refletir que o usuário agora é um membro do grupo
-            setIsMember(true);
-        } catch (error) {
-            alert(error)
-            alert("erro")
-            console.error('Error joining group:', error);
-        }
-    };
-
     useEffect(() => {
         // Função assíncrona para chamar a API e definir os grupos iniciais
         const fetchInitialGroups = async () => {
             try {
-                const response = await CallBackAllPublicGroups();
-                setGroupAndDms(response.data); // ou ajuste de acordo com a estrutura da resposta
+                const response = await CallBackAllGroups();
+                setAllGroups(response.data); // ou ajuste de acordo com a estrutura da resposta
             } catch (error) {
                 console.error('Error fetching initial groups:', error);
             }
@@ -269,7 +229,17 @@ export const ChatPage = () => {
         // Chamada da função para buscar os grupos ao montar o componente
         fetchInitialGroups();
     }, []); // Array vazio para garantir que seja chamado apenas uma vez ao montar o componente
-    
+
+    const handleJoinGroup = (groupName: string, password: string) => {
+        // Envia uma solicitação ao backend para entrar no grupo
+        const joinRequest = {
+            username: username,
+            groupName: groupName,
+            password: password
+        };
+        chatSocket.emit('joinChat', joinRequest);
+    };
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -296,9 +266,7 @@ export const ChatPage = () => {
                             className="groupPasswordInput"
                         />
                     )}
-                    <button type="submit" className="createGroupButton" onClick={() => selectedGroupType === 'PUBLIC' && !isMember && handleJoinGroup()}>
-                        {selectedGroupType === 'PUBLIC' ? (isMember ? 'Joined' : 'Join') : 'Create'}
-                    </button>
+                    <button type="submit" className="createGroupButton">Create</button>
 
                 </form>
                 <label htmlFor="groupTypeFilter">Filter by Group Type:</label>
@@ -310,20 +278,42 @@ export const ChatPage = () => {
                     <option value="">All</option>
                     <option value="PUBLIC">Public</option>
                     <option value="PROTECT">Protected</option>
+
                     <option value="PRIVATE">Private</option>
                 </select>
                 <ul>
-                    {groupsAndDms
+                    {allGroups
                         .filter(group => !selectedGroupTypeFilter || group.type === selectedGroupTypeFilter)
-                        .map((group, index) => (
-                            <li key={index} onClick={() => {
-                                setCurrentChat(group.name);
-                                setSelectedGroupType(group.type);
-                            }}>
-                                {group.name}
-                                <span className="groupTypeIndicator">({group.type})</span>
-                            </li>
-                        ))}
+                        .map((group, index) => {
+                            const isMember = groupsAndDms.some(g => g.name === group.name);
+                            return (
+                                <li key={index} onClick={() => {
+                                    setCurrentChat(group.name);
+                                    setSelectedGroupType(group.type);
+                                }}>
+                                    {group.name}
+                                    <span className="groupTypeIndicator">({group.type})</span>
+                                    {isMember ? (
+                                        <span> - Member</span>
+                                    ) : (
+                                        group.type === 'PROTECT' ? (
+                                            <div>
+                                                <input
+                                                    type="password"
+                                                    placeholder="Enter group password"
+                                                    value={joinPassword}
+                                                    onChange={(e) => setJoinPassword(e.target.value)} // Renomeamos para setEnteredPassword
+                                                />
+                                                <button onClick={() => handleJoinGroup(group.name, joinPassword)}>Join Group</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => handleJoinGroup(group.name, '')}>Join Group</button>
+                                        )
+                                    )}
+                                </li>
+                            );
+                        })
+                    }
                 </ul>
             </div>
             <div className="chatContainer">
@@ -361,4 +351,4 @@ export const ChatPage = () => {
             )}
         </div>
     );
-}    
+}
