@@ -9,6 +9,23 @@ interface Group {
     name: string;
     type: string;
 }
+interface Message {
+    groupName: string;
+    username: string;
+    message: string;
+    date: Date;
+}
+
+interface MessageFromBackend {
+    date: string;
+    content: string;
+    group: {
+        name: string;
+    };
+    sender: {
+        user: string;
+    };
+}
 
 export const ChatPage = () => {
     const chatSocket = useContext(ChatContext);
@@ -21,17 +38,15 @@ export const ChatPage = () => {
     const [username, setUsername] = useState<string>('')
     const [password, setPassword] = useState<string | null>(null);
     const [maxHeight, setMaxHeight] = useState<number>(0);
-    const [groupType, setGroupType] = useState<string>('PUBLIC'); // Inicializado como "PUBLIC"
-    const [selectedGroupType, setSelectedGroupType] = useState<string>(''); // Inicializado como "PUBLIC"
-    const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>(''); // Estado para armazenar a seleção do filtro
-
-    const [chatMessages, setChatMessages] = useState<{ [groupName: string]: string[] }>({});
+    const [groupType, setGroupType] = useState<string>('PUBLIC');
+    const [selectedGroupType, setSelectedGroupType] = useState<string>('');
+    const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>('');
     const [allGroups, setAllGroups] = useState<Group[]>([]);
     const [joinPassword, setJoinPassword] = useState<string>('')
 
-    // const handleChangeMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    //     setMessage(event.target.value);
-    // };
+    const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
+
+
 
     const connectSocket = () => {
         chatSocket.connect();
@@ -101,28 +116,6 @@ export const ChatPage = () => {
         setMessage(event.target.value);
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        if (currentChat) {
-            const newMessage = `${username}: ${message}`;
-
-            chatSocket.emit("sendMessage", {
-                groupName: currentChat,
-                message: newMessage
-            });
-
-            const updatedMessages = {
-                ...chatMessages,
-                [currentChat]: [...(chatMessages[currentChat] || []), newMessage],
-            };
-
-            setChatMessages(updatedMessages);
-            setMessage('');
-        }
-    };
-
-
     const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
@@ -133,9 +126,9 @@ export const ChatPage = () => {
                 password: groupType == "PROTECT" ? password : null
             });
             console.log('Group created:', response.data);
-            // atualiza os grupos no qual user faz parte
+            // member group refresh
             setGroupAndDms([...groupsAndDms, { name: newGroupName, type: groupType }]);
-            //atualiza o global
+            //member group global refresh
             setAllGroups([...allGroups, { name: newGroupName, type: groupType }]);
             setNewGroupName('');
             setPassword('')
@@ -144,7 +137,7 @@ export const ChatPage = () => {
         }
     };
 
-    // Talvez isso nao seja necessario
+    // TODO Talvez isso nao seja necessario
     const calculateMaxHeight = () => {
         const windowHeight = window.innerHeight;
         const margin = 100;
@@ -171,34 +164,11 @@ export const ChatPage = () => {
     }, [currentChat, groupsAndDms]);
 
 
-
-    useEffect(() => {
-        // Adicionar um manipulador de eventos para lidar com mensagens recebidas
-        chatSocket.on("receiveMessage", (data) => {
-            const { groupName, message } = data;
-
-            // Atualizar localmente o estado das mensagens
-            const updatedMessages = {
-                ...chatMessages,
-                [groupName]: [...(chatMessages[groupName] || []), message],
-            };
-
-            setChatMessages(updatedMessages);
-        });
-
-        // ... (restante do código)
-
-        return () => {
-            // Remover o manipulador de eventos ao desmontar o componente
-            chatSocket.off("receiveMessage");
-        };
-    }, [chatSocket, chatMessages]);
-
     useEffect(() => {
         const getMembersInGroup = async () => {
             try {
                 if (!currentChat) {
-                    return; // Se não houver um chat selecionado, saia da função
+                    return;
                 }
                 console.log(selectedGroupType);
                 const response = await axiosPrivate.post('/api/chat/membersInChat', {
@@ -206,7 +176,6 @@ export const ChatPage = () => {
                     type: selectedGroupType,
                 });
                 setMembers(response.data);
-                // setIsMember(response.data.includes(username));
             } catch (error) {
                 console.error('Error fetching group members:', error);
             }
@@ -216,22 +185,19 @@ export const ChatPage = () => {
     }, [currentChat, groupType, username]);
 
     useEffect(() => {
-        // Função assíncrona para chamar a API e definir os grupos iniciais
         const fetchInitialGroups = async () => {
             try {
                 const response = await CallBackAllGroups();
-                setAllGroups(response.data); // ou ajuste de acordo com a estrutura da resposta
+                setAllGroups(response.data);
             } catch (error) {
                 console.error('Error fetching initial groups:', error);
             }
         };
 
-        // Chamada da função para buscar os grupos ao montar o componente
         fetchInitialGroups();
-    }, []); // Array vazio para garantir que seja chamado apenas uma vez ao montar o componente
+    }, []);
 
     const handleJoinGroup = (groupName: string, password: string) => {
-        // Envia uma solicitação ao backend para entrar no grupo
         const joinRequest = {
             username: username,
             groupName: groupName,
@@ -239,6 +205,69 @@ export const ChatPage = () => {
         };
         chatSocket.emit('joinChat', joinRequest);
     };
+
+    const sendMessageToServer = (groupName: string, message: string) => {
+        if (!groupName || !message || !username) return;
+        const messageRequest = {
+
+            groupName: groupName,
+            username: username,
+            message: message,
+        }
+        chatSocket.emit('messageToServer', messageRequest)
+    }
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (currentChat && message) {
+            sendMessageToServer(currentChat, message);
+            setMessage('');
+        }
+    };
+
+    useEffect(() => {
+        chatSocket.on("messageToClient", (message: Message) => {
+            if (!message || !message.groupName) return;
+            setChatMessages(prevMessages => ({
+                ...prevMessages,
+                [message.groupName]: [...(prevMessages[message.groupName] || []), message],
+            }));
+        });
+
+        return () => {
+            chatSocket.off("messageToClient");
+        };
+    }, [chatSocket]);
+
+    const getMessageClass = (target: string) => {
+        return username === target ? 'messageSelf' : 'messageOther';
+    };
+
+    useEffect(() => {
+        const fetchGroupMessages = async () => {
+            try {
+                const response = await axiosPrivate.get<MessageFromBackend[]>(`/api/chat/groupMessages/${currentChat}`);
+
+                const formattedMessages = response.data.map((message: MessageFromBackend) => ({
+                    groupName: message.group.name,
+                    username: message.sender.user,
+                    date: new Date(message.date),
+                    message: message.content,
+                }));
+
+                setChatMessages(prevMessages => ({
+                    ...prevMessages,
+                    [currentChat as string]: formattedMessages,
+                }));
+            } catch (error) {
+                console.error('Error fetching group messages:', error);
+            }
+        };
+
+        if (currentChat) {
+            fetchGroupMessages();
+        }
+    }, [currentChat]);
 
     return (
         <div className="chatPageContainer">
@@ -319,7 +348,10 @@ export const ChatPage = () => {
             <div className="chatContainer">
                 {currentChat && chatMessages[currentChat] ? (
                     chatMessages[currentChat].map((msg, index) => (
-                        <div key={index}>{msg}</div>
+                        <div key={index} className={getMessageClass(msg.username)}>
+                            <p>{msg.username}: {msg.message}</p>
+                            <p>{new Date(msg.date).toLocaleString()}</p>
+                        </div>
                     ))
                 ) : (
                     <p>No messages.</p>

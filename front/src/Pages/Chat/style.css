@@ -6,13 +6,17 @@
 
 /* Estilos do contêiner de grupos e mensagens diretas */
 .groupDmsContainer {
-    flex: 1; /* Ajuste a proporção de acordo com suas preferências */
+    flex: 1;
+    /* Ajuste a proporção de acordo com suas preferências */
     padding: 20px;
     background-color: #f0f0f0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
-    max-height: none; /* Remova a altura máxima para permitir que ele cresça conforme necessário */
+    overflow-y: auto;
+    /* Adicione a barra de rolagem vertical quando necessário */
+    max-height: none;
+    /* Remova a altura máxima para permitir que ele cresça conforme necessário */
 }
+
 .groupDmsContainer h1 {
     margin-bottom: 2px;
 }
@@ -21,8 +25,10 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 700px; /* Defina a altura máxima desejada */
-    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+    max-height: 700px;
+    /* Defina a altura máxima desejada */
+    overflow-y: auto;
+    /* Adicione a barra de rolagem vertical quando necessário */
 }
 
 .groupDmsContainer li {
@@ -43,8 +49,10 @@
     padding: 10px;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
-    max-height: 800px; /* Defina a altura máxima desejada */
+    overflow-y: auto;
+    /* Adicione a barra de rolagem vertical quando necessário */
+    max-height: 800px;
+    /* Defina a altura máxima desejada */
 }
 
 .chatContainer h1 {
@@ -53,11 +61,13 @@
 
 /* Estilos do contêiner de membros */
 .membersContainer {
-    flex: 1; /* Ajuste a proporção de acordo com suas preferências */
+    flex: 1;
+    /* Ajuste a proporção de acordo com suas preferências */
     padding: 10px;
     background-color: #f0f0f0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Adicione a barra de rolagem vertical quando necessário */
+    overflow-y: auto;
+    /* Adicione a barra de rolagem vertical quando necessário */
 }
 
 .membersContainer h1 {
@@ -154,4 +164,22 @@
 
 .groupDmsContainer button:hover {
     background-color: #0056b3;
+}
+
+/* Estilos para mensagens enviadas pelo usuário atual */
+.messageSelf {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+/* Estilos para mensagens enviadas por outros usuários */
+.messageOther {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
