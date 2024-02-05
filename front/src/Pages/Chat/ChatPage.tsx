@@ -269,6 +269,14 @@ export const ChatPage = () => {
         }
     }, [currentChat]);
 
+    const handleOpenGroup = (groupName: string, groupType: string) => {
+        const isMember = groupsAndDms.some(g => g.name === groupName);
+        if (isMember) {
+            setCurrentChat(groupName);
+            setSelectedGroupType(groupType);
+        }
+    }
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -316,10 +324,7 @@ export const ChatPage = () => {
                         .map((group, index) => {
                             const isMember = groupsAndDms.some(g => g.name === group.name);
                             return (
-                                <li key={index} onClick={() => {
-                                    setCurrentChat(group.name);
-                                    setSelectedGroupType(group.type);
-                                }}>
+                                <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
                                     {group.name}
                                     <span className="groupTypeIndicator">({group.type})</span>
                                     {isMember ? (
