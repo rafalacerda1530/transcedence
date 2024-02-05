@@ -97,21 +97,19 @@ export class ChatController {
         return await this.groupService.getUserGroupAndDm(username);
     }
 
-    //TODO TEST
     @Post('membersInChat')
     async getMembersInChat(@Body() getMembers: GetMembers) {
-        const teste = await this.groupService.getMembersInChat(getMembers);
-        return teste;
+        return await this.groupService.getMembersInChat(getMembers);
     }
 
-    @Get('allPublicsGroups')
-    async getPublicGroups() {
-        return await this.groupService.getPublicGroups();
+    //TODO TEST
+    @Get('allGroups')
+    async getAllGroups() {
+        return await this.groupService.getAllGroups();
     }
 
-    @Post('joinGroup')
-    async joinGroup(@Body() joinGroupDto: GroupActionsDto) {
-        return await this.chatService.joinGroup(joinGroupDto);
+    @Get('groupMessages/:groupName')
+    async getMessagesInGroup(@Param('groupName') groupName: string) {
+        return await this.groupService.getMessagesInGroup(groupName);
     }
-
 }

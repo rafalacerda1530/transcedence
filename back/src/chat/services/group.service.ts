@@ -3,6 +3,7 @@ import { Group, GroupDM, GroupStatus, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
 import { GetMembers, JoinGroupDto } from "../dto/chat.dto";
+import { warn } from "console";
 
 @Injectable()
 export class GroupService {
@@ -330,14 +331,28 @@ export class GroupService {
         }
     }
 
-    async getPublicGroups () {
-        const groupsOfType: Group[] = await this.prisma.group.findMany({
-            where: {
-              type: GroupStatus.PUBLIC,
-            },
-          });
-          console.log(groupsOfType)
-        return groupsOfType;
+    //TODO TEST
+    async getAllGroups () {
+        try {
+            const groups = await this.prisma.group.findMany({
+                select: {
+                    name: true,
+                    type: true,
+                }
+            });
+            console.log(groups);
+            return groups;
+
+        } catch (error){
+            throw new BadRequestException(error.message);
+        }
+        // const groupsOfType: Group[] = await this.prisma.group.findMany({
+        //     where: {
+        //       type: GroupStatus.PUBLIC,
+        //     },
+        //   });
+        //   console.log(groupsOfType)
+        // return groupsOfType;
     }
 
     //async joinGroup(joinGroupDto: JoinGroupDto, prisma: PrismaService = this.prisma) {
@@ -373,4 +388,15 @@ export class GroupService {
     //        throw new InternalServerErrorException('Internal Server Error');
     //    }
     //}
+    async getMessagesInGroup(groupName: string){
+        return await this.prisma.message.findMany({
+            where: { group: { name: groupName}},
+            select: {
+                date: true,
+                content: true,
+                group: { select: { name: true}},
+                sender: { select: { user: true}},
+            }
+        })
+    }
 }

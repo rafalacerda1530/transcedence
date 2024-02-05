@@ -272,7 +272,7 @@ export const ChatPage = () => {
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
-                <h1>Groups and DMs</h1>
+                <a href="/home" className="homeButton">Go to Home</a>
                 <form className="createGroupForm" onSubmit={handleCreateGroup}>
                     <select value={groupType} onChange={(e) => setGroupType(e.target.value)} className="groupTypeSelect" >
                         <option value="PUBLIC">Public</option>
@@ -354,7 +354,7 @@ export const ChatPage = () => {
                         </div>
                     ))
                 ) : (
-                    <p>No messages.</p>
+                    <p></p>
                 )}
             </div>
             {currentChat && (
