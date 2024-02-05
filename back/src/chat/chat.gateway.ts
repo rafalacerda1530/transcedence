@@ -125,10 +125,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     @SubscribeMessage('joinChat')
     async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
+        try{
         const messageToClient: messageToClient = await this.chatService.joinGroup(groupActionsDto);
         client.join(groupActionsDto.groupName);
         this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
         this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
+        } catch (error){
+            throw new BadRequestException(error.message);
+        }
     }
 
     @SubscribeMessage('DmMessageToServer')

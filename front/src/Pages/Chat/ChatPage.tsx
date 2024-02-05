@@ -43,11 +43,10 @@ export const ChatPage = () => {
     const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>('');
     const [allGroups, setAllGroups] = useState<Group[]>([]);
     const [joinPassword, setJoinPassword] = useState<string>('')
-
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
+    const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
 
-
-
+  
     const connectSocket = () => {
         chatSocket.connect();
         chatSocket.on("connect", () => {
@@ -116,6 +115,48 @@ export const ChatPage = () => {
         setMessage(event.target.value);
     };
 
+    const handleInviteUser = async (groupName: string, userName: string) => {
+        try {
+            const invite = await axiosPrivate.put("/api/chat/inviteToGroup/", {
+                admUsername: username,
+                groupName: groupName,
+                invitedUsername: userName
+            })
+            alert("Invite send to: " + userName)
+        } catch (error) {
+            throw new Error("Failed to invite user. Please check the entered username or if a request has already been sent");
+        }
+    }
+
+    const checkInvitation = async (groupName: string, userName: string): Promise<boolean> => {
+        try {
+            const responseGroup = await axiosPrivate.get("/api/chat/groupId/" + groupName);
+            const responseUser = await axiosPrivate.get("/api/chat/UserId/" + userName);
+    
+            const userId = Number(responseUser.data.id);
+            const groupId = Number(responseGroup.data.id);
+    
+            if (isNaN(userId) || isNaN(groupId)) {
+                throw new Error('Invalid userId or groupId');
+            }
+    
+            const responseInvitation = await axiosPrivate.get(`/api/chat/CheckInvitationForUserGroup/${userId}/${groupId}`);
+    
+            return responseInvitation.data === true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    };
+    
+
+    const handleInviteUsernameChange = (chatName: string, username: string) => {
+        setInviteUsernames(prevState => ({
+            ...prevState,
+            [chatName]: username
+        }));
+    };
+
     const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
@@ -126,9 +167,7 @@ export const ChatPage = () => {
                 password: groupType == "PROTECT" ? password : null
             });
             console.log('Group created:', response.data);
-            // member group refresh
             setGroupAndDms([...groupsAndDms, { name: newGroupName, type: groupType }]);
-            //member group global refresh
             setAllGroups([...allGroups, { name: newGroupName, type: groupType }]);
             setNewGroupName('');
             setPassword('')
@@ -137,13 +176,14 @@ export const ChatPage = () => {
         }
     };
 
-    // TODO Talvez isso nao seja necessario
+
     const calculateMaxHeight = () => {
         const windowHeight = window.innerHeight;
         const margin = 100;
         const calculatedMaxHeight = windowHeight - margin;
         setMaxHeight(calculatedMaxHeight);
     };
+    
     useEffect(() => {
         calculateMaxHeight();
         window.addEventListener('resize', calculateMaxHeight);
@@ -203,7 +243,7 @@ export const ChatPage = () => {
             groupName: groupName,
             password: password
         };
-        chatSocket.emit('joinChat', joinRequest);
+        const response = chatSocket.emit('joinChat', joinRequest);
     };
 
     const sendMessageToServer = (groupName: string, message: string) => {
@@ -296,7 +336,6 @@ export const ChatPage = () => {
                         />
                     )}
                     <button type="submit" className="createGroupButton">Create</button>
-
                 </form>
                 <label htmlFor="groupTypeFilter">Filter by Group Type:</label>
                 <select
@@ -307,7 +346,6 @@ export const ChatPage = () => {
                     <option value="">All</option>
                     <option value="PUBLIC">Public</option>
                     <option value="PROTECT">Protected</option>
-
                     <option value="PRIVATE">Private</option>
                 </select>
                 <ul>
@@ -315,29 +353,63 @@ export const ChatPage = () => {
                         .filter(group => !selectedGroupTypeFilter || group.type === selectedGroupTypeFilter)
                         .map((group, index) => {
                             const isMember = groupsAndDms.some(g => g.name === group.name);
+                            const currentChatInviteUsername = inviteUsernames[group.name] || '';
+                            
                             return (
                                 <li key={index} onClick={() => {
                                     setCurrentChat(group.name);
                                     setSelectedGroupType(group.type);
+                                    
                                 }}>
                                     {group.name}
                                     <span className="groupTypeIndicator">({group.type})</span>
                                     {isMember ? (
-                                        <span> - Member</span>
+                                        <div>
+                                            <span> - Member</span>
+                                            {group.type === 'PRIVATE' && (
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Enter username to invite"
+                                                        value={currentChatInviteUsername}
+                                                        onChange={(e) => handleInviteUsernameChange(group.name, e.target.value)}
+                                                        className="w-32 h-8 px-2 rounded-full border border-gray-300"
+                                                    />
+                                                    <button className="ml-2 py-2 px-4 rounded bg-black text-white"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await handleInviteUser(group.name, currentChatInviteUsername);
+                                                            } catch (error) {
+                                                                alert('Error inviting user: ' + error);
+                                                                console.error(error);
+                                                            }
+                                                        }}
+                                                    >
+                                                        Invite User
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     ) : (
-                                        group.type === 'PROTECT' ? (
-                                            <div>
-                                                <input
-                                                    type="password"
-                                                    placeholder="Enter group password"
-                                                    value={joinPassword}
-                                                    onChange={(e) => setJoinPassword(e.target.value)} // Renomeamos para setEnteredPassword
-                                                />
-                                                <button onClick={() => handleJoinGroup(group.name, joinPassword)}>Join Group</button>
-                                            </div>
-                                        ) : (
-                                            <button onClick={() => handleJoinGroup(group.name, '')}>Join Group</button>
-                                        )
+                                        <div>
+                                            {group.type === 'PROTECT' ? (
+                                                <div>
+                                                    <input
+                                                        type="password"
+                                                        placeholder="Enter group password"
+                                                        value={joinPassword}
+                                                        onChange={(e) => setJoinPassword(e.target.value)}
+                                                    />
+                                                    <button className="createGroupButton" onClick={() => handleJoinGroup(group.name, joinPassword)}>
+                                                        Join Group
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button className="createGroupButton" onClick={() => handleJoinGroup(group.name, '')}>
+                                                    Join Group
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </li>
                             );

@@ -97,14 +97,37 @@ export class ChatService {
 
     }
 
-    async inviteToGroup(inviteToGroupDto: InviteToGroupDto) {
+    //async inviteToGroup(inviteToGroupDto: InviteToGroupDto) {
+    //    const group = await this.groupService.getGroupByName(inviteToGroupDto.groupName);
+    //    if (group.type !== 'PRIVATE')
+    //        throw new BadRequestException(`Group ${group.name} is not a Private type`)
+    //    const admUser = await this.groupService.getUserByUsername(inviteToGroupDto.admUsername);
+    //    const isAdm = await this.groupService.isAdmInGroup(admUser.id, group.id);
+    //    if (!isAdm)
+    //        throw new BadRequestException(`User ${admUser.user} is not a ADM in Group ${group.name}`);
+//
+    //    const invitedUser = await this.groupService.getUserByUsername(inviteToGroupDto.invitedUsername);
+    //    const isMember = await this.groupService.isMemberInGroup(invitedUser.id, group.id);
+    //    if (isMember)
+    //        throw new BadRequestException(`User ${invitedUser.user} alredy is a member in Group ${group.name}`);
+//
+    //    const wasInvited = await this.groupService.checkExistingInviteForUserInGroup(invitedUser.id, group.id);
+    //    if (wasInvited)
+    //        throw new BadRequestException('User is alredy invited')
+    //    await this.prisma.groupInvite.create({
+    //        data: {
+    //            groupId: group.id,
+    //            invitedUserId: invitedUser.id,
+    //            invitedByUserId: admUser.id,
+    //        },
+    //    })
+    //}
+
+    async inviteToGroupPrivate(inviteToGroupDto: InviteToGroupDto) {
         const group = await this.groupService.getGroupByName(inviteToGroupDto.groupName);
         if (group.type !== 'PRIVATE')
             throw new BadRequestException(`Group ${group.name} is not a Private type`)
         const admUser = await this.groupService.getUserByUsername(inviteToGroupDto.admUsername);
-        const isAdm = await this.groupService.isAdmInGroup(admUser.id, group.id);
-        if (!isAdm)
-            throw new BadRequestException(`User ${admUser.user} is not a ADM in Group ${group.name}`);
 
         const invitedUser = await this.groupService.getUserByUsername(inviteToGroupDto.invitedUsername);
         const isMember = await this.groupService.isMemberInGroup(invitedUser.id, group.id);

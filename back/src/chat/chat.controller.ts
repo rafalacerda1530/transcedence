@@ -19,7 +19,7 @@ export class ChatController {
 
     @Put('inviteToGroup')
     async inviteToGroup(@Body() inviteToGroupDto: InviteToGroupDto) {
-        return await this.chatService.inviteToGroup(inviteToGroupDto);
+        return await this.chatService.inviteToGroupPrivate(inviteToGroupDto);
     }
 
     @Put('setUserAsAdm')
@@ -112,4 +112,22 @@ export class ChatController {
     async getMessagesInGroup(@Param('groupName') groupName: string) {
         return await this.groupService.getMessagesInGroup(groupName);
     }
+
+    @Get('groupId/:groupName')
+    async getGroupByName(@Param('groupName') groupName: string) {
+        return await this.groupService.getGroupByName(groupName);
+    }
+
+    @Get('UserId/:groupName')
+    async getUserByName(@Param('groupName') userName: string) {
+        return await this.groupService.getUserByUsername(userName);
+    }
+
+    @Get('CheckInvitationForUserGroup/:userId/:groupId')
+    async getInvitation(@Param('groupId') groupId: number, @Param('userId') userId: number) {
+        const userIdN = Number(userId);
+        const groupIdN = Number(groupId);
+        return await this.groupService.checkExistingInviteForUserInGroup(userIdN, groupIdN);
+    }
+
 }

@@ -16,13 +16,14 @@ export class GroupService {
             });
             if (!user)
                 throw new BadRequestException(`User ${username} not found`);
+            console.log(user)
             return user;
         } catch (error) {
             throw new BadRequestException(error.message);
         }
     }
 
-    async getGroupByName(chatName: string): Promise<Group> {
+    async getGroupByName(chatName: string) {
         try {
             const group = await this.prisma.group.findUnique({
                 where: { name: chatName },

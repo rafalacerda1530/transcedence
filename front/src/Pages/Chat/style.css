@@ -45,7 +45,7 @@
 
 /* Estilos do contêiner de mensagens */
 .chatContainer {
-    flex: 4;
+    flex: 3;
     padding: 10px;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
