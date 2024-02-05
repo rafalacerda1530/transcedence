@@ -27,12 +27,17 @@ interface MessageFromBackend {
     };
 }
 
+interface GroupMember {
+    username: string;
+    isAdm: boolean;
+}
+
 export const ChatPage = () => {
     const chatSocket = useContext(ChatContext);
     const refreshToken = useRefreshToken();
     const [groupsAndDms, setGroupAndDms] = useState<Group[]>([]);
     const [currentChat, setCurrentChat] = useState<string | null>(null);
-    const [members, setMembers] = useState<string[]>([]);
+    const [members, setMembers] = useState<GroupMember[]>([]);
     const [message, setMessage] = useState<string>('');
     const [newGroupName, setNewGroupName] = useState<string>('');
     const [username, setUsername] = useState<string>('')
@@ -46,7 +51,7 @@ export const ChatPage = () => {
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
     const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
 
-  
+
     const connectSocket = () => {
         chatSocket.connect();
         chatSocket.on("connect", () => {
@@ -132,23 +137,23 @@ export const ChatPage = () => {
         try {
             const responseGroup = await axiosPrivate.get("/api/chat/groupId/" + groupName);
             const responseUser = await axiosPrivate.get("/api/chat/UserId/" + userName);
-    
+
             const userId = Number(responseUser.data.id);
             const groupId = Number(responseGroup.data.id);
-    
+
             if (isNaN(userId) || isNaN(groupId)) {
                 throw new Error('Invalid userId or groupId');
             }
-    
+
             const responseInvitation = await axiosPrivate.get(`/api/chat/CheckInvitationForUserGroup/${userId}/${groupId}`);
-    
+
             return responseInvitation.data === true;
         } catch (error) {
             console.error(error);
             return false;
         }
     };
-    
+
 
     const handleInviteUsernameChange = (chatName: string, username: string) => {
         setInviteUsernames(prevState => ({
@@ -183,7 +188,7 @@ export const ChatPage = () => {
         const calculatedMaxHeight = windowHeight - margin;
         setMaxHeight(calculatedMaxHeight);
     };
-    
+
     useEffect(() => {
         calculateMaxHeight();
         window.addEventListener('resize', calculateMaxHeight);
@@ -210,12 +215,15 @@ export const ChatPage = () => {
                 if (!currentChat) {
                     return;
                 }
-                console.log(selectedGroupType);
                 const response = await axiosPrivate.post('/api/chat/membersInChat', {
                     groupName: currentChat,
                     type: selectedGroupType,
                 });
-                setMembers(response.data);
+                const updatedMembers = response.data.map((member: any) => ({
+                    username: member.username,
+                    isAdm: member.isAdm,
+                }))
+                setMembers(updatedMembers);
             } catch (error) {
                 console.error('Error fetching group members:', error);
             }
@@ -243,7 +251,7 @@ export const ChatPage = () => {
             groupName: groupName,
             password: password
         };
-        const response = chatSocket.emit('joinChat', joinRequest);
+        chatSocket.emit('joinChat', joinRequest);
     };
 
     const sendMessageToServer = (groupName: string, message: string) => {
@@ -317,6 +325,22 @@ export const ChatPage = () => {
         }
     }
 
+    //TODO TEST
+    const handleKickUser = async (target: string) => {
+        try {
+            // Faça uma solicitação para o backend para executar o kick
+            await axiosPrivate.put('/api/chat/kickUser', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: target
+            });
+
+            // Atualize a lista de membros após o kick
+            setMembers(prevMembers => prevMembers.filter(member => member.username !== username));
+        } catch (error) {
+            console.error('Error kicking user:', error);
+        }
+    };
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -362,7 +386,7 @@ export const ChatPage = () => {
                         .map((group, index) => {
                             const isMember = groupsAndDms.some(g => g.name === group.name);
                             const currentChatInviteUsername = inviteUsernames[group.name] || '';
-                            
+
                             return (
                                 <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
                                     {group.name}
@@ -438,7 +462,12 @@ export const ChatPage = () => {
                     <h1>Members: </h1>
                     <ul>
                         {members.map((member, index) => (
-                            <li key={index}>{member}</li>
+                            <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
+                                {member.username}
+                                {username !== member.username && !member.isAdm && (
+                                    <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
+                                )}
+                            </li>
                         ))}
                     </ul>
                 </div>

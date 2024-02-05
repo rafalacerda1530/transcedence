@@ -200,3 +200,32 @@
 .homeButton:hover {
     background-color: #45a049;
 }
+
+.kickButton {
+    background-color: #ff0000;
+    /* Cor de fundo */
+    color: #ffffff;
+    /* Cor do texto */
+    border: none;
+    /* Remover borda */
+    padding: 3px 8px;
+    /* Espaçamento interno reduzido */
+    border-radius: 3px;
+    /* Borda arredondada */
+    cursor: pointer;
+    /* Mostrar cursor de ponteiro ao passar o mouse */
+    font-size: 12px;
+    /* Tamanho da fonte reduzido */
+}
+
+.kickButton:hover {
+    background-color: #cc0000;
+    /* Alterar cor de fundo ao passar o mouse */
+}
+
+.adminMember {
+    color: #ff0000;
+    /* Cor do nome do administrador */
+    font-weight: bold;
+    /* Texto em negrito para administradores */
+}
