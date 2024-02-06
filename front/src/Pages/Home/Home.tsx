@@ -3,16 +3,93 @@ import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 import axios from "axios";
 import { StatusContext } from "../../context/StatusContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
-import ToggleSwitch from "./button/toggle";
 
+import ToggleSwitch from "./button/toggle";
+import Modal from "react-modal";
+Modal.setAppElement("#root");
+
+const customStyles = {
+  content: {
+    width: "60%",
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    backgroundColor: "#000",
+    color: "#fff",
+    borderRadius: "10px 10px 10px 10px",
+  },
+  header: {},
+};
 
 export const Home = () => {
   interface UserData {
+    id: number;
     user: string;
     nickname: string;
     email: string;
     profileImage: string;
   }
+  interface Amigo {
+    id: number;
+    user: string;
+    status: string;
+  }
+  const getStatusColor = (status: string) => {
+    return status === "Online" ? "green" : "red";
+  };
+
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalSolicitacoesIOpen, setSolicitacoesOpen] = useState(false);
+  const [solicitacoesData, setSolicitacoesData] = useState<Amigo[]>([]);
+  const [amigosData, setAmigosData] = useState<Amigo[]>([]);
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const openModalSolicitacoes = () => {
+    setSolicitacoesOpen(true);
+  };
+
+  const closeModalSolicitacoes = () => {
+    setSolicitacoesOpen(false);
+  };
+  const handleSolicitacoes = async () => {
+    if (username) {
+      const url = "/friendship/Pendentes/" + username;
+      try {
+        const response = await axiosPrivate.get(url);
+        setSolicitacoesData(response.data);
+        openModalSolicitacoes(); // Move this line outside of the try block
+      } catch (error) {
+        console.log("Erro ao obter dados dos amigos:", error);
+      }
+    }
+  };
+  const handleAmigos = async () => {
+    if (username) {
+      const url = "/friendship/" + username;
+
+      try {
+        const response = await axiosPrivate.get(url);
+        if (response.data.length > 0) {
+          setAmigosData(response.data);
+          openModal(); // Move this line outside of the try block
+        } else {
+          alert("nao tem amigos!");
+        }
+      } catch (error) {
+        console.log("Erro ao obter dados dos amigos:", error);
+      }
+    }
+  };
 
   const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
   const statusSocket = useContext(StatusContext);
@@ -22,10 +99,8 @@ export const Home = () => {
   const [editedName, setEditedName] = useState("");
   const [editedEmail, setEditedEmail] = useState("");
   const [editedNickname, setEditedNickname] = useState("");
-  const [isProfileSectionVisible, setIsProfileSectionVisible] =
-    useState(true);
+  const [isProfileSectionVisible, setIsProfileSectionVisible] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-
 
   const connectSocket = () => {
     statusSocket.connect();
@@ -56,7 +131,6 @@ export const Home = () => {
       }
       connectSocket();
     });
-
   };
 
   const disconnectSocket = () => {
@@ -84,28 +158,26 @@ export const Home = () => {
   };
 
   const handlePesquisarHistorico = async (user?: string) => {
-    if (user === '')
-      window.location.href = `/matchHistoryComplete/$+ `;
-    else
-      window.location.href = `/matchHistoryComplete/${user}`;
-  }
+    if (user === "") window.location.href = `/matchHistoryComplete/$+ `;
+    else window.location.href = `/matchHistoryComplete/${user}`;
+  };
 
   const handleGerarQrCode = () => {
     window.location.href = `/generate2fa`;
-  }
+  };
 
   const handleIniciarJogo = async (user?: string) => {
     window.location.href = `/Queue`;
-  }
+  };
 
   const handleLogout = async () => {
     try {
       const response = await axiosPrivate.post("/user/logout");
       window.location.href = `/login`;
-    }catch (error){
-      console.log(error)
+    } catch (error) {
+      console.log(error);
     }
-  }
+  };
 
   const handleSaveClick = async () => {
     try {
@@ -125,6 +197,7 @@ export const Home = () => {
       );
 
       setUserData({
+        id: userResponse.data.user.userId,
         user: userResponse.data.user.user,
         email: userResponse.data.user.email,
         nickname: userResponse.data.user.nickname,
@@ -145,7 +218,7 @@ export const Home = () => {
   const [showBall, setShowBall] = useState(false);
   const [username, setUserName] = useState("");
   const axiosPrivate = useAxiosPrivate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [userStats, setUserStats] = useState({
     win: 0,
     lose: 0,
@@ -153,14 +226,25 @@ export const Home = () => {
   });
 
   useEffect(() => {
+    // Move the modal opening logic outside of the useEffect
+    if (amigosData.length > 0) {
+      openModal();
+    }
+  }, [amigosData]);
+  useEffect(() => {
+    // Move the modal opening logic outside of the useEffect
+    if (solicitacoesData.length > 0) {
+      openModalSolicitacoes();
+    }
+  }, [solicitacoesData]);
+
+  useEffect(() => {
     const user = async () => {
       try {
         const response = await axiosPrivate.get("/user/me");
-        setUserName(response.data?.user?.toUpperCase() + ",");
+        setUserName(response.data?.user);
 
-        const userHistoryResponse = await axiosPrivate.get(
-          "/user/meHistory"
-        );
+        const userHistoryResponse = await axiosPrivate.get("/user/meHistory");
         const { win, lose, score } = userHistoryResponse.data;
 
         setUserStats({
@@ -178,20 +262,14 @@ export const Home = () => {
     user();
   }, [axiosPrivate]);
 
-  useEffect(() => {
-    // Mostrar a bola após 2 segundos (pode ajustar o tempo)
-    const timeout = setTimeout(() => {
-      setShowBall(true);
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, []);
   let image = "";
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await axiosPrivate.get("/user/me");
         setUserData({
+          id: response.data.userId,
           user: response.data?.user,
           email: response.data?.email,
           nickname: response.data?.nickname,
@@ -224,6 +302,7 @@ export const Home = () => {
         formData.append("profileImage", file); // 'file' é o arquivo de imagem
         formData.append("user", user); // Adicionar o usuário ao FormData
 
+		
         // Enviar a requisição POST para o backend
         const uploadResponse = await axiosPrivate.post(
           "/user/uploadImage",
@@ -235,7 +314,7 @@ export const Home = () => {
           }
         );
 
-        console.log("Imagem enviada com sucesso:", uploadResponse.data);
+        console.log("Imagem enviada com sucesso:", formData);
       } catch (error) {
         console.error("Erro ao enviar a imagem:", error);
       }
@@ -244,13 +323,48 @@ export const Home = () => {
     }
   };
 
+  const handleStatus = async (status: number, amigoId: any) => {
+    if (status == 1) {
+      try {
+        console.log("cliquei:", status, amigoId);
+        // @Post(':userId/add/:friendId')
+        const uploadResponse = await axiosPrivate.post(
+          `friendship/${userData?.id}/accept/${amigoId}`
+        );
+
+        console.log("Solicitacao aceita com sucesso:", uploadResponse.data);
+        closeModal();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    console.log(status);
+    if (status == 0) {
+      try {
+        console.log("cliquei:", status, amigoId);
+        console.log("eu:", userData);
+        // @Post(':userId/add/:friendId')
+
+        const uploadResponse = await axiosPrivate.post(
+          `friendship/${userData?.id}/reject/${amigoId}`
+        );
+
+        console.log("Solicitacao aceita com sucesso:", uploadResponse.data);
+        closeModal();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   return (
     <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center">
       <div className="flex gap-8">
         {/* Seção do perfil */}
         <div
-          className={`bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md ${isEditing ? "center-profile-editing" : "center-profile"
-            }`}
+          className={`bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md ${
+            isEditing ? "center-profile-editing" : "center-profile"
+          }`}
         >
           {userData && (
             <div className="text-center mb-6">
@@ -279,17 +393,13 @@ export const Home = () => {
                   <input
                     type="text"
                     value={editedName}
-                    onChange={(e) =>
-                      setEditedName(e.target.value)
-                    }
+                    onChange={(e) => setEditedName(e.target.value)}
                     className="text-black border border-gray-500 rounded p-2"
                     readOnly={!isEditing}
                     style={{ width: "100%" }}
                   />
                 ) : (
-                  <span className="text-gray-500">
-                    {userData.user}
-                  </span>
+                  <span className="text-gray-500">{userData.user}</span>
                 )}
               </div>
               <div className="mb-6">
@@ -299,9 +409,7 @@ export const Home = () => {
                     <input
                       type="mail"
                       value={editedEmail}
-                      onChange={(e) =>
-                        setEditedEmail(e.target.value)
-                      }
+                      onChange={(e) => setEditedEmail(e.target.value)}
                       className="text-black border border-gray-500 rounded p-2"
                       readOnly={!isEditing}
                       style={{ width: "100%" }}
@@ -313,9 +421,7 @@ export const Home = () => {
                     )}
                   </>
                 ) : (
-                  <span className="text-gray-500">
-                    {userData.email}
-                  </span>
+                  <span className="text-gray-500">{userData.email}</span>
                 )}
               </div>
               <div className="mb-6">
@@ -325,11 +431,7 @@ export const Home = () => {
                     <input
                       type="name"
                       value={editedNickname}
-                      onChange={(e) =>
-                        setEditedNickname(
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => setEditedNickname(e.target.value)}
                       className="text-black border border-gray-500 rounded p-2"
                       readOnly={!isEditing}
                       style={{ width: "100%" }}
@@ -341,14 +443,12 @@ export const Home = () => {
                     )}
                   </>
                 ) : (
-                  <span className="text-gray-500">
-                    {userData.nickname}
-                  </span>
+                  <span className="text-gray-500">{userData.nickname}</span>
                 )}
               </div>
               <div className="mb-4">
                 <img
-                  src="https://i.imgur.com/VavB8Rm.png"
+                    src="https://i.imgur.com/VavB8Rm.png"
                   alt="Profile"
                   className="w-20 h-20 rounded-full mx-auto mb-4"
                 />
@@ -375,15 +475,93 @@ export const Home = () => {
                   2FA - AUTHENTICATION
                 </div>
                 <div className=" ">
-                  <button className="bg-blue-600 text-white rounded-full px-2 py-2 "
-                    onClick={() => handleGerarQrCode()}>
+                  <button
+                    className="bg-blue-600 text-white mt-2 mr-2 rounded-full px-2 py-2 "
+                    onClick={() => handleGerarQrCode()}
+                  >
                     Novo Qr-Code
                   </button>
+                  <button
+                    className="bg-blue-600 text-white mt-2 rounded-full px-2 py-2 "
+                    onClick={handleSolicitacoes}
+                  >
+                    Ver solicitações de amizade
+                  </button>
+                  <Modal
+                    isOpen={modalSolicitacoesIOpen}
+                    onRequestClose={closeModalSolicitacoes}
+                    style={customStyles}
+                    contentLabel="Example Modal"
+                  >
+                    <header>
+                      <button onClick={closeModalSolicitacoes}>x</button>
+                    </header>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th
+                            style={{
+                              padding: "10px",
+                              textAlign: "left",
+                              borderBottom: "1px solid #ddd",
+                            }}
+                          >
+                            Amigos
+                          </th>
+                          <th
+                            style={{
+                              padding: "10px",
+                              textAlign: "left",
+                              borderBottom: "1px solid #ddd",
+                            }}
+                          >
+                            Açôes
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {solicitacoesData.map((amigo) => (
+                          <tr key={amigo.id}>
+                            <td
+                              style={{
+                                padding: "10px",
+                                borderBottom: "1px solid #ddd",
+                              }}
+                            >
+                              {amigo.user}
+                            </td>
+                            <td
+                              style={{
+                                padding: "10px",
+                                borderBottom: "1px solid #ddd",
+                              }}
+                            >
+                              <button
+                                className="bg-blue-600 text-white mt-2 mr-2 rounded-full px-2 py-2 "
+                                onClick={(e) => handleStatus(1, amigo.id)}
+                              >
+                                aceitar
+                              </button>
+                              <button
+                                className="bg-blue-600 text-white mt-2 mr-2 rounded-full px-2 py-2 "
+                                onClick={(e) => handleStatus(0, amigo.id)}
+                              >
+                                rejeitar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Modal>
                 </div>
-
               </div>
             </div>
-
           )}
         </div>
         {/* Seção para iniciar o jogo */}
@@ -395,14 +573,14 @@ export const Home = () => {
                   {username} SEJA BEM-VINDO AO PONG GAME
                 </h1>
                 <p className="mb-4">
-                  Desafie seus amigos em uma partida
-                  emocionante de Ping Pong!
+                  Desafie seus amigos em uma partida emocionante de Ping Pong!
                 </p>
 
                 <div className="flex flex-col items-center">
                   <button
                     className="bg-blue-600 text-white rounded-full px-4 py-2 mb-4"
-                    onClick={() => handleIniciarJogo()}>
+                    onClick={() => handleIniciarJogo()}
+                  >
                     Iniciar Jogo
                   </button>
                   <div className="text-black">
@@ -411,12 +589,98 @@ export const Home = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Digite o Player"
-                      className="border border-gray-400 p-2 mb-4 rounded-md w-full" />
+                      className="border border-gray-400 p-2 mb-4 rounded-md w-full"
+                    />
                     <button
-                      className="bg-blue-600 text-white rounded-full px-4 py-2 mb-4"
-                      onClick={() => handlePesquisarHistorico(searchTerm)}>
+                      className="bg-blue-600 text-white rounded-full mr-2 px-4 py-2 mb-4"
+                      onClick={() => handlePesquisarHistorico(searchTerm)}
+                    >
                       Pesquisar Histórico
                     </button>
+                    <button
+                      className="bg-blue-600 text-white rounded-full px-4 py-2 mb-4"
+                      onClick={handleAmigos} // Change to call handleAmigos instead of openModal directly
+                    >
+                      Ver amigos
+                    </button>
+
+                    <Modal
+                      isOpen={modalIsOpen}
+                      onRequestClose={closeModal}
+                      style={customStyles}
+                      contentLabel="Example Modal"
+                    >
+                      <header>
+                        <button onClick={closeModal}>x</button>
+                      </header>
+                      <table
+                        style={{
+                          width: "100%",
+                          borderCollapse: "collapse", // Adicionei para melhorar a aparência das bordas da tabela
+                        }}
+                      >
+                        <thead>
+                          <tr>
+                            <th
+                              style={{
+                                padding: "10px",
+                                textAlign: "left",
+                                borderBottom: "1px solid #ddd",
+                              }}
+                            >
+                              Amigos
+                            </th>
+                            <th
+                              style={{
+                                padding: "10px",
+                                textAlign: "left",
+                                borderBottom: "1px solid #ddd",
+                              }}
+                            >
+                              Status
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {amigosData.map((amigo) => (
+                            <tr key={amigo.id}>
+                              <td
+                                style={{
+                                  padding: "10px",
+                                  borderBottom: "1px solid #ddd",
+                                }}
+                              >
+                                {amigo.user}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "10px",
+                                  borderBottom: "1px solid #ddd",
+                                }}
+                              >
+                                <div>
+                                  <div
+                                    style={{
+                                      width: "10px",
+                                      height: "10px",
+                                      borderRadius: "50%",
+                                      backgroundColor: getStatusColor(
+                                        amigo.status
+                                      ),
+                                      display: "inline-block",
+                                      marginRight: "5px",
+                                    }}
+                                  />
+                                  {amigo.status === "Online"
+                                    ? "Online"
+                                    : "Offline"}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </Modal>
                   </div>
                 </div>
               </div>
@@ -434,7 +698,6 @@ export const Home = () => {
                   </button>
                 </div>
               </div>
-
             </div>
 
             {/* Seção para estatisticas */}
@@ -446,13 +709,11 @@ export const Home = () => {
                 <div className="mb-4 flex flex-col items-center justify-center">
                   <div className="flex flex-col items-center mb-4">
                     <div className="w-16 h-16 bg-green-500 rounded-full mb-2"></div>
-                    <strong>Vitórias:</strong>{" "}
-                    {userStats.win}
+                    <strong>Vitórias:</strong> {userStats.win}
                   </div>
                   <div className="flex flex-col items-center mb-4">
                     <div className="w-16 h-16 bg-red-500 rounded-full mb-2"></div>
-                    <strong>Derrotas:</strong>{" "}
-                    {userStats.lose}
+                    <strong>Derrotas:</strong> {userStats.lose}
                   </div>
                   <div className="flex flex-col items-center">
                     <strong className="text-yellow-500 text-xl">

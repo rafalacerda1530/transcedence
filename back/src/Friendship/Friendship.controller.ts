@@ -1,10 +1,4 @@
-import {
-    Controller,
-    Post,
-    Delete,
-    Param,
-    Get,
-} from '@nestjs/common';
+import { Controller, Post, Delete, Param, Get } from '@nestjs/common';
 import { FriendshipService } from './Friendship.service';
 // import { AuthGuard } from '@nestjs/passport';
 
@@ -21,9 +15,15 @@ export class FriendshipController {
     constructor(private readonly friendshipService: FriendshipService) {}
 
     @Post(':userId/status/:friendId')
-    async getFriendshipStatus( @Param('userId') userId: string, @Param('friendId') friendId: string,) {
-        const friendshipStatus = await this.friendshipService.getFriendshipStatus( parseInt(userId, 10), parseInt(friendId, 10),);
-        console.log(friendshipStatus);
+    async getFriendshipStatus(
+        @Param('userId') userId: string,
+        @Param('friendId') friendId: string,
+    ) {
+        const friendshipStatus =
+            await this.friendshipService.getFriendshipStatus(
+                parseInt(userId, 10),
+                parseInt(friendId, 10),
+            );
         return friendshipStatus;
     }
 
@@ -54,10 +54,14 @@ export class FriendshipController {
         @Param('userId') userId: string,
         @Param('friendId') friendId: string,
     ): Promise<void> {
-        await this.friendshipService.addFriendship(
-            parseInt(userId, 10),
-            parseInt(friendId, 10),
-        );
+        try {
+            const envio = await this.friendshipService.addFriendship(
+                parseInt(userId, 10),
+                parseInt(friendId, 10),
+            );
+        } catch (err) {
+            console.log('error: ', err);
+        }
     }
 
     @Delete(':userId/delete/:friendId')
@@ -76,6 +80,18 @@ export class FriendshipController {
         @Param('username') username: string,
     ): Promise<{ id: number; user: string; status: string }[]> {
         const friends = await this.friendshipService.getFriends(username);
+        return friends.map(({ id, user, status }) => ({
+            id,
+            user,
+            status: statusMappings[status],
+        }));
+    }
+	@Get('Pendentes/:username')
+    async getFriendsPend(
+        @Param('username') username: string,
+    ): Promise<{ id: number; user: string; status: string }[]> {
+        console.log('getFriends', username);
+        const friends = await this.friendshipService.getFriendsPend(username);
         return friends.map(({ id, user, status }) => ({
             id,
             user,
