@@ -229,3 +229,80 @@
     font-weight: bold;
     /* Texto em negrito para administradores */
 }
+
+.banButton {
+    background-color: #ff0000;
+    /* Cor de fundo */
+    color: #ffffff;
+    /* Cor do texto */
+    border: none;
+    /* Remover borda */
+    padding: 3px 8px;
+    /* Espaçamento interno reduzido */
+    border-radius: 3px;
+    /* Borda arredondada */
+    cursor: pointer;
+    /* Mostrar cursor de ponteiro ao passar o mouse */
+    margin-left: 8px;
+    font-size: 12px;
+    /* Tamanho da fonte reduzido */
+}
+
+.banButton:hover {
+    background-color: #cc0000;
+    /* Cor de fundo vermelha mais escura ao passar o mouse */
+}
+
+.unbanButton {
+    padding: 1px 3px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.unbanButton:hover {
+    background-color: #45a049;
+}
+
+.banPopup {
+    /* Estilo do contêiner do pop-up */
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.banPopup input {
+    /* Estilo do input de duração do banimento */
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.banPopup button {
+    /* Estilo dos botões de confirmar e cancelar */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s;
+}
+
+.banPopup button:hover {
+    /* Efeito de hover nos botões */
+    background-color: #0056b3;
+}

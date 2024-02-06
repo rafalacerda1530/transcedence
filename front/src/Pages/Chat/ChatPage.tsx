@@ -50,6 +50,13 @@ export const ChatPage = () => {
     const [joinPassword, setJoinPassword] = useState<string>('')
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
     const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
+    const [banList, setBanList] = useState([]);
+
+    const [usernameToUnban, setUsernameToUnban] = useState('');
+
+    const [isBanPopupOpen, setIsBanPopupOpen] = useState(false);
+    const [banDuration, setBanDuration] = useState<number | null>(null);
+    const [usernameToBan, setUsernameToBan] = useState<string>('')
 
 
     const connectSocket = () => {
@@ -341,6 +348,76 @@ export const ChatPage = () => {
             console.error('Error kicking user:', error);
         }
     };
+
+    const handleBanUser = async () => {
+        try {
+            await axiosPrivate.put('/api/chat/banUser', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: usernameToBan,
+                banDuration: banDuration,
+            });
+            setMembers(prevMembers => prevMembers.filter(member => member.username !== usernameToBan));
+            setIsBanPopupOpen(false);
+        } catch (error) {
+            console.error('Error banning user:', error);
+        }
+    };
+
+
+    //TODO TEST
+    useEffect(() => {
+        if (currentChat) {
+            // Aqui você pode fazer uma solicitação ao backend para obter a lista de usuários banidos
+            const fetchBanList = async () => {
+                console.log(currentChat);
+                try {
+                    const response = await axiosPrivate.get(`api/chat/ban/list/${currentChat}`);
+                    setBanList(response.data);
+                } catch (error) {
+                    console.error('Error fetching ban list:', error);
+                }
+            };
+
+            fetchBanList();
+        }
+    }, [currentChat]);
+
+    const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setUsernameToUnban(event.target.value);
+    };
+
+    const handleUnbanUser = async (usernameToUnban: string) => {
+        try {
+            await axiosPrivate.put('/api/chat/unban', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: usernameToUnban
+            });
+            console.log('deu???')
+            const updatedBanList = banList.filter(user => user !== usernameToUnban);
+            setBanList(updatedBanList);
+            setUsernameToUnban('');
+        } catch (error) {
+            console.error('Error unbanning user:', error);
+        }
+    };
+
+    const handleOpenBanPopup = (target: string) => {
+        setUsernameToBan(target);
+        setIsBanPopupOpen(true);
+
+    }
+    const handleCloseBanPopup = () => {
+        setIsBanPopupOpen(false);
+    }
+
+    const handleBanDurationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const duration = parseInt(event.target.value);
+        setBanDuration(duration);
+    };
+
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -465,11 +542,41 @@ export const ChatPage = () => {
                             <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
                                 {member.username}
                                 {username !== member.username && !member.isAdm && (
-                                    <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
+                                    <div>
+                                        <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
+                                        <button className="banButton" onClick={() => handleOpenBanPopup(member.username)}>Ban</button>
+                                    </div>
                                 )}
                             </li>
                         ))}
                     </ul>
+                    <div>
+                        <h2>Ban Management</h2>
+                        <div>
+                            <h3>Ban List</h3>
+                            <ul>
+                                {banList.map((user, index) => (
+                                    <li key={index}>
+                                        {user}
+                                        <button className="unbanButton" onClick={() => handleUnbanUser(user)}>Unban</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isBanPopupOpen && (
+                <div className="banPopup">
+                    <input
+                        type="number"
+                        value={banDuration || ''}
+                        onChange={handleBanDurationChange}
+                        placeholder="Ban duration (minutes)"
+                    />
+                    {/* Passe o usuário correto para banir ao clicar em "Confirmar" */}
+                    <button onClick={handleBanUser}>Confirm</button>
+                    <button onClick={handleCloseBanPopup}>Cancel</button>
                 </div>
             )}
             {currentChat && (
