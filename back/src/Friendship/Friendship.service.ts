@@ -110,7 +110,7 @@ export class FriendshipService {
             const friendships = await this.prisma.friendship.findMany({
                 where: {
 					friendshipStatus: 2,
-                    OR: [{ followedById: user.id }, { followingId: user.id }]
+                     followingId: user.id 
                 },
                 include: {
                     following: true,
