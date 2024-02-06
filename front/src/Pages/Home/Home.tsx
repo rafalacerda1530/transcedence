@@ -443,7 +443,11 @@ export const Home = () => {
               </div>
               <div className="mb-4">
                 <img
-                  src={"./profilesUser/" + userData.profileImage}
+                  src={
+                    userData.profileImage == "https://i.imgur.com/VavB8Rm.png"
+                      ? userData.profileImage
+                      : "./profilesUser/" + userData.profileImage
+                  }
                   alt="Profile"
                   className="w-20 h-20 rounded-full mx-auto mb-4"
                 />
