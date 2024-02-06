@@ -3,7 +3,6 @@ import { useAxiosPrivate } from "../../hooks/useAxiosPrivate";
 import axios from "axios";
 import { StatusContext } from "../../context/StatusContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
-
 import ToggleSwitch from "./button/toggle";
 import Modal from "react-modal";
 Modal.setAppElement("#root");
@@ -302,7 +301,6 @@ export const Home = () => {
         formData.append("profileImage", file); // 'file' é o arquivo de imagem
         formData.append("user", user); // Adicionar o usuário ao FormData
 
-		
         // Enviar a requisição POST para o backend
         const uploadResponse = await axiosPrivate.post(
           "/user/uploadImage",
@@ -315,6 +313,7 @@ export const Home = () => {
         );
 
         console.log("Imagem enviada com sucesso:", formData);
+        user();
       } catch (error) {
         console.error("Erro ao enviar a imagem:", error);
       }
@@ -326,7 +325,6 @@ export const Home = () => {
   const handleStatus = async (status: number, amigoId: any) => {
     if (status == 1) {
       try {
-        console.log("cliquei:", status, amigoId);
         // @Post(':userId/add/:friendId')
         const uploadResponse = await axiosPrivate.post(
           `friendship/${userData?.id}/accept/${amigoId}`
@@ -338,11 +336,8 @@ export const Home = () => {
         console.log(error);
       }
     }
-    console.log(status);
     if (status == 0) {
       try {
-        console.log("cliquei:", status, amigoId);
-        console.log("eu:", userData);
         // @Post(':userId/add/:friendId')
 
         const uploadResponse = await axiosPrivate.post(
@@ -448,7 +443,7 @@ export const Home = () => {
               </div>
               <div className="mb-4">
                 <img
-                    src="https://i.imgur.com/VavB8Rm.png"
+                  src={"./profilesUser/" + userData.profileImage}
                   alt="Profile"
                   className="w-20 h-20 rounded-full mx-auto mb-4"
                 />

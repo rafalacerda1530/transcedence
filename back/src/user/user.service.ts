@@ -71,11 +71,11 @@ export class UserService {
         res.clearCookie("refreshToken");
     }
 
-	async saveProfileImage(username: string, filePath: string) {
+	async saveProfileImage(username: string, fileName: string) {
 		// Atualizar o caminho do arquivo no banco de dados para o usuário específico
 		const updatedUser = await this.prisma.user.update({
 			where: { user: username },
-			data: { profileImage: filePath },
+			data: { profileImage: fileName },
 		});
 
 		return updatedUser;
