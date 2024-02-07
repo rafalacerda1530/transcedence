@@ -325,13 +325,20 @@ export class GroupService {
                         });
                         const isAdm = await this.prisma.groupAdmin.findFirst({
                             where: {
-                                userId:member.userId,
+                                userId: member.userId,
                                 groupId: group.id,
                             }
                         })
+                        const isMuted = await this.prisma.mute.findFirst({
+                            where: {
+                                userId: member.userId,
+                                groupId: group.id,
+                            },
+                        });
                         return {
                             username: user?.user,
                             isAdm: !!isAdm,
+                            isMuted: !!isMuted,
                         };
                     })
                 );
@@ -341,7 +348,7 @@ export class GroupService {
     }
 
     //TODO TEST
-    async getAllGroups () {
+    async getAllGroups() {
         try {
             const groups = await this.prisma.group.findMany({
                 select: {
@@ -352,7 +359,7 @@ export class GroupService {
             console.log(groups);
             return groups;
 
-        } catch (error){
+        } catch (error) {
             throw new BadRequestException(error.message);
         }
         // const groupsOfType: Group[] = await this.prisma.group.findMany({
@@ -397,29 +404,29 @@ export class GroupService {
     //        throw new InternalServerErrorException('Internal Server Error');
     //    }
     //}
-    async getMessagesInGroup(groupName: string){
+    async getMessagesInGroup(groupName: string) {
         return await this.prisma.message.findMany({
-            where: { group: { name: groupName}},
+            where: { group: { name: groupName } },
             select: {
                 date: true,
                 content: true,
-                group: { select: { name: true}},
-                sender: { select: { user: true}},
+                group: { select: { name: true } },
+                sender: { select: { user: true } },
             }
         })
     }
 
     // TODO TEST
-    async getBanList(groupName: string){
+    async getBanList(groupName: string) {
         try {
             const group = await this.getGroupByName(groupName);
             const bans = await this.prisma.ban.findMany({
-                where: { groupId: group.id},
-                include: { user: { select: { user: true}}},
+                where: { groupId: group.id },
+                include: { user: { select: { user: true } } },
             });
             const banList = bans.map((ban) => (ban.user.user));
             return banList;
-        } catch (error){
+        } catch (error) {
             throw new BadRequestException('Failed to get group ban list');
         }
     }

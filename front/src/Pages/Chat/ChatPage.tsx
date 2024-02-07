@@ -31,6 +31,7 @@ interface GroupMember {
     groupName: string;
     username: string;
     isAdm: boolean;
+    isMuted: boolean;
 }
 
 export const ChatPage = () => {
@@ -57,6 +58,11 @@ export const ChatPage = () => {
     const [isBanPopupOpen, setIsBanPopupOpen] = useState(false);
     const [banDuration, setBanDuration] = useState<number | null>(null);
     const [usernameToBan, setUsernameToBan] = useState<string>('')
+
+    const [isMutePopupOpen, setIsMutePopupOpen] = useState(false);
+    const [muteDuration, setMuteDuration] = useState<number | null>(null);
+    const [usernameToMute, setUsernameToMute] = useState<string>('');
+
 
 
     const connectSocket = () => {
@@ -187,6 +193,8 @@ export const ChatPage = () => {
 
     useEffect(() => {
         chatSocket.on('joinOwnerOnGroup', ({ name, type }) => {
+            console.log(name)
+            console.log(type)
             setGroupAndDms(prevGroups => [...prevGroups, { name, type }]);
         });
 
@@ -194,6 +202,7 @@ export const ChatPage = () => {
             chatSocket.off('groupCreated');
         };
     }, [chatSocket]);
+
     useEffect(() => {
         chatSocket.on('groupCreated', ({ name, type }) => {
             setAllGroups(prevAllGroups => [...prevAllGroups, { name, type }]);
@@ -208,13 +217,14 @@ export const ChatPage = () => {
         chatSocket.on('joinedGroup', ({ groupName, userUsername, type }) => {
             const isGroupInList = groupsAndDms.some(group => group.name === groupName);
             const isAlreadyMember = isGroupInList && groupMembers[groupName]?.some(member => member.username === userUsername);
+            console.log("teste")
 
             if (!isAlreadyMember) {
                 setGroupMembers(prevGroupMembers => ({
                     ...prevGroupMembers,
                     [groupName]: [
                         ...(prevGroupMembers[groupName] || []),
-                        { username: userUsername, isAdm: false } // Assume-se que o novo usuário não é um administrador por padrão
+                        { username: userUsername, isAdm: false, isMuted: false } // Assume-se que o novo usuário não é um administrador por padrão
                     ]
                 }));
 
@@ -495,6 +505,91 @@ export const ChatPage = () => {
         });
     }, [chatSocket, setGroupMembers]);
 
+    const handleOpenMutePopup = (target: string) => {
+        setUsernameToMute(target);
+        setIsMutePopupOpen(true);
+    };
+
+    const handleCloseMutePopup = () => {
+        setIsMutePopupOpen(false);
+    };
+
+    const handleMuteDurationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const duration = parseInt(event.target.value);
+        setMuteDuration(duration);
+    };
+
+    useEffect(() => {
+        chatSocket.on('muteUserResponse', ({ groupName, targetUsername }) => {
+            setGroupMembers(prevGroupMembers => {
+                const updatedMembers = prevGroupMembers[groupName].map(member => {
+                    if (member.username === targetUsername) {
+                        return { ...member, isMuted: true };
+                    }
+                    return member;
+                });
+                return {
+                    ...prevGroupMembers,
+                    [groupName]: updatedMembers
+                };
+            });
+            console.log(groupMembers[groupName])
+        });
+
+        return () => {
+            chatSocket.off('muteUserResponse');
+        };
+    }, [chatSocket, setGroupMembers]);
+
+
+    const handleMuteUser = () => {
+        try {
+            chatSocket.emit('muteUser', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: usernameToMute,
+                muteDuration: muteDuration,
+            });
+            setIsMutePopupOpen(false);
+        } catch (error) {
+            console.error('Error muting user:', error);
+        }
+    };
+
+    const handleUnmuteUser = (target: string) => {
+        try {
+            chatSocket.emit('removeMute', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: target,
+            });
+        } catch (error) {
+            console.error('Error muting user:', error);
+        }
+    };
+
+    useEffect(() => {
+        chatSocket.on('removeMuteUserResponse', ({ groupName, targetUsername }) => {
+            setGroupMembers(prevGroupMembers => {
+                const updatedMembers = prevGroupMembers[groupName].map(member => {
+                    if (member.username === targetUsername) {
+                        return { ...member, isMuted: false };
+                    }
+                    return member;
+                });
+                return {
+                    ...prevGroupMembers,
+                    [groupName]: updatedMembers
+                };
+            });
+        });
+
+        return () => {
+            chatSocket.off('muteUserResponse');
+        };
+    }, [chatSocket, setGroupMembers]);
+
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -622,10 +717,15 @@ export const ChatPage = () => {
                                     <div>
                                         <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
                                         <button className="banButton" onClick={() => handleOpenBanPopup(member.username)}>Ban</button>
-                                        {!member.isAdm ? (
-                                            <button className="setAdminButton" onClick={() => handleSetAdmin(member.username)}>Set Admin</button>
+                                        {member.isMuted ? (
+                                            <button className="unmuteButton" onClick={() => handleUnmuteUser(member.username)}>Unmute</button>
                                         ) : (
-                                            <button className="unsetAdminButton" onClick={() => handleUnsetAdmin(member.username)}>Unset Admin</button>
+                                            <button className="muteButton" onClick={() => handleOpenMutePopup(member.username)}>Mute</button>
+                                        )}
+                                        {!member.isAdm ? (
+                                            <button className="setAdminButton" onClick={() => handleSetAdmin(member.username)}>S/Adm</button>
+                                        ) : (
+                                            <button className="unsetAdminButton" onClick={() => handleUnsetAdmin(member.username)}>U/Adm</button>
                                         )}
                                     </div>
                                 )}
@@ -645,6 +745,19 @@ export const ChatPage = () => {
                             </ul>
                         </div>
                     </div>
+                </div>
+            )}
+            {isMutePopupOpen && (
+                <div className="mutePopup">
+                    <input
+                        type="number"
+                        value={muteDuration || ''}
+                        onChange={handleMuteDurationChange}
+                        placeholder="Mute duration (minutes)"
+                    />
+                    {/* Passe o usuário correto para mutar ao clicar em "Confirmar" */}
+                    <button onClick={handleMuteUser}>Confirm</button>
+                    <button onClick={handleCloseMutePopup}>Cancel</button>
                 </div>
             )}
             {isBanPopupOpen && (

@@ -230,6 +230,111 @@
     /* Texto em negrito para administradores */
 }
 
+.setAdminButton,
+.unsetAdminButton {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 3px 8px;
+    /* Reduza ainda mais o padding */
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.unsetAdminButton {
+    background-color: #f44336;
+}
+
+.setAdminButton:hover,
+.unsetAdminButton:hover {
+    background-color: #45a049;
+}
+
+.unmuteButton {
+    background-color: #4CAF50; /* Cor de fundo verde */
+    color: white; /* Cor do texto branca */
+    padding: 3px 8px;
+    border: none; /* Sem borda */
+    border-radius: 3px;
+    margin-left: 8px;
+    cursor: pointer; /* Cursor do mouse como ponteiro */
+    font-size: 12px;
+    /* margin-right: 8px; /1* Margem à direita para separar visualmente dos outros botões *1/ */
+}
+
+.unmuteButton:hover {
+    background-color: #45a049; /* Cor de fundo mais escura ao passar o mouse */
+}
+
+.muteButton {
+    background-color: #ff8800;
+    /* Cor de fundo */
+    color: #ffffff;
+    /* Cor do texto */
+    border: none;
+    /* Remover borda */
+    padding: 3px 8px;
+    /* Espaçamento interno reduzido */
+    border-radius: 3px;
+    margin-left: 8px;
+    /* Borda arredondada */
+    cursor: pointer;
+    /* Mostrar cursor de ponteiro ao passar o mouse */
+    font-size: 12px;
+    /* Tamanho da fonte reduzido */
+}
+
+.muteButton:hover {
+    background-color: #e67300;
+    /* Alterar cor de fundo ao passar o mouse */
+}
+
+.mutePopup {
+    /* Estilo do contêiner do pop-up */
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.mutePopup input {
+    /* Estilo do input de duração do mute */
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.mutePopup button {
+    /* Estilo dos botões de confirmar e cancelar */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s;
+}
+
+.mutePopup button:hover {
+    /* Efeito de hover nos botões */
+    background-color: #0056b3;
+}
+
 .banButton {
     background-color: #ff0000;
     /* Cor de fundo */
@@ -305,31 +410,4 @@
 .banPopup button:hover {
     /* Efeito de hover nos botões */
     background-color: #0056b3;
-}
-
-.setAdminButton,
-.unsetAdminButton {
-    background-color: #4CAF50;
-    /* Cor de fundo verde para "Set Admin" */
-    border: none;
-    color: white;
-    padding: 10px 24px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 12px;
-}
-
-.unsetAdminButton {
-    background-color: #f44336;
-    /* Cor de fundo vermelha para "Unset Admin" */
-}
-
-.setAdminButton:hover,
-.unsetAdminButton:hover {
-    background-color: #45a049;
-    /* Mudança de cor no hover */
 }

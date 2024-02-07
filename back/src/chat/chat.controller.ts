@@ -27,16 +27,6 @@ export class ChatController {
         return await this.chatService.setChannelOnlyInvite(setOnlyInvite);
     }
 
-    @Put('muteUser')
-    async muteUser(@Body() muteUser: MuteUser) {
-        return await this.chatService.muteUser(muteUser);
-    }
-
-    @Put('removeMute')
-    async removeMute(@Body() muteUser: MuteUser) {
-        return await this.chatService.removeMute(muteUser);
-    }
-
     @Put('blockUser')
     async blockUser(@Body() blockUser: BlockUser) {
         return await this.chatService.blockUser(blockUser);
