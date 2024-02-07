@@ -3,7 +3,7 @@ import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
-import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser } from './dto/chat.dto';
+import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, SetAdm } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
@@ -107,7 +107,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
         console.log(isUserMember);
 
-        if (isUserMember){
+        if (isUserMember) {
             const messageToClient: messageToClient = await this.chatService.saveMessage(message);
             if (messageToClient) {
                 this.server.to(message.groupName).emit('messageToClient', messageToClient);
@@ -262,5 +262,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
+    @SubscribeMessage('setAdm')
+    async setUserAsAdm(@ConnectedSocket() client: Socket, @MessageBody() setAdm: SetAdm) {
+        try {
+            await this.chatService.setUserAsAdm(setAdm);
+            this.server.to(setAdm.groupName).emit('setAdmResponse', { groupName: setAdm.groupName, targetUsername: setAdm.targetUsername });
+
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('unsetAdm')
+    async unsetUserAsAdm(@ConnectedSocket() client: Socket, @MessageBody() setAdm: SetAdm) {
+        try {
+            await this.chatService.removeAdm(setAdm);
+            this.server.to(setAdm.groupName).emit('unsetAdmResponse', { groupName: setAdm.groupName, targetUsername: setAdm.targetUsername });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
 
 }

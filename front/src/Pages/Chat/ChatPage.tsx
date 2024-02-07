@@ -438,6 +438,63 @@ export const ChatPage = () => {
         }
     }, [currentChat]);
 
+    const handleSetAdmin = (target: string) => {
+        try {
+            console.log(currentChat)
+            chatSocket.emit('setAdm', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: target
+            });
+        } catch (error) {
+            console.error('Error setting admin:', error);
+        }
+    };
+    useEffect(() => {
+        chatSocket.on('setAdmResponse', ({ groupName, targetUsername }) => {
+            setGroupMembers(prevGroupMembers => {
+                const updatedMembers = prevGroupMembers[groupName].map(member => {
+                    if (member.username === targetUsername) {
+                        return { ...member, isAdm: true };
+                    }
+                    return member;
+                });
+                return {
+                    ...prevGroupMembers,
+                    [groupName]: updatedMembers
+                };
+            });
+        });
+    }, [chatSocket, setGroupMembers]);
+
+    const handleUnsetAdmin = (target: string) => {
+        try {
+            chatSocket.emit('unsetAdmin', {
+                groupName: currentChat,
+                admUsername: username,
+                targetUsername: target
+            });
+        } catch (error) {
+            console.error('Error unsetting admin:', error);
+        }
+    };
+    useEffect(() => {
+        chatSocket.on('unsetAdmResponse', ({ groupName, targetUsername }) => {
+            setGroupMembers(prevGroupMembers => {
+                const updatedMembers = prevGroupMembers[groupName].map(member => {
+                    if (member.username === targetUsername) {
+                        return { ...member, isAdm: false };
+                    }
+                    return member;
+                });
+                return {
+                    ...prevGroupMembers,
+                    [groupName]: updatedMembers
+                };
+            });
+        });
+    }, [chatSocket, setGroupMembers]);
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -565,6 +622,11 @@ export const ChatPage = () => {
                                     <div>
                                         <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
                                         <button className="banButton" onClick={() => handleOpenBanPopup(member.username)}>Ban</button>
+                                        {!member.isAdm ? (
+                                            <button className="setAdminButton" onClick={() => handleSetAdmin(member.username)}>Set Admin</button>
+                                        ) : (
+                                            <button className="unsetAdminButton" onClick={() => handleUnsetAdmin(member.username)}>Unset Admin</button>
+                                        )}
                                     </div>
                                 )}
                             </li>

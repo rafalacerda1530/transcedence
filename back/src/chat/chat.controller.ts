@@ -17,16 +17,6 @@ export class ChatController {
         return await this.chatService.inviteToGroupPrivate(inviteToGroupDto);
     }
 
-    @Put('setUserAsAdm')
-    async setUserAsAdm(@Body() setAdm: SetAdm) {
-        return await this.chatService.setUserAsAdm(setAdm);
-    }
-
-    @Put('removeUserAsAdm')
-    async removeUserAsAdm(@Body() setAdm: SetAdm) {
-        return await this.chatService.removeAdm(setAdm);
-    }
-
     @Post('changeChannelPass')
     async changeChannelPass(@Body() passowordChannel: PassowordChannel) {
         return await this.chatService.changeChannelPass(passowordChannel);
