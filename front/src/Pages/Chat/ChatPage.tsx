@@ -28,6 +28,7 @@ interface MessageFromBackend {
 }
 
 interface GroupMember {
+    groupName: string;
     username: string;
     isAdm: boolean;
 }
@@ -37,22 +38,21 @@ export const ChatPage = () => {
     const refreshToken = useRefreshToken();
     const [groupsAndDms, setGroupAndDms] = useState<Group[]>([]);
     const [currentChat, setCurrentChat] = useState<string | null>(null);
-    const [members, setMembers] = useState<GroupMember[]>([]);
+    const [groupMembers, setGroupMembers] = useState<{ [groupName: string]: GroupMember[] }>({});
+
     const [message, setMessage] = useState<string>('');
     const [newGroupName, setNewGroupName] = useState<string>('');
     const [username, setUsername] = useState<string>('')
     const [password, setPassword] = useState<string | null>(null);
     const [maxHeight, setMaxHeight] = useState<number>(0);
     const [groupType, setGroupType] = useState<string>('PUBLIC');
-    const [selectedGroupType, setSelectedGroupType] = useState<string>('');
     const [selectedGroupTypeFilter, setSelectedGroupTypeFilter] = useState<string>('');
     const [allGroups, setAllGroups] = useState<Group[]>([]);
     const [joinPassword, setJoinPassword] = useState<string>('')
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
     const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
-    const [banList, setBanList] = useState([]);
+    const [banList, setBanList] = useState<string[]>([]);
 
-    const [usernameToUnban, setUsernameToUnban] = useState('');
 
     const [isBanPopupOpen, setIsBanPopupOpen] = useState(false);
     const [banDuration, setBanDuration] = useState<number | null>(null);
@@ -129,7 +129,7 @@ export const ChatPage = () => {
 
     const handleInviteUser = async (groupName: string, userName: string) => {
         try {
-            const invite = await axiosPrivate.put("/api/chat/inviteToGroup/", {
+            await axiosPrivate.put("/api/chat/inviteToGroup/", {
                 admUsername: username,
                 groupName: groupName,
                 invitedUsername: userName
@@ -140,26 +140,26 @@ export const ChatPage = () => {
         }
     }
 
-    const checkInvitation = async (groupName: string, userName: string): Promise<boolean> => {
-        try {
-            const responseGroup = await axiosPrivate.get("/api/chat/groupId/" + groupName);
-            const responseUser = await axiosPrivate.get("/api/chat/UserId/" + userName);
+    // const checkInvitation = async (groupName: string, userName: string): Promise<boolean> => {
+    //     try {
+    //         const responseGroup = await axiosPrivate.get("/api/chat/groupId/" + groupName);
+    //         const responseUser = await axiosPrivate.get("/api/chat/UserId/" + userName);
 
-            const userId = Number(responseUser.data.id);
-            const groupId = Number(responseGroup.data.id);
+    //         const userId = Number(responseUser.data.id);
+    //         const groupId = Number(responseGroup.data.id);
 
-            if (isNaN(userId) || isNaN(groupId)) {
-                throw new Error('Invalid userId or groupId');
-            }
+    //         if (isNaN(userId) || isNaN(groupId)) {
+    //             throw new Error('Invalid userId or groupId');
+    //         }
 
-            const responseInvitation = await axiosPrivate.get(`/api/chat/CheckInvitationForUserGroup/${userId}/${groupId}`);
+    //         const responseInvitation = await axiosPrivate.get(`/api/chat/CheckInvitationForUserGroup/${userId}/${groupId}`);
 
-            return responseInvitation.data === true;
-        } catch (error) {
-            console.error(error);
-            return false;
-        }
-    };
+    //         return responseInvitation.data === true;
+    //     } catch (error) {
+    //         console.error(error);
+    //         return false;
+    //     }
+    // };
 
 
     const handleInviteUsernameChange = (chatName: string, username: string) => {
@@ -172,22 +172,60 @@ export const ChatPage = () => {
     const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
-            const response = await axiosPrivate.post('/api/chat/createGroup', {
+            chatSocket.emit('createGroup', {
                 type: groupType,
                 groupName: newGroupName,
                 ownerUsername: username,
-                password: groupType == "PROTECT" ? password : null
+                password: groupType === "PROTECT" ? password : null
             });
-            console.log('Group created:', response.data);
-            setGroupAndDms([...groupsAndDms, { name: newGroupName, type: groupType }]);
-            setAllGroups([...allGroups, { name: newGroupName, type: groupType }]);
             setNewGroupName('');
-            setPassword('')
+            setPassword('');
         } catch (error) {
-            console.error('Error creating group:', error);
+            console.error('Error emitting createGroup event:', error);
         }
     };
 
+    useEffect(() => {
+        chatSocket.on('joinOwnerOnGroup', ({ name, type }) => {
+            setGroupAndDms(prevGroups => [...prevGroups, { name, type }]);
+        });
+
+        return () => {
+            chatSocket.off('groupCreated');
+        };
+    }, [chatSocket]);
+    useEffect(() => {
+        chatSocket.on('groupCreated', ({ name, type }) => {
+            setAllGroups(prevAllGroups => [...prevAllGroups, { name, type }]);
+        });
+
+        return () => {
+            chatSocket.off('groupCreated');
+        };
+    }, [chatSocket]);
+
+    useEffect(() => {
+        chatSocket.on('joinedGroup', ({ groupName, userUsername, type }) => {
+            const isGroupInList = groupsAndDms.some(group => group.name === groupName);
+            const isAlreadyMember = isGroupInList && groupMembers[groupName]?.some(member => member.username === userUsername);
+
+            if (!isAlreadyMember) {
+                setGroupMembers(prevGroupMembers => ({
+                    ...prevGroupMembers,
+                    [groupName]: [
+                        ...(prevGroupMembers[groupName] || []),
+                        { username: userUsername, isAdm: false } // Assume-se que o novo usuário não é um administrador por padrão
+                    ]
+                }));
+
+                setGroupAndDms(prevGroups => [...prevGroups, { name: groupName, type }]);
+            }
+        });
+
+        return () => {
+            chatSocket.off('joinedGroup');
+        };
+    }, [chatSocket, groupsAndDms, groupMembers]);
 
     const calculateMaxHeight = () => {
         const windowHeight = window.innerHeight;
@@ -205,39 +243,17 @@ export const ChatPage = () => {
     }, []);
 
     useEffect(() => {
-        const getGroupType = async () => {
-            const selectedGroup = groupsAndDms.find(group => group.name === currentChat);
-            if (selectedGroup) {
-                setSelectedGroupType(selectedGroup.type);
-            }
+        chatSocket.on('membersInGroup', (groupName, updatedMembers: GroupMember[]) => {
+            setGroupMembers(prevGroupMembers => ({
+                ...prevGroupMembers,
+                [groupName]: updatedMembers,
+            }));
+        });
+
+        return () => {
+            chatSocket.off('membersInGroup');
         };
-
-        getGroupType();
-    }, [currentChat, groupsAndDms]);
-
-
-    useEffect(() => {
-        const getMembersInGroup = async () => {
-            try {
-                if (!currentChat) {
-                    return;
-                }
-                const response = await axiosPrivate.post('/api/chat/membersInChat', {
-                    groupName: currentChat,
-                    type: selectedGroupType,
-                });
-                const updatedMembers = response.data.map((member: any) => ({
-                    username: member.username,
-                    isAdm: member.isAdm,
-                }))
-                setMembers(updatedMembers);
-            } catch (error) {
-                console.error('Error fetching group members:', error);
-            }
-        };
-
-        getMembersInGroup();
-    }, [currentChat, groupType, username]);
+    }, [chatSocket, groupMembers]);
 
     useEffect(() => {
         const fetchInitialGroups = async () => {
@@ -328,80 +344,70 @@ export const ChatPage = () => {
         const isMember = groupsAndDms.some(g => g.name === groupName);
         if (isMember) {
             setCurrentChat(groupName);
-            setSelectedGroupType(groupType);
+            chatSocket.emit('getMembersInGroup', {
+                groupName: groupName,
+                type: groupType
+            });
         }
     }
 
-    //TODO TEST
     const handleKickUser = async (target: string) => {
         try {
-            // Faça uma solicitação para o backend para executar o kick
-            await axiosPrivate.put('/api/chat/kickUser', {
+            chatSocket.emit('kickUser', {
                 groupName: currentChat,
                 admUsername: username,
                 targetUsername: target
             });
-
-            // Atualize a lista de membros após o kick
-            setMembers(prevMembers => prevMembers.filter(member => member.username !== username));
         } catch (error) {
             console.error('Error kicking user:', error);
         }
     };
 
-    const handleBanUser = async () => {
+    const handleBanUser = () => {
         try {
-            await axiosPrivate.put('/api/chat/banUser', {
+            chatSocket.emit('banUser', {
                 groupName: currentChat,
                 admUsername: username,
                 targetUsername: usernameToBan,
                 banDuration: banDuration,
             });
-            setMembers(prevMembers => prevMembers.filter(member => member.username !== usernameToBan));
             setIsBanPopupOpen(false);
         } catch (error) {
             console.error('Error banning user:', error);
         }
     };
-
-
-    //TODO TEST
     useEffect(() => {
-        if (currentChat) {
-            // Aqui você pode fazer uma solicitação ao backend para obter a lista de usuários banidos
-            const fetchBanList = async () => {
-                console.log(currentChat);
-                try {
-                    const response = await axiosPrivate.get(`api/chat/ban/list/${currentChat}`);
-                    setBanList(response.data);
-                } catch (error) {
-                    console.error('Error fetching ban list:', error);
-                }
-            };
+        chatSocket.on('userBanned', (bannedUser) => {
+            setBanList(prevBanList => [...prevBanList, bannedUser]);
+        });
 
-            fetchBanList();
-        }
-    }, [currentChat]);
+        return () => {
+            chatSocket.off('userBanned');
+        };
+    }, [chatSocket]);
 
-    const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setUsernameToUnban(event.target.value);
-    };
 
-    const handleUnbanUser = async (usernameToUnban: string) => {
+    const handleUnbanUser = (usernameToUnban: string) => {
         try {
-            await axiosPrivate.put('/api/chat/unban', {
+            chatSocket.emit('unbanUser', {
                 groupName: currentChat,
                 admUsername: username,
-                targetUsername: usernameToUnban
+                targetUsername: usernameToUnban,
             });
-            console.log('deu???')
-            const updatedBanList = banList.filter(user => user !== usernameToUnban);
-            setBanList(updatedBanList);
-            setUsernameToUnban('');
         } catch (error) {
             console.error('Error unbanning user:', error);
         }
     };
+
+    useEffect(() => {
+        chatSocket.on('userUnbanned', (username: string) => {
+            setBanList(prevBanList => prevBanList.filter(user => user !== username));
+        });
+
+        return () => {
+            chatSocket.off('userUnbanned');
+        };
+    }, [chatSocket]);
 
     const handleOpenBanPopup = (target: string) => {
         setUsernameToBan(target);
@@ -417,6 +423,20 @@ export const ChatPage = () => {
         setBanDuration(duration);
     };
 
+    useEffect(() => {
+        if (currentChat) {
+            const fetchBanList = async () => {
+                try {
+                    const response = await axiosPrivate.get(`api/chat/ban/list/${currentChat}`);
+                    setBanList(response.data);
+                } catch (error) {
+                    console.error('Error fetching ban list:', error);
+                }
+            };
+
+            fetchBanList();
+        }
+    }, [currentChat]);
 
     return (
         <div className="chatPageContainer">
@@ -538,7 +558,7 @@ export const ChatPage = () => {
                 <div className="membersContainer">
                     <h1>Members: </h1>
                     <ul>
-                        {members.map((member, index) => (
+                        {groupMembers[currentChat]?.map((member, index) => (
                             <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
                                 {member.username}
                                 {username !== member.username && !member.isAdm && (
@@ -551,7 +571,6 @@ export const ChatPage = () => {
                         ))}
                     </ul>
                     <div>
-                        <h2>Ban Management</h2>
                         <div>
                             <h3>Ban List</h3>
                             <ul>
