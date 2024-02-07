@@ -45,12 +45,11 @@ export class ChatService {
     }
 
     async createGroup({ type, groupName, ownerUsername, password }: CreateGroupDto) {
-        console.log(type, groupName,ownerUsername,password)
         const userOwner = await this.groupService.getUserByUsername(ownerUsername);
         this.groupService.validatePasswordForGroupType(type, password);
         if (type === "PROTECT" && password)
             password = await argon.hash(password);
-        const newGroup = await this.prisma.group.create({
+        await this.prisma.group.create({
             data: {
                 name: groupName,
                 type: type,
@@ -60,10 +59,10 @@ export class ChatService {
                 admins: { create: { user: { connect: { id: userOwner.id } } } },
             },
         });
-        return newGroup;
+        return { name: groupName, type: type };
     }
 
-    async joinGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
+    async joinGroup(groupActionsDto: GroupActionsDto) {
         const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
         const group = await this.groupService.getGroupByName(groupActionsDto.groupName,);
 
@@ -82,7 +81,12 @@ export class ChatService {
             message: "joined in the group",
             date: new Date(Date.now()),
         };
-        return messageToClient;
+        const refresh = {
+            groupName: group.name,
+            userUsername: user.user,
+            type: group.type
+        }
+        return {messageToClient, refresh};
     }
 
     /**
@@ -105,12 +109,12 @@ export class ChatService {
     //    const isAdm = await this.groupService.isAdmInGroup(admUser.id, group.id);
     //    if (!isAdm)
     //        throw new BadRequestException(`User ${admUser.user} is not a ADM in Group ${group.name}`);
-//
+    //
     //    const invitedUser = await this.groupService.getUserByUsername(inviteToGroupDto.invitedUsername);
     //    const isMember = await this.groupService.isMemberInGroup(invitedUser.id, group.id);
     //    if (isMember)
     //        throw new BadRequestException(`User ${invitedUser.user} alredy is a member in Group ${group.name}`);
-//
+    //
     //    const wasInvited = await this.groupService.checkExistingInviteForUserInGroup(invitedUser.id, group.id);
     //    if (wasInvited)
     //        throw new BadRequestException('User is alredy invited')
@@ -273,7 +277,14 @@ export class ChatService {
         const target = await this.groupService.getUserByUsername(targetUsername);
         const group = await this.groupService.getGroupByName(groupName);
 
-        await this.groupService.validateAdmActions(adm, target, group);
+        const isAdm = await this.groupService.isAdmInGroup(adm.id, group.id);
+
+        if (!isAdm)
+            throw new BadRequestException(`${adm.user} is not a adm in ${group.name}`)
+        if (group.ownerId == target.id)
+            throw new BadRequestException(`${target.user} is the owner from ${group.name}`)
+        if (adm.id == target.id)
+            throw new BadRequestException(`you cannot do it in your self'`)
         const isBanned = await this.groupService.isUserBanned(target.id, group.id);
         if (isBanned) {
             await this.prisma.ban.deleteMany({
@@ -409,5 +420,5 @@ export class ChatService {
         return messageToClient;
     }
 
-    
+
 }

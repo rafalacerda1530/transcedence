@@ -12,11 +12,6 @@ export class ChatController {
 
     ) { }
 
-    @Post('createGroup')
-    async createGroup(@Body() createGroupDto: CreateGroupDto) {
-        return await this.chatService.createGroup(createGroupDto);
-    }
-
     @Put('inviteToGroup')
     async inviteToGroup(@Body() inviteToGroupDto: InviteToGroupDto) {
         return await this.chatService.inviteToGroupPrivate(inviteToGroupDto);
@@ -40,21 +35,6 @@ export class ChatController {
     @Put('setChannelOnlyInvite')
     async setChannelOnlyInvite(@Body() setOnlyInvite: SetOnlyInvite) {
         return await this.chatService.setChannelOnlyInvite(setOnlyInvite);
-    }
-
-    @Put('kickUser')
-    async kickUser(@Body() kickUser: KickUser) {
-        return await this.chatService.kickUser(kickUser);
-    }
-
-    @Put('banUser')
-    async banUser(@Body() banUser: BanUser) {
-        return await this.chatService.banUser(banUser);
-    }
-
-    @Put('removeBan')
-    async removeBan(@Body() banUser: BanUser) {
-        return await this.chatService.removeBanCommand(banUser);
     }
 
     @Put('muteUser')
@@ -97,10 +77,10 @@ export class ChatController {
         return await this.groupService.getUserGroupAndDm(username);
     }
 
-    @Post('membersInChat')
-    async getMembersInChat(@Body() getMembers: GetMembers) {
-        return await this.groupService.getMembersInChat(getMembers);
-    }
+    // @Post('membersInChat')
+    // async getMembersInChat(@Body() getMembers: GetMembers) {
+    //     return await this.groupService.getMembersInChat(getMembers);
+    // }
 
     //TODO TEST
     @Get('allGroups')
@@ -128,6 +108,11 @@ export class ChatController {
         const userIdN = Number(userId);
         const groupIdN = Number(groupId);
         return await this.groupService.checkExistingInviteForUserInGroup(userIdN, groupIdN);
+    }
+
+    @Get('ban/list/:groupName')
+    async getBanList(@Param('groupName') groupName: string){
+        return await this.groupService.getBanList(groupName);
     }
 
 }

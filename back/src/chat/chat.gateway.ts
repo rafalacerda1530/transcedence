@@ -3,10 +3,11 @@ import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
-import { GroupActionsDto } from './dto/chat.dto';
+import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
+import { Group } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'chat' })
@@ -44,8 +45,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 this.userSocketMap.set(userId, client.id);
 
                 const userGroupAndDm = await this.groupService.getUserGroupAndDm(userId);
-                if (userGroupAndDm){
-                    for ( const {name} of userGroupAndDm) {
+                if (userGroupAndDm) {
+                    for (const { name } of userGroupAndDm) {
                         client.join(name);
                     }
                     console.log(userGroupAndDm)
@@ -84,8 +85,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     handleDisconnect(client: Socket) {
         const sockets = this.server.sockets;
         const socketId = client.id;
-        this.userSocketMap.forEach((storedSocketId, userId ) => {
-            if (storedSocketId === socketId){
+        this.userSocketMap.forEach((storedSocketId, userId) => {
+            if (storedSocketId === socketId) {
                 this.userSocketMap.delete(userId);
                 return;
             }
@@ -101,11 +102,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
         if (isMutted)
             throw new BadRequestException('you are mutted in this channel');
+        const user = await this.groupService.getUserByUsername(message.username);
+        const group = await this.groupService.getGroupByName(message.groupName);
+        const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
+        console.log(isUserMember);
 
-        const messageToClient: messageToClient = await this.chatService.saveMessage(message);
-        if (messageToClient) {
-            this.server.to(message.groupName).emit('messageToClient', messageToClient);
-            this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+        if (isUserMember){
+            const messageToClient: messageToClient = await this.chatService.saveMessage(message);
+            if (messageToClient) {
+                this.server.to(message.groupName).emit('messageToClient', messageToClient);
+                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+            }
         }
     }
 
@@ -125,12 +132,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     @SubscribeMessage('joinChat')
     async handleJoinChat(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
-        try{
-        const messageToClient: messageToClient = await this.chatService.joinGroup(groupActionsDto);
-        client.join(groupActionsDto.groupName);
-        this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
-        this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
-        } catch (error){
+        try {
+            const { messageToClient: messageToClient, refresh } = await this.chatService.joinGroup(groupActionsDto);
+            client.join(groupActionsDto.groupName);
+            this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
+            this.server.to(groupActionsDto.groupName).emit('joinedGroup', refresh)
+            this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
+        } catch (error) {
             throw new BadRequestException(error.message);
         }
     }
@@ -145,6 +153,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         if (messageToClient) {
             this.server.to(message.groupName).emit('messageToClient', messageToClient);
             this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+        }
+    }
+
+    @SubscribeMessage('createGroup')
+    async createGroup(@ConnectedSocket() client: Socket, @MessageBody() createGroupDto: CreateGroupDto) {
+        try {
+            const newGroup = await this.chatService.createGroup(createGroupDto);
+            if (newGroup) {
+                this.server.emit('groupCreated', newGroup)
+                client.emit('joinOwnerOnGroup', newGroup)
+            }
+        } catch (error) {
+            throw new BadRequestException(error.message);
         }
     }
 
@@ -189,5 +210,57 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             throw new BadRequestException(error.message);
         }
     }
+
+    @SubscribeMessage('getMembersInGroup')
+    async getMembersInChat(@ConnectedSocket() client: Socket, @MessageBody() getMembers: GetMembers) {
+        try {
+            const members = await this.groupService.getMembersInChat(getMembers);
+            client.emit('membersInGroup', getMembers.groupName, members)
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('kickUser')
+    async kickUser(@ConnectedSocket() client: Socket, @MessageBody() kickUser: KickUser) {
+        try {
+            await this.chatService.kickUser(kickUser);
+            const updatedMembers = await this.groupService.getMembersInChat({
+                groupName: kickUser.groupName,
+                type: 'PUBLIC'
+            });
+            this.server.to(kickUser.groupName).emit('membersInGroup', kickUser.groupName, updatedMembers);
+
+
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('banUser')
+    async banUser(@ConnectedSocket() client: Socket, @MessageBody() banUser: BanUser) {
+        try {
+            await this.chatService.banUser(banUser);
+            const updatedMembers = await this.groupService.getMembersInChat({
+                groupName: banUser.groupName,
+                type: 'PUBLIC'
+            });
+            this.server.to(banUser.groupName).emit('membersInGroup', banUser.groupName, updatedMembers);
+            this.server.to(banUser.groupName).emit('userBanned', banUser.targetUsername);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('unbanUser')
+    async unbanUser(@ConnectedSocket() client: Socket, @MessageBody() banUser: BanUser) {
+        try {
+            await this.chatService.removeBanCommand(banUser);
+            this.server.to(banUser.groupName).emit('userUnbanned', banUser.targetUsername);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
 
 }

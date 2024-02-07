@@ -3,7 +3,6 @@ import { Group, GroupDM, GroupStatus, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
 import { GetMembers, JoinGroupDto } from "../dto/chat.dto";
-import { warn } from "console";
 
 @Injectable()
 export class GroupService {
@@ -16,7 +15,6 @@ export class GroupService {
             });
             if (!user)
                 throw new BadRequestException(`User ${username} not found`);
-            console.log(user)
             return user;
         } catch (error) {
             throw new BadRequestException(error.message);
@@ -317,17 +315,27 @@ export class GroupService {
             }
         } else {
             const groupMembers = await this.prisma.group.findUnique({ where: { name: groupName } }).members();
+            const group = await this.getGroupByName(groupName);
             if (groupMembers) {
                 const groupMemberUsernames = await Promise.all(
                     groupMembers.map(async (member) => {
                         const user = await this.prisma.user.findUnique({
                             where: { id: member.userId },
-                            select: { user: true },
+                            select: { id: true, user: true },
                         });
-                        return user?.user;
+                        const isAdm = await this.prisma.groupAdmin.findFirst({
+                            where: {
+                                userId:member.userId,
+                                groupId: group.id,
+                            }
+                        })
+                        return {
+                            username: user?.user,
+                            isAdm: !!isAdm,
+                        };
                     })
                 );
-                return groupMemberUsernames.filter((username) => username);
+                return groupMemberUsernames;
             }
         }
     }
@@ -399,5 +407,20 @@ export class GroupService {
                 sender: { select: { user: true}},
             }
         })
+    }
+
+    // TODO TEST
+    async getBanList(groupName: string){
+        try {
+            const group = await this.getGroupByName(groupName);
+            const bans = await this.prisma.ban.findMany({
+                where: { groupId: group.id},
+                include: { user: { select: { user: true}}},
+            });
+            const banList = bans.map((ban) => (ban.user.user));
+            return banList;
+        } catch (error){
+            throw new BadRequestException('Failed to get group ban list');
+        }
     }
 }
