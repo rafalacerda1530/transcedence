@@ -712,7 +712,7 @@ export const ChatPage = () => {
                     <ul>
                         {groupMembers[currentChat]?.map((member, index) => (
                             <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
-                                {member.username}
+                                <a href={`/matchHistoryComplete/${member.username}`} className="memberName text-lg font-bold">{member.username}</a>
                                 {username !== member.username && !member.isAdm && (
                                     <div>
                                         <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
