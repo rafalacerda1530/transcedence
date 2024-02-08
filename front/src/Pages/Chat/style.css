@@ -411,3 +411,72 @@
     /* Efeito de hover nos botões */
     background-color: #0056b3;
 }
+
+/* Estilos para o botão de alteração de senha */
+.changePasswordButton {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Estilos para o popup de alteração de senha */
+.changePasswordPopup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.changePasswordPopup h2 {
+  margin-bottom: 10px;
+}
+
+.changePasswordPopup input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.changePasswordPopup .confirmButton,
+.changePasswordPopup .cancelButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.changePasswordPopup .confirmButton {
+  background-color: #4caf50;
+  color: white;
+}
+
+.changePasswordPopup .cancelButton {
+  background-color: #ccc;
+  color: #000;
+}
+
+.setOnlyInviteButton {
+  background-color: #2196F3;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.setOnlyInviteButton:hover {
+  background-color: #0b7dda;
+}

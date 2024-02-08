@@ -17,16 +17,6 @@ export class ChatController {
         return await this.chatService.inviteToGroupPrivate(inviteToGroupDto);
     }
 
-    @Post('changeChannelPass')
-    async changeChannelPass(@Body() passowordChannel: PassowordChannel) {
-        return await this.chatService.changeChannelPass(passowordChannel);
-    }
-
-    @Put('setChannelOnlyInvite')
-    async setChannelOnlyInvite(@Body() setOnlyInvite: SetOnlyInvite) {
-        return await this.chatService.setChannelOnlyInvite(setOnlyInvite);
-    }
-
     @Put('blockUser')
     async blockUser(@Body() blockUser: BlockUser) {
         return await this.chatService.blockUser(blockUser);

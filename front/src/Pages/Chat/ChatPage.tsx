@@ -63,6 +63,8 @@ export const ChatPage = () => {
     const [muteDuration, setMuteDuration] = useState<number | null>(null);
     const [usernameToMute, setUsernameToMute] = useState<string>('');
 
+    const [isChangePasswordPopupOpen, setIsChangePasswordPopupOpen] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
 
 
     const connectSocket = () => {
@@ -590,6 +592,50 @@ export const ChatPage = () => {
     }, [chatSocket, setGroupMembers]);
 
 
+    const openChangePasswordPopup = () => {
+        setIsChangePasswordPopupOpen(true);
+    };
+    const closeChangePasswordPopup = () => {
+        setIsChangePasswordPopupOpen(false);
+    };
+    const handleChangePassword = () => {
+        try {
+            const passwordToSend = newPassword.trim() === '' ? null : newPassword;
+            chatSocket.emit('changeChannelPass', {
+                groupName: currentChat,
+                ownerUsername: username,
+                password: passwordToSend
+            });
+            setIsChangePasswordPopupOpen(false);
+        } catch (error) {
+            console.error('Error changing the group type:', error);
+        }
+    };
+    useEffect(() => {
+        chatSocket.on('groupTypeUpdated', ({ groupName, type }) => {
+            setGroupAndDms((prevGroups) =>
+                prevGroups.map((group) =>
+                    group.name === groupName ? { ...group, type } : group
+                )
+            );
+        });
+
+        return () => {
+            chatSocket.off('groupTypeUpdated');
+        };
+    }, [chatSocket]);
+
+    const handleSetOnlyInvite = () => {
+        try {
+            chatSocket.emit('setChannelOnlyInvite', {
+                groupName: currentChat,
+                ownerUsername: username,
+            });
+        } catch (error) {
+            console.error('Error muting user:', error);
+        }
+    };
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -629,6 +675,8 @@ export const ChatPage = () => {
                     <option value="PROTECT">Protected</option>
                     <option value="PRIVATE">Private</option>
                 </select>
+
+
                 <ul>
                     {allGroups
                         .filter(group => !selectedGroupTypeFilter || group.type === selectedGroupTypeFilter)
@@ -639,7 +687,10 @@ export const ChatPage = () => {
                             return (
                                 <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
                                     {group.name}
-                                    <span className="groupTypeIndicator">({group.type})</span>
+                                    <span className="groupTypeIndicator">
+                                        {groupsAndDms.find(g => g.name === group.name)?.type || group.type}
+                                    </span>
+
                                     {isMember ? (
                                         <div>
                                             <span> - Member</span>
@@ -708,6 +759,27 @@ export const ChatPage = () => {
             </div>
             {currentChat && (
                 <div className="membersContainer">
+                    <div>
+                        {currentChat && (
+                            <button onClick={openChangePasswordPopup} className="changePasswordButton">Change Password</button>
+                        )}
+                        {currentChat && (
+                            <button onClick={handleSetOnlyInvite} className="setOnlyInviteButton">Set Only Invite</button>
+                        )}
+                        {isChangePasswordPopupOpen && (
+                            <div className="changePasswordPopup">
+                                <h2>Change Password</h2>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="leave blank for no password"
+                                />
+                                <button className="confirmButton" onClick={handleChangePassword}>Change Password</button>
+                                <button className="cancelButton" onClick={closeChangePasswordPopup}>Cancel</button>
+                            </div>
+                        )}
+                    </div>
                     <h1>Members: </h1>
                     <ul>
                         {groupMembers[currentChat]?.map((member, index) => (

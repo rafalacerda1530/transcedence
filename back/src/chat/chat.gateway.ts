@@ -3,7 +3,7 @@ import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
-import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, MuteUser, SetAdm } from './dto/chat.dto';
+import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
@@ -123,7 +123,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     async handleOwnerJoinGroup(client: Socket, groupActionsDto: GroupActionsDto, type: string) {
         const permission = await this.chatService.joinOwnerInGroup(groupActionsDto)
         if (permission) {
-            client.emit('joinOwnerOnGroup' , {name: groupActionsDto.groupName, type: type})
+            client.emit('joinOwnerOnGroup', { name: groupActionsDto.groupName, type: type })
             console.log(groupActionsDto.groupName)
             client.join(groupActionsDto.groupName);
             this.logger.debug(`Client ${client.id} join group: |${groupActionsDto.groupName}|`);
@@ -167,7 +167,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                     groupName: createGroupDto.groupName,
                     username: createGroupDto.ownerUsername
                 }
-                this.handleOwnerJoinGroup(client,parameter, createGroupDto.type);
+                this.handleOwnerJoinGroup(client, parameter, createGroupDto.type);
                 this.server.emit('groupCreated', newGroup)
             }
         } catch (error) {
@@ -312,6 +312,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             await this.chatService.removeMute(muteUser);
             this.server.to(muteUser.groupName).emit('removeMuteUserResponse', { groupName: muteUser.groupName, targetUsername: muteUser.targetUsername });
             client.to(muteUser.groupName).emit('removeMuteUserResponse', { groupName: muteUser.groupName, targetUsername: muteUser.targetUsername });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('changeChannelPass')
+    async changeChannelPass(@ConnectedSocket() client: Socket, @MessageBody() passowordChannel: PassowordChannel) {
+        try {
+            await this.chatService.changeChannelPass(passowordChannel);
+            const group = await this.groupService.getGroupByName(passowordChannel.groupName);
+            this.server.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
+            // client.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('setChannelOnlyInvite')
+    async setChannelOnlyInvite(@ConnectedSocket() client: Socket, @MessageBody() setOnlyInvite: SetOnlyInvite) {
+        try {
+            await this.chatService.setChannelOnlyInvite(setOnlyInvite);
+            const group = await this.groupService.getGroupByName(setOnlyInvite.groupName);
+            this.server.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
+            // client.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
         } catch (error) {
             throw new BadRequestException(error.message);
         }
