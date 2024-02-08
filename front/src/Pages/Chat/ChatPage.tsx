@@ -504,7 +504,7 @@ export const ChatPage = () => {
 
     const handleUnsetAdmin = (target: string) => {
         try {
-            chatSocket.emit('unsetAdmin', {
+            chatSocket.emit('unsetAdm', {
                 groupName: currentChat,
                 admUsername: username,
                 targetUsername: target
@@ -698,6 +698,14 @@ export const ChatPage = () => {
         };
     }, []);
 
+    const isAdmin = (currentUser: string, groupMembers: { [groupName: string]: GroupMember[] }, currentChat: string | null): boolean => {
+        if (!currentChat) return false; // Se não houver chat selecionado, o usuário não é um administrador
+        const members = groupMembers[currentChat];
+        if (!members) return false; // Se não houver membros no chat, o usuário não é um administrador
+        const currentUserInChat = members.find(member => member.username === currentUser);
+        return currentUserInChat ? currentUserInChat.isAdm : false;
+    };
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -821,35 +829,38 @@ export const ChatPage = () => {
             </div>
             {currentChat && (
                 <div className="membersContainer">
-                    <div>
-                        {currentChat && (
-                            <button onClick={openChangePasswordPopup} className="changePasswordButton">Change Password</button>
-                        )}
-                        {currentChat && (
-                            <button onClick={handleSetOnlyInvite} className="setOnlyInviteButton">Set Only Invite</button>
-                        )}
-                        {isChangePasswordPopupOpen && (
-                            <div className="changePasswordPopup">
-                                <h2>Change Password</h2>
-                                <input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="leave blank for no password"
-                                />
-                                <button className="confirmButton" onClick={handleChangePassword}>Change Password</button>
-                                <button className="cancelButton" onClick={closeChangePasswordPopup}>Cancel</button>
-                            </div>
-                        )}
-                    </div>
+                    {isAdmin(username, groupMembers, currentChat) && (
+
+                        <div>
+                            {currentChat && (
+                                <button onClick={openChangePasswordPopup} className="changePasswordButton">Change Password</button>
+                            )}
+                            {currentChat && (
+                                <button onClick={handleSetOnlyInvite} className="setOnlyInviteButton">Set Only Invite</button>
+                            )}
+                            {isChangePasswordPopupOpen && (
+                                <div className="changePasswordPopup">
+                                    <h2>Change Password</h2>
+                                    <input
+                                        type="password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="leave blank for no password"
+                                    />
+                                    <button className="confirmButton" onClick={handleChangePassword}>Change Password</button>
+                                    <button className="cancelButton" onClick={closeChangePasswordPopup}>Cancel</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <h1>Members: </h1>
                     <ul>
                         {groupMembers[currentChat]?.map((member, index) => (
                             <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
                                 <a href={`/matchHistoryComplete/${member.username}`} className="memberName text-lg font-bold">{member.username}</a>
-                                {username !== member.username && !member.isAdm && (
+                                {isAdmin(username, groupMembers, currentChat) && username !== member.username && (
                                     <div>
-                                        <button className="kickButton" onClick={() => handleKickUser(member.username)}>K</button>
+                                        <button className="kickButton" onClick={() => handleKickUser(member.username)}>Kick</button>
                                         <button className="banButton" onClick={() => handleOpenBanPopup(member.username)}>Ban</button>
                                         {member.isMuted ? (
                                             <button className="unmuteButton" onClick={() => handleUnmuteUser(member.username)}>Unmute</button>
@@ -865,6 +876,16 @@ export const ChatPage = () => {
                                             <button className="setAdminButton" onClick={() => handleSetAdmin(member.username)}>S/Adm</button>
                                         ) : (
                                             <button className="unsetAdminButton" onClick={() => handleUnsetAdmin(member.username)}>U/Adm</button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {!isAdmin(username, groupMembers, currentChat) && username !== member.username && (
+                                    <div>
+                                        {!blockedUsers.includes(member.username) ? (
+                                            <button className="blockButton" onClick={() => handleBlock(member.username)}>Block</button>
+                                        ) : (
+                                            <button className="unblockButton" onClick={() => unblockUser(member.username)}>Unblock</button>
                                         )}
                                     </div>
                                 )}
