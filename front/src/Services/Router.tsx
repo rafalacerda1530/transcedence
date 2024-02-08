@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-pascal-case */
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginGame from "../Pages/Login/login";
@@ -22,28 +21,29 @@ export const Router = () => {
         <>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/Login" element={<LoginGame />} />
+                    <Route path="/" element={<Navigate to="/home" />} />
+                    <Route path="/login" element={<LoginGame />} />
                 </Routes>
                 <QueueProvider value={queueSocket}>
                     <Routes>
-                        <Route path="/Queue" element={<QueueGame />} />
+                        <Route path="/queue" element={<QueueGame />} />
                     </Routes>
                 </QueueProvider>
                 <GameProvider value={gameSocket}>
                     <Routes>
-                        <Route path="/Game" element={<Game />} />
+                        <Route path="/game" element={<Game />} />
                     </Routes>
                 </GameProvider>
                 <StatusProvider value={statusSocket}>
                     <Routes>
-                        <Route path="/Home" element={<Home />} />
+                        <Route path="/home" element={<Home />} />
                     </Routes>
                 </StatusProvider>
                 <Routes>
-                    <Route path="/Profile" element={<Profile />} />
+                    <Route path="/profile" element={<Profile />} />
                 </Routes>
                 <Routes>
-                    <Route path="/Callback" element={<CallBack />} />
+                    <Route path="/callback" element={<CallBack />} />
                 </Routes>
                 <Routes>
                     <Route path="/generate2fa" element={<Generate2fa />} />

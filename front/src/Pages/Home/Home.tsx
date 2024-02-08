@@ -98,6 +98,10 @@ export const Home = () => {
     window.location.href = `/Queue`;
   }
 
+  const handleChat = async () => {
+    window.location.href = `/chat`;
+  }
+
   const handleLogout = async () => {
     try {
       const response = await axiosPrivate.post("/user/logout");
@@ -422,6 +426,20 @@ export const Home = () => {
               </div>
               <div className="flex items-center ">
                 <div className="ml-5 ">
+                  <button onClick={() => handleChat()}>
+                    <div className="flex items-center w-8 h-8 rounded-full mx-auto ">
+                      <img
+                        src="https://banner2.cleanpng.com/20180320/rcq/kisspng-emoticon-monochrome-photography-smiley-black-and-w-chat-5ab0973e38faa0.0133901215215224942334.jpg"
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full mx-auto mr-6"
+                      />
+                      <span className=" font-bold  text-base">Chat</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center ">
+                <div className="ml-5 ">
                   <button onClick={() => handleLogout()}>
                     <div className="flex items-center w-8 h-8 rounded-full mx-auto ">
                       <img
@@ -434,7 +452,6 @@ export const Home = () => {
                   </button>
                 </div>
               </div>
-
             </div>
 
             {/* Seção para estatisticas */}
