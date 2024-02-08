@@ -3,7 +3,7 @@ import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { messageToClient, messageToServer } from './dto/chat.interface';
-import { BanUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { BanUser, BlockUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
@@ -336,6 +336,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             const group = await this.groupService.getGroupByName(setOnlyInvite.groupName);
             this.server.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
             // client.emit('groupTypeUpdated', { groupName: group.name, type: group.type });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('blockUser')
+    async blockUser(@ConnectedSocket() client: Socket, @MessageBody() blockUser: BlockUser) {
+        try {
+            await this.chatService.blockUser(blockUser);
+            client.emit('blockUserResponse', { target: blockUser.targetUsername });
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('unblockUser')
+    async removeBlock(@ConnectedSocket() client: Socket, @MessageBody() blockUser: BlockUser) {
+        try {
+            await this.chatService.removeBlock(blockUser);
+            client.emit('unblockUserResponse', { target: blockUser.targetUsername });
         } catch (error) {
             throw new BadRequestException(error.message);
         }

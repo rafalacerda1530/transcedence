@@ -17,16 +17,6 @@ export class ChatController {
         return await this.chatService.inviteToGroupPrivate(inviteToGroupDto);
     }
 
-    @Put('blockUser')
-    async blockUser(@Body() blockUser: BlockUser) {
-        return await this.chatService.blockUser(blockUser);
-    }
-
-    @Put('removeBlock')
-    async removeBlock(@Body() blockUser: BlockUser) {
-        return await this.chatService.removeBlock(blockUser);
-    }
-
     @Post('isUserBlocked')
     async isUserBlocked(@Body() blockUser: BlockUser) {
         return await this.groupService.isUserBlocked(blockUser.userUsername, blockUser.targetUsername);
@@ -47,12 +37,6 @@ export class ChatController {
         return await this.groupService.getUserGroupAndDm(username);
     }
 
-    // @Post('membersInChat')
-    // async getMembersInChat(@Body() getMembers: GetMembers) {
-    //     return await this.groupService.getMembersInChat(getMembers);
-    // }
-
-    //TODO TEST
     @Get('allGroups')
     async getAllGroups() {
         return await this.groupService.getAllGroups();
@@ -81,8 +65,13 @@ export class ChatController {
     }
 
     @Get('ban/list/:groupName')
-    async getBanList(@Param('groupName') groupName: string){
+    async getBanList(@Param('groupName') groupName: string) {
         return await this.groupService.getBanList(groupName);
+    }
+
+    @Get('blockedList/:username')
+    async getBlockList(@Param('username') username: string) {
+        return await this.groupService.getBlockedListUser(username);
     }
 
 }

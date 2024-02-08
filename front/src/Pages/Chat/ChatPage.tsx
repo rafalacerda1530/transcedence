@@ -66,6 +66,8 @@ export const ChatPage = () => {
     const [isChangePasswordPopupOpen, setIsChangePasswordPopupOpen] = useState(false);
     const [newPassword, setNewPassword] = useState('');
 
+    const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
+
 
     const connectSocket = () => {
         chatSocket.connect();
@@ -130,6 +132,19 @@ export const ChatPage = () => {
             disconnectSocket();
         };
     }, [chatSocket]);
+
+    useEffect(() => {
+        const fetchBlockedUsersStatus = async () => {
+            try {
+                const response = await axiosPrivate.get(`/api/chat/blockedList/${username}`);
+                setBlockedUsers(response.data);
+            } catch (error) {
+                console.error('Error fetching blocked user list:', error);
+            }
+        };
+
+        fetchBlockedUsersStatus();
+    }, [username]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(event.target.value);
@@ -308,9 +323,15 @@ export const ChatPage = () => {
         }
     };
 
+    const isUserBlocked = (username: string) => {
+        return blockedUsers.includes(username);
+    };
+
     useEffect(() => {
         chatSocket.on("messageToClient", (message: Message) => {
-            if (!message || !message.groupName) return;
+            if (!message || !message.groupName || isUserBlocked(message.username)) {
+                return;
+            }
             setChatMessages(prevMessages => ({
                 ...prevMessages,
                 [message.groupName]: [...(prevMessages[message.groupName] || []), message],
@@ -320,7 +341,8 @@ export const ChatPage = () => {
         return () => {
             chatSocket.off("messageToClient");
         };
-    }, [chatSocket]);
+    }, [chatSocket, isUserBlocked]);
+
 
     const getMessageClass = (target: string) => {
         return username === target ? 'messageSelf' : 'messageOther';
@@ -338,9 +360,10 @@ export const ChatPage = () => {
                     message: message.content,
                 }));
 
+                const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
                 setChatMessages(prevMessages => ({
                     ...prevMessages,
-                    [currentChat as string]: formattedMessages,
+                    [currentChat as string]: filteredMessages,
                 }));
             } catch (error) {
                 console.error('Error fetching group messages:', error);
@@ -636,6 +659,45 @@ export const ChatPage = () => {
         }
     };
 
+    const handleBlock = (target: string) => {
+        try {
+            chatSocket.emit('blockUser', {
+                userUsername: username,
+                targetUsername: target
+            });
+        } catch (error) {
+            console.error('Error blocking user:', error);
+        }
+    };
+    useEffect(() => {
+        chatSocket.on('blockUserResponse', ({ target }) => {
+            setBlockedUsers(prevBlockedUsers => [...prevBlockedUsers, target]);
+        });
+
+        return () => {
+            chatSocket.off('blockUserResponse');
+        };
+    }, []);
+    const unblockUser = (target: string) => {
+        try {
+            chatSocket.emit('unblockUser', {
+                userUsername: username,
+                targetUsername: target
+            });
+        } catch (error) {
+            console.error('Error unblocking user:', error);
+        }
+    };
+    useEffect(() => {
+        chatSocket.on('unblockUserResponse', ({ target }) => {
+            setBlockedUsers(prevBlockedUsers => prevBlockedUsers.filter(user => user !== target));
+        });
+
+        return () => {
+            chatSocket.off('unblockUserResponse');
+        };
+    }, []);
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -793,6 +855,11 @@ export const ChatPage = () => {
                                             <button className="unmuteButton" onClick={() => handleUnmuteUser(member.username)}>Unmute</button>
                                         ) : (
                                             <button className="muteButton" onClick={() => handleOpenMutePopup(member.username)}>Mute</button>
+                                        )}
+                                        {!blockedUsers.includes(member.username) ? (
+                                            <button className="blockButton" onClick={() => handleBlock(member.username)}>Block</button>
+                                        ) : (
+                                            <button className="unblockButton" onClick={() => unblockUser(member.username)}>Unblock</button>
                                         )}
                                         {!member.isAdm ? (
                                             <button className="setAdminButton" onClick={() => handleSetAdmin(member.username)}>S/Adm</button>

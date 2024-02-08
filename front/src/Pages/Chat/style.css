@@ -256,19 +256,24 @@
 }
 
 .unmuteButton {
-    background-color: #4CAF50; /* Cor de fundo verde */
-    color: white; /* Cor do texto branca */
+    background-color: #4CAF50;
+    /* Cor de fundo verde */
+    color: white;
+    /* Cor do texto branca */
     padding: 3px 8px;
-    border: none; /* Sem borda */
+    border: none;
+    /* Sem borda */
     border-radius: 3px;
     margin-left: 8px;
-    cursor: pointer; /* Cursor do mouse como ponteiro */
+    cursor: pointer;
+    /* Cursor do mouse como ponteiro */
     font-size: 12px;
     /* margin-right: 8px; /1* Margem à direita para separar visualmente dos outros botões *1/ */
 }
 
 .unmuteButton:hover {
-    background-color: #45a049; /* Cor de fundo mais escura ao passar o mouse */
+    background-color: #45a049;
+    /* Cor de fundo mais escura ao passar o mouse */
 }
 
 .muteButton {
@@ -414,69 +419,107 @@
 
 /* Estilos para o botão de alteração de senha */
 .changePasswordButton {
-  background-color: #4caf50;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-bottom: 10px;
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
 }
 
 /* Estilos para o popup de alteração de senha */
 .changePasswordPopup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
 .changePasswordPopup h2 {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .changePasswordPopup input[type="password"] {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
 .changePasswordPopup .confirmButton,
 .changePasswordPopup .cancelButton {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-right: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
 }
 
 .changePasswordPopup .confirmButton {
-  background-color: #4caf50;
-  color: white;
+    background-color: #4caf50;
+    color: white;
 }
 
 .changePasswordPopup .cancelButton {
-  background-color: #ccc;
-  color: #000;
+    background-color: #ccc;
+    color: #000;
 }
 
 .setOnlyInviteButton {
-  background-color: #2196F3;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
+    background-color: #2196F3;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
 }
 
 .setOnlyInviteButton:hover {
-  background-color: #0b7dda;
+    background-color: #0b7dda;
+}
+
+.blockButton {
+    background-color: #ff0000;
+    /* Cor de fundo */
+    color: #ffffff;
+    /* Cor do texto */
+    border: none;
+    /* Remover borda */
+    padding: 3px 8px;
+    /* Espaçamento interno reduzido */
+    border-radius: 3px;
+    /* Borda arredondada */
+    cursor: pointer;
+    /* Mostrar cursor de ponteiro ao passar o mouse */
+    margin-left: 8px;
+    font-size: 12px;
+    /* Tamanho da fonte reduzido */
+}
+
+.blockButton:hover {
+    background-color: #cc0000;
+    /* Cor de fundo vermelha mais escura ao passar o mouse */
+}
+
+.unblockButton {
+    padding: 3px 8px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    margin-left: 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.unblockButton:hover {
+    background-color: #45a049;
 }

@@ -347,7 +347,6 @@ export class GroupService {
         }
     }
 
-    //TODO TEST
     async getAllGroups() {
         try {
             const groups = await this.prisma.group.findMany({
@@ -362,13 +361,6 @@ export class GroupService {
         } catch (error) {
             throw new BadRequestException(error.message);
         }
-        // const groupsOfType: Group[] = await this.prisma.group.findMany({
-        //     where: {
-        //       type: GroupStatus.PUBLIC,
-        //     },
-        //   });
-        //   console.log(groupsOfType)
-        // return groupsOfType;
     }
 
     //async joinGroup(joinGroupDto: JoinGroupDto, prisma: PrismaService = this.prisma) {
@@ -416,7 +408,6 @@ export class GroupService {
         })
     }
 
-    // TODO TEST
     async getBanList(groupName: string) {
         try {
             const group = await this.getGroupByName(groupName);
@@ -430,4 +421,20 @@ export class GroupService {
             throw new BadRequestException('Failed to get group ban list');
         }
     }
+
+    async getBlockedListUser(username: string) {
+        try {
+            const user = await this.getUserByUsername(username);
+            const blockedUsers = await this.prisma.block.findMany({
+                where: { userId: user.id },
+                include: { blockedUser: true }
+            })
+            const blockedUsernames = blockedUsers.map(block => block.blockedUser.user);
+            return blockedUsernames;
+        } catch (error) {
+            throw new BadRequestException('Failed to get blocked list');
+        }
+    }
+
+
 }
