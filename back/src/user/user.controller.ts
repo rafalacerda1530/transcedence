@@ -37,7 +37,7 @@ export class UserController {
 	@UseInterceptors(
 		FileInterceptor('profileImage', {
 			storage: diskStorage({
-				destination: './uploads', // Diretório onde as imagens serão salvas temporariamente
+				destination: './../front/public/profilesUser', // Diretório onde as imagens serão salvas temporariamente
 				filename: (req, file, cb) => {
 					const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 					const extension = file.mimetype.split('/')[1]; // Obter a extensão do arquivo
@@ -46,14 +46,15 @@ export class UserController {
 				},
 			}),
 		}),
-	)
+		)
 	async uploadImage(
 		@UploadedFile() file,
 		@Body('user') user: string
 	) {
+		console.log("I M A G E",file.filename, user)
 		try {
-			const filePath = file.path;
-			const updatedUser = await this.userService.saveProfileImage(user, filePath);
+			const fileName = file.filename;
+			const updatedUser = await this.userService.saveProfileImage(user, fileName);
 			console.log("Imagem salva com sucesso para o usuário:", user);
 
 			return { message: 'Imagem salva com sucesso!', user: updatedUser };

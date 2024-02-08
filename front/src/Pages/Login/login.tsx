@@ -31,7 +31,6 @@ function LoginGame() {
 
   const handleLogin = async (event: { preventDefault: () => void }) => {
     event.preventDefault(); // Evite o envio do formulário padrão
-    console.log("http://localhost:5555");
     const authentication2fa = await CallBackCheck2fa(formData);
     if (authentication2fa && authenticate2factor === false)
       setAuthenticate2faActive(true);

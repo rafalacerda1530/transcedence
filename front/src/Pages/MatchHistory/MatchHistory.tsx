@@ -13,27 +13,25 @@ interface MatchHistoryItem {
 }
 
 interface UserData {
+  userId: number;
   user: string;
   nickname: string;
   email: string;
   profileImage: string;
 }
 const handleHomeButton = () => {
-  const url =
-    "http://localhost:3000/home";
+  const url = "http://localhost:3000/home";
   window.location.href = url;
 };
 
-
-
 export const MatchHistoryComplete = () => {
-
   const { user } = useParams<{ user: string }>();
   const [history, setHistory] = useState<Record<string, MatchHistoryItem>>({});
   const [showBall, setShowBall] = useState(true);
   const statusSocket = useContext(StatusContext);
   const refreshToken = useRefreshToken();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [meData, setMeData] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState({
     win: 0,
     lose: 0,
@@ -70,7 +68,6 @@ export const MatchHistoryComplete = () => {
       }
       connectSocket();
     });
-
   };
 
   const disconnectSocket = () => {
@@ -92,6 +89,7 @@ export const MatchHistoryComplete = () => {
   const fetchUserData = async (response: AxiosResponse<UserData>) => {
     try {
       setUserData({
+        userId: response.data?.userId,
         user: response.data?.user,
         email: response.data?.email,
         nickname: response.data?.nickname,
@@ -104,11 +102,28 @@ export const MatchHistoryComplete = () => {
       console.log(error);
     }
   };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axiosPrivate.get("/user/me");
+        setMeData({
+          userId: response.data.userId,
+          user: response.data?.user,
+          email: response.data?.email,
+          nickname: response.data?.nickname,
+          profileImage: response.data?.profileImage,
+        });
+        image = response.data?.profileImage;
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-
+    fetchUserData();
+  }, [axiosPrivate, setUserData]);
   const CallBackMatchAll = (userId?: string) => {
     return axiosPrivate
-      .get('user/matchHistory', {
+      .get("user/matchHistory", {
         params: { user: userId },
         withCredentials: true,
       })
@@ -123,7 +138,7 @@ export const MatchHistoryComplete = () => {
 
   const CallBackUserInfo = (userId?: string) => {
     return axiosPrivate
-      .get('user/meInfo', {
+      .get("user/meInfo", {
         params: { user: userId },
         withCredentials: true,
       })
@@ -138,7 +153,7 @@ export const MatchHistoryComplete = () => {
 
   const CallBackMatchHistory = (userId?: string) => {
     return axiosPrivate
-      .get('user/getUserHistoryComplete', {
+      .get("user/getUserHistoryComplete", {
         params: { user: userId },
         withCredentials: true,
       })
@@ -149,6 +164,18 @@ export const MatchHistoryComplete = () => {
         console.log(error);
         throw error;
       });
+  };
+  const handleAddFriend = async (userId: any, friendId: any) => {
+    try {
+      // Enviar a requisição POST para o backend
+      const uploadResponse = await axiosPrivate.post(
+        `friendship/${userId}/add/${friendId}`
+      );
+
+      console.log("Solicitacao enviada com sucesso:", uploadResponse.data);
+    } catch (error) {
+      console.error("Erro ao enviar a solicitacao:", error);
+    }
   };
 
   const matchHistory = async () => {
@@ -175,10 +202,10 @@ export const MatchHistoryComplete = () => {
     const AllHistory = async () => {
       try {
         const responseUser = await CallBackUserInfo(user);
-        const response = await CallBackMatchHistory(user)
-        fetchUserData(responseUser)
-        matchHistory()
-        const batata = responseUser.data.user
+        const response = await CallBackMatchHistory(user);
+        fetchUserData(responseUser);
+        matchHistory();
+        const batata = responseUser.data.user;
         setHistory(response.data.history);
       } catch (error) {
         console.log(error);
@@ -187,10 +214,9 @@ export const MatchHistoryComplete = () => {
 
     AllHistory();
   }, []);
-
+  console.log("Aqui esta tudo", userData?.userId, meData?.userId);
   return (
     <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center">
-
       <div className="flex gap-5">
         <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md">
           <div className="mb-2">
@@ -212,44 +238,46 @@ export const MatchHistoryComplete = () => {
               className="w-20 h-20 rounded-full mx-auto mb-4"
             />
           </div>
-
         </div>
 
         {/* Seção para estatísticas */}
         <div className="bg-black text-white p-8 rounded-lg border border-gray-700 max-w-md ml-4">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-4">
-              Estatísticas do Usuário
-            </h1>
+            <h1 className="text-4xl font-bold mb-4">Estatísticas do Usuário</h1>
             <div className="mb-4 flex flex-col items-center justify-center">
               <div className="flex flex-col items-center mb-4">
                 <div className="w-16 h-16 bg-green-500 rounded-full mb-2"></div>
-                <strong>Vitórias:</strong>{" "}
-                {userStats.win}
+                <strong>Vitórias:</strong> {userStats.win}
               </div>
               <div className="flex flex-col items-center mb-4">
                 <div className="w-16 h-16 bg-red-500 rounded-full mb-2"></div>
-                <strong>Derrotas:</strong>{" "}
-                {userStats.lose}
+                <strong>Derrotas:</strong> {userStats.lose}
               </div>
               <div className="flex flex-col items-center">
-                <strong className="text-yellow-500 text-xl">
-                  Pontuação:
-                </strong>
+                <strong className="text-yellow-500 text-xl">Pontuação:</strong>
                 <div className="bg-yellow-500 text-black rounded-lg p-4 mt-2 text-2xl font-bold">
                   {userStats.score}
                 </div>
               </div>
             </div>
             <div className="mb-">
-            <button
-              type="button"
-              className="text-white font-bold bg-blue-600 text-white rounded-full px-8 py-2"
-              onClick={handleHomeButton}
-            >
-              Home
-            </button>
-          </div>
+              <button
+                type="button"
+                className="text-white font-bold bg-blue-600 text-white rounded-full px-8 py-2"
+                onClick={handleHomeButton}
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                className="text-white font-bold bg-blue-600 text-white rounded-full px-8 py-2"
+                onClick={() =>
+                  handleAddFriend(meData?.userId, userData?.userId)
+                }
+              >
+                Enviar Solicitação
+              </button>
+            </div>
           </div>
         </div>
         {/*SEÇÃO hISTÓRICO DE PARTIDAS*/}
@@ -261,7 +289,7 @@ export const MatchHistoryComplete = () => {
             <div className=" flex flex-col items-center justify-center">
               {Object.keys(history).map((key) => (
                 <div key={key} className="mb-5 font-bold">
-                  <p >Partida: {history[key].Partida}</p>
+                  <p>Partida: {history[key].Partida}</p>
                   <p>{history[key].Pontos_Player1}</p>
                   <p>{history[key].Pontos_Player2}</p>
                   <p>{history[key].Vencedor}</p>
