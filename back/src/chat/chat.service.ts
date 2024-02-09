@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { messageToClient, messageToServer } from "./dto/chat.interface";
+import { messageToClient, messageToServer, gameInviteToServer, gameInviteClient } from "./dto/chat.interface";
 import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, GroupActionsDto, InviteToGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite, DeleteDmGroup } from "./dto/chat.dto";
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
@@ -32,6 +32,7 @@ export class ChatService {
                 group: { connect: { id: chat.id } },
                 date: new Date(),
                 content: messageToServer.message,
+                gameInvite: false,
             },
         });
         const messageToClient: messageToClient = {
@@ -405,6 +406,7 @@ export class ChatService {
                 groupDM: { connect: { id: chat.id } },
                 date: new Date(),
                 content: messageToServer.message,
+                gameInvite: false,
             },
         });
         const messageToClient: messageToClient = {
@@ -417,5 +419,39 @@ export class ChatService {
         return messageToClient;
     }
 
+    async saveGameInvite(gameInviteToServer: gameInviteToServer) {
+        const user = await this.groupService.getUserByUsername(gameInviteToServer.username,);
+        const chat = await this.groupService.getGroupByName(gameInviteToServer.groupName,);
+
+        await this.prisma.message.updateMany({
+            where: {
+                senderId: user.id,
+                groupId: chat.id,
+                gameInvite: true
+            },
+            data: {
+                gameInvite: false
+            }
+        })
+
+        const messageDB = await this.prisma.message.create({
+            data: {
+                sender: { connect: { id: user.id } },
+                group: { connect: { id: chat.id } },
+                date: new Date(),
+                content: "Expired Game Invite",
+                gameInvite: true,
+                gameType: gameInviteToServer.gameType,
+            },
+        });
+        const gameInviteClient: gameInviteClient = {
+            id: messageDB.id,
+            groupName: chat.name,
+            username: user.user,
+            date: messageDB.date,
+            gameInvite: messageDB.gameInvite
+        };
+        return gameInviteClient;
+    }
 
 }

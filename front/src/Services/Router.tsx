@@ -14,6 +14,7 @@ import { MatchHistoryComplete } from "../Pages/MatchHistory/MatchHistory";
 import { StatusProvider, statusSocket } from "../context/StatusContext";
 import { ChatProvider, chatSocket } from "../context/ChatContext";
 import {ChatPage} from "../Pages/Chat/ChatPage";
+import { GameInviteProvider, gameInviteSocket } from "../context/GameInvite";
 
 
 export const Router = () => {
@@ -21,49 +22,50 @@ export const Router = () => {
         <>
             <BrowserRouter>
                 <Routes>
+                        <Route path="/callback" element={<CallBack />} />
+                </Routes>
+                <Routes>
                     <Route path="/" element={<Navigate to="/home" />} />
                     <Route path="/login" element={<LoginGame />} />
                 </Routes>
-                <QueueProvider value={queueSocket}>
-                    <Routes>
-                        <Route path="/queue" element={<QueueGame />} />
-                    </Routes>
-                </QueueProvider>
                 <GameProvider value={gameSocket}>
                     <Routes>
                         <Route path="/game" element={<Game />} />
                     </Routes>
                 </GameProvider>
-                <StatusProvider value={statusSocket}>
+                <GameInviteProvider value={gameInviteSocket}>
+                    <QueueProvider value={queueSocket}>
+                        <Routes>
+                            <Route path="/queue" element={<QueueGame />} />
+                        </Routes>
+                    </QueueProvider>
+                    <StatusProvider value={statusSocket}>
+                        <Routes>
+                            <Route path="/home" element={<Home />} />
+                        </Routes>
+                    </StatusProvider>
                     <Routes>
-                        <Route path="/home" element={<Home />} />
+                        <Route path="/profile" element={<Profile />} />
                     </Routes>
-                </StatusProvider>
-                <Routes>
-                    <Route path="/profile" element={<Profile />} />
-                </Routes>
-                <Routes>
-                    <Route path="/callback" element={<CallBack />} />
-                </Routes>
-                <Routes>
-                    <Route path="/generate2fa" element={<Generate2fa />} />
-                </Routes>
-                <Routes>
-                    <Route path="/user/:username" element={<FriendsList />} />
-                </Routes>
-
-                <StatusProvider value={statusSocket}>
                     <Routes>
-                        <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
+                        <Route path="/generate2fa" element={<Generate2fa />} />
                     </Routes>
-                </StatusProvider>
-
-                <ChatProvider value={chatSocket}>
-                <Routes>
-                    <Route path="/chat" element={<ChatPage/>} />
-                </Routes>
-                </ChatProvider>
-
+                    <Routes>
+                        <Route path="/user/:username" element={<FriendsList />} />
+                    </Routes>
+                    <StatusProvider value={statusSocket}>
+                        <Routes>
+                            <Route path="/matchHistoryComplete/:user" element={<MatchHistoryComplete/>} />
+                        </Routes>
+                    </StatusProvider>
+                    <StatusProvider value={statusSocket}>
+                        <ChatProvider value={chatSocket}>
+                            <Routes>
+                                <Route path="/chat" element={<ChatPage/>} />
+                            </Routes>
+                        </ChatProvider>
+                    </StatusProvider>
+                </GameInviteProvider>
             </BrowserRouter>
         </>
     );

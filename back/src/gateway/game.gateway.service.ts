@@ -289,6 +289,7 @@ export class GameGatewayService implements OnGatewayConnection, OnGatewayDisconn
                 let userData: UserData = { username: "", roomId: "" };
                 userData = { username: decoded['sub'], roomId: "" };
                 this.players.set(client.id, userData);
+                this.prismaCommands.updateGameInvites(userData.username);
             }
         } catch (error) {
             console.log(error);

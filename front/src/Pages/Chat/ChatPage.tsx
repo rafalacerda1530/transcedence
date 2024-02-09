@@ -4,6 +4,8 @@ import { ChatContext } from '../../context/ChatContext';
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import { axiosPrivate } from '../../hooks/useAxiosPrivate';
 import { CallBackAllGroups } from './CallBack/CallBack';
+import { StatusContext } from '../../context/StatusContext';
+import { GameInviteContext } from '../../context/GameInvite';
 
 interface Group {
     name: string;
@@ -14,6 +16,7 @@ interface Message {
     username: string;
     message: string;
     date: Date;
+    gameInvite: boolean;
 }
 
 interface MessageFromBackend {
@@ -25,6 +28,7 @@ interface MessageFromBackend {
     sender: {
         user: string;
     };
+    gameInvite: boolean;
 }
 
 interface GroupMember {
@@ -61,10 +65,12 @@ export const ChatPage = () => {
     const [isChangePasswordPopupOpen, setIsChangePasswordPopupOpen] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
-
+    const [isGameInvitePopupOpen, setIsGameInvitePopupOpen] = useState(false);
     const [dmGroups, setDmGroups] = useState<Group[]>([]);
     const [directChatMembers, setDirectChatMembers] = useState<string[]>([]);
     const [isSocketConnected, setIsSocketConnected] = useState(false);
+    const statusSocket = useContext(StatusContext);
+    const gameInviteSocket = useContext(GameInviteContext);
 
 
 
@@ -136,6 +142,116 @@ export const ChatPage = () => {
             disconnectSocket();
         };
     }, [chatSocket]);
+
+    const connectStatusSocket = () => {
+        statusSocket.connect();
+        statusSocket.on("connect", () => {
+            console.log("Conectado ao socket");
+        });
+
+        statusSocket.on("jwt_error", async (error) => {
+            console.log(`Connection failed due to ${error.message}`);
+            console.log("Tentando Reautenticar");
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        statusSocket.on("missing_token", async () => {
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+    };
+
+    const disconnectStatusSocket = () => {
+        statusSocket.off("connect");
+        statusSocket.off("jwt_error");
+        statusSocket.off("missing_cookie");
+        statusSocket.disconnect();
+    };
+
+    useEffect(() => {
+        connectStatusSocket();
+        return () => {
+            console.log("Desconectando do socket");
+            disconnectStatusSocket();
+        };
+    }, [statusSocket]);
+
+    const connectGameInviteSocket = () => {
+        gameInviteSocket.connect();
+        gameInviteSocket.on("connect", () => {
+            console.log("Conectado ao socket");
+        });
+
+        gameInviteSocket.on("jwt_error", async (error) => {
+            console.log(`Connection failed due to ${error.message}`);
+            console.log("Tentando Reautenticar");
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("missing_token", async () => {
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("joinGame", (response) => {
+            console.log("Conectado ao jogo");
+            if (response.roomId === undefined) {
+                console.log("opponentId undefined");
+                disconnectSocket();
+                connectSocket();
+            }
+            console.log(response.roomId);
+            disconnectSocket();
+            window.location.href =
+                "http://localhost:3000/Game?roomId=" +
+                response.roomId +
+                "&mode=" +
+                response.mode;
+        });
+    };
+
+    const disconnectGameInviteSocket = () => {
+        gameInviteSocket.off("connect");
+        gameInviteSocket.off("jwt_error");
+        gameInviteSocket.off("missing_cookie");
+        gameInviteSocket.disconnect();
+    };
+
+    useEffect(() => {
+        connectGameInviteSocket();
+        return () => {
+            console.log("Desconectando do socket");
+            disconnectGameInviteSocket();
+        };
+    }, [gameInviteSocket]);
+
+
     useEffect(() => {
 
         const fetchInitialDmGroups = async () => {
@@ -402,6 +518,7 @@ export const ChatPage = () => {
                         username: message.sender.user,
                         date: new Date(message.date),
                         message: message.content,
+                        gameInvite: message.gameInvite
                     }));
                     const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
                     console.log(filteredMessages)
@@ -421,7 +538,7 @@ export const ChatPage = () => {
                     console.log(filteredMessages)
                     setChatMessages(prevMessages => ({
                         ...prevMessages,
-                        [currentChat as string]: filteredMessages,
+                        [currentChat as string]: filteredMessages as Message[],
                     }));
 
                 }
@@ -553,6 +670,7 @@ export const ChatPage = () => {
             console.error('Error setting admin:', error);
         }
     };
+
     useEffect(() => {
         chatSocket.on('setAdmResponse', ({ groupName, targetUsername }) => {
             setGroupMembers(prevGroupMembers => {
@@ -581,6 +699,7 @@ export const ChatPage = () => {
             console.error('Error unsetting admin:', error);
         }
     };
+
     useEffect(() => {
         chatSocket.on('unsetAdmResponse', ({ groupName, targetUsername }) => {
             setGroupMembers(prevGroupMembers => {
@@ -737,6 +856,7 @@ export const ChatPage = () => {
             console.error('Error blocking user:', error);
         }
     };
+
     useEffect(() => {
         chatSocket.on('blockUserResponse', ({ target }) => {
             setBlockedUsers(prevBlockedUsers => [...prevBlockedUsers, target]);
@@ -746,6 +866,7 @@ export const ChatPage = () => {
             chatSocket.off('blockUserResponse');
         };
     }, []);
+
     const unblockUser = (target: string) => {
         try {
             chatSocket.emit('unblockUser', {
@@ -756,6 +877,7 @@ export const ChatPage = () => {
             console.error('Error unblocking user:', error);
         }
     };
+
     useEffect(() => {
         chatSocket.on('unblockUserResponse', ({ target }) => {
             setBlockedUsers(prevBlockedUsers => prevBlockedUsers.filter(user => user !== target));
@@ -787,6 +909,34 @@ export const ChatPage = () => {
         return chat !== null && chat.startsWith("Dm-");
     }
 
+    const handleGameInvite = (groupName: string | null, type: string): React.MouseEventHandler<HTMLButtonElement> => {
+        return (event) => {
+            try {
+                if (!groupName)
+                    throw new Error('No chat selected');
+                chatSocket.emit('gameInvite', {
+                    groupName: groupName,
+                    username: username,
+                    gameType: type,
+                });
+                setIsGameInvitePopupOpen(false);
+            } catch (error) {
+                alert('Error sending game invite: ' + error);
+            }
+        };
+    };
+
+    const handleGameInviteAccept = (senderUsername: string): React.MouseEventHandler<HTMLButtonElement> => {
+        return (event) => {
+            console.log(senderUsername);
+            if (senderUsername === username)
+                return;
+            gameInviteSocket.emit('acceptGameInvite', {
+                username: senderUsername,
+                groupName: currentChat
+            });
+        };
+    };
 
     return (
         <div className="chatPageContainer">
@@ -915,8 +1065,17 @@ export const ChatPage = () => {
                 {currentChat && chatMessages[currentChat] ? (
                     chatMessages[currentChat].map((msg, index) => (
                         <div key={index} className={getMessageClass(msg.username)}>
-                            <p>{msg.username}: {msg.message}</p>
-                            <p>{new Date(msg.date).toLocaleString()}</p>
+                                {msg.gameInvite ? (
+                                    <div>
+                                            <p>{msg.username} has sent a game invite.</p>
+                                            <button className="accept-invite-button" onClick={handleGameInviteAccept(msg.username)}>Accept</button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p>{msg.username}: {msg.message}</p>
+                                    </div>
+                                )}
+                                <p>{new Date(msg.date).toLocaleString()}</p>
                         </div>
                     ))
                 ) : (
@@ -1049,19 +1208,29 @@ export const ChatPage = () => {
                     <button onClick={handleCloseBanPopup}>Cancel</button>
                 </div>
             )}
+            {isGameInvitePopupOpen && (
+                <div className="gameInvitePopup">
+                    <p>Choose Game Mode:</p>
+                    <button onClick={handleGameInvite(currentChat, "normal")}>Normal Map</button>
+                    <button onClick={handleGameInvite(currentChat, "hard")}>Hard Map</button>
+                    <button onClick={handleGameInvite(currentChat, "stick")}>Stick Ball</button>
+                    <button onClick={() => {setIsGameInvitePopupOpen(false)}}>Cancel</button>
+                </div>
+            )}
             {currentChat && (
                 <div className="messageInputContainer">
+                    <button onClick={() => {setIsGameInvitePopupOpen(true)}}>Game Invite</button>
                     <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            value={message}
-                            onChange={handleChange}
-                            placeholder="Type your message (max 200 characters)"
-                            maxLength={200}
-                        />
-                        <button type="submit">Send</button>
-                    </form>
-                </div>
+                    <input
+                        type="text"
+                        value={message}
+                        onChange={handleChange}
+                        placeholder="Type your message (max 200 characters)"
+                        maxLength={200}
+                    />
+                    <button type="submit">Send</button>
+                </form>
+            </div>
             )}
         </div>
     );

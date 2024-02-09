@@ -2,7 +2,7 @@ import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGat
 import { ChatService } from './chat.service';
 import { Namespace, Socket } from 'socket.io';
 import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { messageToClient, messageToServer } from './dto/chat.interface';
+import { messageToClient, messageToServer, gameInviteToServer, gameInviteClient } from './dto/chat.interface';
 import { BanUser, BlockUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
@@ -152,6 +152,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         if (messageToClient) {
             this.server.to(message.groupName).emit('messageToClient', messageToClient);
             this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+        }
+    }
+
+    @SubscribeMessage('gameInvite')
+    async handleGameInvite(@ConnectedSocket() client: Socket, @MessageBody() message: gameInviteToServer) {
+        const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
+        if (isMutted) {
+            throw new BadRequestException('you are mutted in this channel');
+        }
+        const user = await this.groupService.getUserByUsername(message.username);
+        const group = await this.groupService.getGroupByName(message.groupName);
+        const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
+        console.log(isUserMember);
+
+        if (isUserMember) {
+            const gameInviteClient: gameInviteClient = await this.chatService.saveGameInvite(message);
+            if (gameInviteClient) {
+                this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
+                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
+            }
         }
     }
 

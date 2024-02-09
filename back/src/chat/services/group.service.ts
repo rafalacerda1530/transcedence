@@ -444,6 +444,7 @@ export class GroupService {
                 content: true,
                 sender: { select: { user: true } },
                 group: { select: { name: true, type: true } },
+                gameInvite: true,
             }
         });
     }
@@ -458,6 +459,7 @@ export class GroupService {
                 content: true,
                 sender: { select: { user: true } },
                 groupDM: { select: { name: true, type: true } },
+                gameInvite: true,
             }
         });
 

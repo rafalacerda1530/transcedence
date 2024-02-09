@@ -1,10 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { QueueContext } from "../../context/QueueContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
+import { GameInviteContext } from "../../context/GameInvite";
 
 export const QueueGame = () => {
     const socket = useContext(QueueContext);
     const refreshToken = useRefreshToken();
+    const gameInviteSocket = useContext(GameInviteContext);
     const [search, setSearch] = useState(false);
     const [normalMap, setNormalMap] = useState(false);
     const [hardMap, setHardMap] = useState(false);
@@ -73,6 +75,68 @@ export const QueueGame = () => {
             disconnectSocket();
         };
     }, [socket]);
+
+    const connectGameInviteSocket = () => {
+        gameInviteSocket.connect();
+        gameInviteSocket.on("connect", () => {
+            console.log("Conectado ao socket");
+        });
+
+        gameInviteSocket.on("jwt_error", async (error) => {
+            console.log(`Connection failed due to ${error.message}`);
+            console.log("Tentando Reautenticar");
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("missing_token", async () => {
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("joinGame", (response) => {
+            console.log("Conectado ao jogo");
+            if (response.roomId === undefined) {
+                console.log("opponentId undefined");
+                disconnectSocket();
+                connectSocket();
+            }
+            console.log(response.roomId);
+            disconnectSocket();
+            window.location.href =
+                "http://localhost:3000/Game?roomId=" +
+                response.roomId +
+                "&mode=" +
+                response.mode;
+        });
+    };
+
+    const disconnectGameInviteSocket = () => {
+        gameInviteSocket.off("connect");
+        gameInviteSocket.off("jwt_error");
+        gameInviteSocket.off("missing_cookie");
+        gameInviteSocket.disconnect();
+    };
+
+    useEffect(() => {
+        connectGameInviteSocket();
+        return () => {
+            console.log("Desconectando do socket");
+            disconnectGameInviteSocket();
+        };
+    }, [gameInviteSocket]);
 
     const joinQueue = () => {
         const gameModes = [];

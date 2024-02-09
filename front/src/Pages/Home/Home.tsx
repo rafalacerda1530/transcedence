@@ -5,6 +5,7 @@ import { StatusContext } from "../../context/StatusContext";
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import ToggleSwitch from "./button/toggle";
 import Modal from "react-modal";
+import { GameInviteContext } from "../../context/GameInvite";
 Modal.setAppElement("#root");
 
 const customStyles = {
@@ -100,6 +101,7 @@ export const Home = () => {
     const [editedNickname, setEditedNickname] = useState("");
     const [isProfileSectionVisible, setIsProfileSectionVisible] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
+    const gameInviteSocket = useContext(GameInviteContext);
 
     const connectSocket = () => {
         statusSocket.connect();
@@ -146,6 +148,69 @@ export const Home = () => {
             disconnectSocket();
         };
     }, [statusSocket]);
+
+    const connectGameInviteSocket = () => {
+        gameInviteSocket.connect();
+        gameInviteSocket.on("connect", () => {
+            console.log("Conectado ao socket");
+        });
+
+        gameInviteSocket.on("jwt_error", async (error) => {
+            console.log(`Connection failed due to ${error.message}`);
+            console.log("Tentando Reautenticar");
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("missing_token", async () => {
+            disconnectSocket();
+            try {
+                await refreshToken();
+            } catch (error) {
+                console.log(error);
+                window.location.href = "http://localhost:3000/login";
+            }
+            connectSocket();
+        });
+
+        gameInviteSocket.on("joinGame", (response) => {
+            console.log("Conectado ao jogo");
+            if (response.roomId === undefined) {
+                console.log("opponentId undefined");
+                disconnectSocket();
+                connectSocket();
+            }
+            console.log(response.roomId);
+            disconnectSocket();
+            window.location.href =
+                "http://localhost:3000/Game?roomId=" +
+                response.roomId +
+                "&mode=" +
+                response.mode;
+        });
+    };
+
+    const disconnectGameInviteSocket = () => {
+        gameInviteSocket.off("connect");
+        gameInviteSocket.off("jwt_error");
+        gameInviteSocket.off("missing_cookie");
+        gameInviteSocket.disconnect();
+    };
+
+    useEffect(() => {
+        connectGameInviteSocket();
+        return () => {
+            console.log("Desconectando do socket");
+            disconnectGameInviteSocket();
+        };
+    }, [gameInviteSocket]);
+
 
     const [ativo, setAtivo] = useState(false);
 

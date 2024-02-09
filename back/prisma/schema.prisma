@@ -167,6 +167,8 @@ model Group {
     GroupInvite GroupInvite[]
     bans        Ban[]
     mutes       Mute[]
+
+    @@index([name])
 }
 
 model Message {
@@ -184,6 +186,11 @@ model Message {
 
     groupDM   GroupDM? @relation(fields: [groupDMId], references: [id], onDelete: Cascade)
     groupDMId Int?
+
+    gameInvite Boolean
+    gameType   String?
+
+    @@index([senderId])
 }
 
 model GroupDM {
@@ -195,6 +202,8 @@ model GroupDM {
     type    GroupStatus
     members GroupMembership[]
     Message Message[]
+
+    @@index([name])
 }
 
 model GroupMembership {

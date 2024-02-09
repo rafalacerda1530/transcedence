@@ -4,10 +4,11 @@ import { PrismaService } from './prisma.service';
 import { User, UserStatus } from '@prisma/client';
 import { Game } from 'src/game/game';
 import { use } from 'passport';
+import internal from 'stream';
 
 @Injectable()
 export class PrismaCommands {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     async createUserIntra(responseFromIntra: object) {
         try {
@@ -68,10 +69,68 @@ export class PrismaCommands {
     }
 
     async updateUserStatus(username: string, status: UserStatus) {
-		await this.prisma.user.update({
-			where: { user: username },
-			data: { status: status },
-		});
-	}
+        const user = await this.prisma.user.findUnique({
+            where: { user: username },
+        });
 
+        if (!user) {
+            return ;
+        }
+
+
+        await this.prisma.user.update({
+            where: { user: username },
+            data: { status: status },
+        });
+    }
+
+    async updateGameInvites(username: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { user: username },
+        });
+
+        await this.prisma.message.updateMany({
+            where: {
+                senderId: user.id,
+                gameInvite: true
+            },
+            data: {
+                gameInvite: false
+            }
+        });
+    }
+
+    async getGameInviteInfo(username: string, groupName: string, groupDMName: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { user: username },
+        });
+
+        if (groupName != null) {
+            const group = await this.prisma.group.findUnique({
+                where: { name: groupName },
+            })
+            const message = await this.prisma.message.findFirst({
+                where: {
+                    groupId: group.id,
+                    gameInvite: true,
+                    senderId: user.id
+                }
+            });
+            return message;
+        }
+
+        if (groupDMName != null) {
+            const group = await this.prisma.groupDM.findUnique({
+                where: { name: groupDMName }
+            });
+            const message = await this.prisma.message.findFirst({
+                where: {
+                    groupDMId: group.id,
+                    gameInvite: true,
+                    senderId: user.id
+                }
+            });
+            return message;
+        }
+    }
 }
