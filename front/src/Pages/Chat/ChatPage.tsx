@@ -3,7 +3,7 @@ import './style.css'
 import { ChatContext } from '../../context/ChatContext';
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import { axiosPrivate } from '../../hooks/useAxiosPrivate';
-import { CallBackAllDmGroups, CallBackAllGroups } from './CallBack/CallBack';
+import { CallBackAllGroups } from './CallBack/CallBack';
 
 interface Group {
     name: string;
@@ -64,6 +64,8 @@ export const ChatPage = () => {
 
     const [dmGroups, setDmGroups] = useState<Group[]>([]);
     const [directChatMembers, setDirectChatMembers] = useState<string[]>([]);
+    const [isSocketConnected, setIsSocketConnected] = useState(false);
+
 
 
 
@@ -72,6 +74,8 @@ export const ChatPage = () => {
         chatSocket.connect();
         chatSocket.on("connect", () => {
             console.log("----------Conectado ao socket");
+            setIsSocketConnected(true); // Define a flag para verdadeira quando a conexão é estabelecida
+
         });
 
         chatSocket.on("GroupsAndDms", (body) => {
@@ -132,14 +136,40 @@ export const ChatPage = () => {
             disconnectSocket();
         };
     }, [chatSocket]);
+    useEffect(() => {
+
+        const fetchInitialDmGroups = async () => {
+            if (isSocketConnected) {
+                try {
+                    const response = await axiosPrivate.post(`/api/chat/allDm`, {
+                        username: username,
+                    });
+                    const dmGroupsData: Group[] = response.data.map((groupName: string) => ({
+                        name: groupName,
+                        type: 'DIRECT', // Definir o tipo como 'direct' para todos os grupos
+                    }));
+                    setDmGroups(dmGroupsData);
+
+                } catch (error) {
+                    console.error('Error fetching initial DM groups:', error);
+                }
+            }
+        };
+
+        fetchInitialDmGroups();
+    }, [isSocketConnected, username]);
+
 
     useEffect(() => {
         const fetchBlockedUsersStatus = async () => {
-            try {
-                const response = await axiosPrivate.get(`/api/chat/blockedList/${username}`);
-                setBlockedUsers(response.data);
-            } catch (error) {
-                console.error('Error fetching blocked user list:', error);
+            if (currentChat && !isDirectChat(currentChat)) {
+
+                try {
+                    const response = await axiosPrivate.get(`/api/chat/blockedList/${username}`);
+                    setBlockedUsers(response.data);
+                } catch (error) {
+                    console.error('Error fetching blocked user list:', error);
+                }
             }
         };
 
@@ -753,26 +783,6 @@ export const ChatPage = () => {
             chatSocket.off('DmGroupCreated');
         };
     }, [chatSocket]);
-    useEffect(() => {
-        const fetchInitialDmGroups = async () => {
-            try {
-                const response = await axiosPrivate.post(`/api/chat/allDm`, {
-                    username: username,
-                });
-                const dmGroupsData: Group[] = response.data.map((groupName: string) => ({
-                    name: groupName,
-                    type: 'DIRECT', // Definir o tipo como 'direct' para todos os grupos
-                }));
-                setDmGroups(dmGroupsData);
-
-            } catch (error) {
-                console.error('Error fetching initial DM groups:', error);
-            }
-        };
-
-        fetchInitialDmGroups();
-    }, [username]);
-
     function isDirectChat(chat: string | null): boolean {
         return chat !== null && chat.startsWith("Dm-");
     }
