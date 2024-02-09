@@ -100,15 +100,16 @@ export class PrismaCommands {
         });
     }
 
-    async getGameInviteInfo(username: string, groupName: string, groupDMName: string) {
+    async getGameInviteInfo(username: string, groupName: string) {
         const user = await this.prisma.user.findUnique({
             where: { user: username },
         });
-
-        if (groupName != null) {
-            const group = await this.prisma.group.findUnique({
-                where: { name: groupName },
-            })
+        console.log(user);
+        const group = await this.prisma.group.findUnique({
+            where: { name: groupName },
+        })
+        console.log(group);
+        if (group) {
             const message = await this.prisma.message.findFirst({
                 where: {
                     groupId: group.id,
@@ -119,13 +120,14 @@ export class PrismaCommands {
             return message;
         }
 
-        if (groupDMName != null) {
-            const group = await this.prisma.groupDM.findUnique({
-                where: { name: groupDMName }
-            });
+        const groupDM = await this.prisma.groupDM.findUnique({
+            where: { name: groupName },
+        })
+        console.log(groupDM);
+        if (groupDM) {
             const message = await this.prisma.message.findFirst({
                 where: {
-                    groupDMId: group.id,
+                    groupDMId: groupDM.id,
                     gameInvite: true,
                     senderId: user.id
                 }

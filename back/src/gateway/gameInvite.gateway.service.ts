@@ -65,7 +65,7 @@ export class GameInviteGatewayService implements OnGatewayConnection, OnGatewayD
             this.prismaCommands.updateGameInvites(data.username);
             return;
         }
-        const message = await this.prismaCommands.getGameInviteInfo(data.username, data?.groupName, data?.groupDMName);
+        const message = await this.prismaCommands.getGameInviteInfo(data.username, data?.groupName);
         if (!message) {
             this.emitErrorAndDisconnect(client, 'No game invite found', 'no_game_invite');
             return;

@@ -8,6 +8,7 @@ import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
 import { GroupStatus } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'chat' })
@@ -17,6 +18,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     constructor(
         private readonly chatService: ChatService,
         private readonly groupService: GroupService,
+        private readonly prisma: PrismaService,
         private config: ConfigService,
     ) { }
 
@@ -157,22 +159,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     @SubscribeMessage('gameInvite')
     async handleGameInvite(@ConnectedSocket() client: Socket, @MessageBody() message: gameInviteToServer) {
-        const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
-        if (isMutted) {
-            throw new BadRequestException('you are mutted in this channel');
-        }
+        const group = await this.prisma.group.findUnique({
+            where: { name: message.groupName },
+        })
         const user = await this.groupService.getUserByUsername(message.username);
-        const group = await this.groupService.getGroupByName(message.groupName);
-        const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
-        console.log(isUserMember);
 
-        if (isUserMember) {
-            const gameInviteClient: gameInviteClient = await this.chatService.saveGameInvite(message);
-            if (gameInviteClient) {
-                this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
-                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
+        if (group) {
+            const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
+            if (isMutted) {
+                throw new BadRequestException('you are mutted in this channel');
             }
+            const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
+            if (isUserMember) {
+                const gameInviteClient: gameInviteClient = await this.chatService.saveGameInvite(message);
+                if (gameInviteClient) {
+                    this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
+                    this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
+                }
+            }
+            return ;
         }
+
+        const groupDM = await this.prisma.groupDM.findUnique({
+            where: { name: message.groupName },
+        })
+        if (groupDM){
+            const gameInviteClient: gameInviteClient = await this.chatService.saveGameInvite(message);
+                if (gameInviteClient) {
+                    this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
+                    this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
+                }
+        }
+        return ;
     }
 
     @SubscribeMessage('createGroup')

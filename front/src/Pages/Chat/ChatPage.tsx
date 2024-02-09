@@ -219,6 +219,14 @@ export const ChatPage = () => {
             connectSocket();
         });
 
+        gameInviteSocket.on("no_game_invite", async () => {
+            alert("No game invite found");
+        });
+
+        gameInviteSocket.on("opponent_not_found", async () => {
+            alert("Opponent disconnected or is already in a game");
+        });
+
         gameInviteSocket.on("joinGame", (response) => {
             console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
@@ -914,6 +922,7 @@ export const ChatPage = () => {
             try {
                 if (!groupName)
                     throw new Error('No chat selected');
+                console.log(groupName);
                 chatSocket.emit('gameInvite', {
                     groupName: groupName,
                     username: username,

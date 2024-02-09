@@ -421,12 +421,51 @@ export class ChatService {
 
     async saveGameInvite(gameInviteToServer: gameInviteToServer) {
         const user = await this.groupService.getUserByUsername(gameInviteToServer.username,);
-        const chat = await this.groupService.getGroupByName(gameInviteToServer.groupName,);
+
+        const group = await this.prisma.group.findUnique({
+            where: { name: gameInviteToServer.groupName },
+        })
+        if (group){
+            await this.prisma.message.updateMany({
+                where: {
+                    senderId: user.id,
+                    groupId: group.id,
+                    gameInvite: true
+                },
+                data: {
+                    gameInvite: false
+                }
+            })
+
+            const messageDB = await this.prisma.message.create({
+                data: {
+                    sender: { connect: { id: user.id } },
+                    group: { connect: { id: group.id } },
+                    date: new Date(),
+                    content: "Expired Game Invite",
+                    gameInvite: true,
+                    gameType: gameInviteToServer.gameType,
+                },
+            });
+
+            const gameInviteClient: gameInviteClient = {
+                id: messageDB.id,
+                groupName: group.name,
+                username: user.user,
+                date: messageDB.date,
+                gameInvite: messageDB.gameInvite
+            };
+            return gameInviteClient;
+        }
+
+        const groupDM = await this.prisma.groupDM.findUnique({
+            where: { name: gameInviteToServer.groupName },
+        })
 
         await this.prisma.message.updateMany({
             where: {
                 senderId: user.id,
-                groupId: chat.id,
+                groupDMId: groupDM.id,
                 gameInvite: true
             },
             data: {
@@ -437,16 +476,17 @@ export class ChatService {
         const messageDB = await this.prisma.message.create({
             data: {
                 sender: { connect: { id: user.id } },
-                group: { connect: { id: chat.id } },
+                groupDM: { connect: { id: groupDM.id } },
                 date: new Date(),
                 content: "Expired Game Invite",
                 gameInvite: true,
                 gameType: gameInviteToServer.gameType,
             },
         });
+
         const gameInviteClient: gameInviteClient = {
             id: messageDB.id,
-            groupName: chat.name,
+            groupName: groupDM.name,
             username: user.user,
             date: messageDB.date,
             gameInvite: messageDB.gameInvite
