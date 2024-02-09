@@ -816,17 +816,20 @@ export const ChatPage = () => {
                     <option value="PUBLIC">Public</option>
                     <option value="PROTECT">Protected</option>
                     <option value="PRIVATE">Private</option>
+                    <option value="DIRECT">Direct</option>
                 </select>
 
                 <ul>
                     {/* Renderizar os grupos de mensagens diretas */}
-                    {dmGroups.map((group, index) => (
-                        <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
-                            {group.name}
-                            <span className="groupTypeIndicator">Direct</span>
-                            {/* Adicionar lógica adicional conforme necessário para as mensagens diretas */}
-                        </li>
-                    ))}
+                    {dmGroups
+                        .filter(group => !selectedGroupTypeFilter || group.type === selectedGroupTypeFilter)
+                        .map((group, index) => (
+                            <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
+                                {group.name}
+                                <span className="groupTypeIndicator">Direct</span>
+                                {/* Adicionar lógica adicional conforme necessário para as mensagens diretas */}
+                            </li>
+                        ))}
                 </ul>
 
 
