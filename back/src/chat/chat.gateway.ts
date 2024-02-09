@@ -7,6 +7,7 @@ import { BanUser, BlockUser, CreateGroupDto, GetMembers, GroupActionsDto, KickUs
 import { GroupService } from './services/group.service';
 import * as jwt from 'jsonwebtoken'
 import { ConfigService } from '@nestjs/config';
+import { GroupStatus } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'chat' })
@@ -40,15 +41,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         try {
             const decoded = jwt.verify(token, this.config.get('JWT_SECRET_ACCESS'),);
             if (typeof decoded['sub'] === 'string') {
-                const userId = decoded['sub'];
-                this.userSocketMap.set(userId, client.id);
+                const username = decoded['sub'];
+                this.userSocketMap.set(username, client.id);
 
-                const userGroupAndDm = await this.groupService.getUserGroupAndDm(userId);
+                const userGroupAndDm = await this.groupService.getUserGroupAndDm(username);
                 if (userGroupAndDm) {
                     for (const { name } of userGroupAndDm) {
                         client.join(name);
                     }
-                    console.log(userGroupAndDm)
                     client.emit('GroupsAndDms', userGroupAndDm)
                 }
             }
@@ -76,7 +76,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     emitErrorAndDisconnect(client: Socket, message: string, event: string) {
-        console.log(message);
         client.emit(event, { message });
         client.disconnect();
     }
@@ -90,31 +89,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 return;
             }
         });
-        console.log(this.userSocketMap)
         this.logger.log(`Client with id ${client.id} has disconnected from chat-socket`);
         this.logger.debug(`Number of connected in chat-sockets ${sockets.size}`);
     }
 
 
-    @SubscribeMessage('messageToServer')
-    async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
-        const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
-        if (isMutted) {
-            throw new BadRequestException('you are mutted in this channel');
-        }
-        const user = await this.groupService.getUserByUsername(message.username);
-        const group = await this.groupService.getGroupByName(message.groupName);
-        const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
-        console.log(isUserMember);
-
-        if (isUserMember) {
-            const messageToClient: messageToClient = await this.chatService.saveMessage(message);
-            if (messageToClient) {
-                this.server.to(message.groupName).emit('messageToClient', messageToClient);
-                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
-            }
-        }
-    }
 
     /**
     * @brief when create a group join the owner socket in the group
@@ -124,7 +103,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         const permission = await this.chatService.joinOwnerInGroup(groupActionsDto)
         if (permission) {
             client.emit('joinOwnerOnGroup', { name: groupActionsDto.groupName, type: type })
-            console.log(groupActionsDto.groupName)
             client.join(groupActionsDto.groupName);
             this.logger.debug(`Client ${client.id} join group: |${groupActionsDto.groupName}|`);
         }
@@ -142,6 +120,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
         } catch (error) {
             throw new BadRequestException(error.message);
+        }
+    }
+
+    @SubscribeMessage('messageToServer')
+    async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() message: messageToServer) {
+        const isMutted = await this.groupService.isUserMutted(message.username, message.groupName);
+        if (isMutted) {
+            throw new BadRequestException('you are mutted in this channel');
+        }
+        const user = await this.groupService.getUserByUsername(message.username);
+        const group = await this.groupService.getGroupByName(message.groupName);
+        const isUserMember = await this.groupService.isMemberInGroup(user.id, group.id)
+
+        if (isUserMember) {
+            const messageToClient: messageToClient = await this.chatService.saveMessage(message);
+            if (messageToClient) {
+                this.server.to(message.groupName).emit('messageToClient', messageToClient);
+                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${messageToClient}|`);
+            }
         }
     }
 
@@ -175,14 +172,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         }
     }
 
-    @SubscribeMessage('joinDmGroup')
-    async handleJoinDmGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
-        const messageToClient: messageToClient = await this.chatService.joinDmGroup(groupActionsDto);
-        client.join(groupActionsDto.groupName);
-        this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
-        this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
-    }
-
     @SubscribeMessage('leaveGroup')
     async handleLeaveGroup(@ConnectedSocket() client: Socket, @MessageBody() groupActionsDto: GroupActionsDto) {
         try {
@@ -202,6 +191,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     getUserSocketId(primaryKey: string): string {
         return this.userSocketMap.get(primaryKey);
     }
+
+    //TODO  TEST
+    async socketEmitDmGroup(socketId: string, groupName: string, userA: string, userB: string) {
+        try {
+            // const socket = this.server.sockets.get(socketId)
+            this.server.to(groupName).emit('DmGroupCreated', {
+                type: GroupStatus.DIRECT,
+                name: groupName,
+                userA: userA,
+                userB: userB,
+            });
+        } catch (error) {
+            return;
+        }
+    }
+    async joinDmGroup(socketId: string, groupName: string) {
+        try {
+            const socket = this.server.sockets.get(socketId)
+
+            socket.join(groupName);
+
+        } catch (error) {
+            return;
+        }
+        // this.server.to(groupActionsDto.groupName).emit('messageToClient', messageToClient)
+        // this.logger.debug(`${groupActionsDto.username} Client ${client.id} join group: |${groupActionsDto.groupName}|`);
+    }
+
 
     leaveUserFromGroup(socketId: string, groupName: string) {
         try {

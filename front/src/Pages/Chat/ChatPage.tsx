@@ -3,7 +3,7 @@ import './style.css'
 import { ChatContext } from '../../context/ChatContext';
 import { useRefreshToken } from "../../hooks/useRefreshToken";
 import { axiosPrivate } from '../../hooks/useAxiosPrivate';
-import { CallBackAllGroups } from './CallBack/CallBack';
+import { CallBackAllDmGroups, CallBackAllGroups } from './CallBack/CallBack';
 
 interface Group {
     name: string;
@@ -40,7 +40,6 @@ export const ChatPage = () => {
     const [groupsAndDms, setGroupAndDms] = useState<Group[]>([]);
     const [currentChat, setCurrentChat] = useState<string | null>(null);
     const [groupMembers, setGroupMembers] = useState<{ [groupName: string]: GroupMember[] }>({});
-
     const [message, setMessage] = useState<string>('');
     const [newGroupName, setNewGroupName] = useState<string>('');
     const [username, setUsername] = useState<string>('')
@@ -53,20 +52,20 @@ export const ChatPage = () => {
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
     const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
     const [banList, setBanList] = useState<string[]>([]);
-
-
     const [isBanPopupOpen, setIsBanPopupOpen] = useState(false);
     const [banDuration, setBanDuration] = useState<number | null>(null);
     const [usernameToBan, setUsernameToBan] = useState<string>('')
-
     const [isMutePopupOpen, setIsMutePopupOpen] = useState(false);
     const [muteDuration, setMuteDuration] = useState<number | null>(null);
     const [usernameToMute, setUsernameToMute] = useState<string>('');
-
     const [isChangePasswordPopupOpen, setIsChangePasswordPopupOpen] = useState(false);
     const [newPassword, setNewPassword] = useState('');
-
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
+
+    const [dmGroups, setDmGroups] = useState<Group[]>([]);
+    const [directChatMembers, setDirectChatMembers] = useState<string[]>([]);
+
+
 
 
     const connectSocket = () => {
@@ -78,6 +77,7 @@ export const ChatPage = () => {
         chatSocket.on("GroupsAndDms", (body) => {
             setGroupAndDms(body);
         })
+
 
         chatSocket.on("jwt_error", async (error) => {
             console.log(`Connection failed due to ${error.message}`);
@@ -210,13 +210,11 @@ export const ChatPage = () => {
 
     useEffect(() => {
         chatSocket.on('joinOwnerOnGroup', ({ name, type }) => {
-            console.log(name)
-            console.log(type)
             setGroupAndDms(prevGroups => [...prevGroups, { name, type }]);
         });
 
         return () => {
-            chatSocket.off('groupCreated');
+            chatSocket.off('joinOwnerOnGroup');
         };
     }, [chatSocket]);
 
@@ -315,10 +313,26 @@ export const ChatPage = () => {
         chatSocket.emit('messageToServer', messageRequest)
     }
 
+    const dmSendMessageToServer = (groupName: string, message: string) => {
+        if (!groupName || !message || !username) return;
+        const messageRequest = {
+
+            groupName: groupName,
+            username: username,
+            message: message,
+        }
+        chatSocket.emit('DmMessageToServer', messageRequest)
+    }
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (currentChat && message) {
+        const isDm = isDirectChat(currentChat);
+        if (currentChat && message && !isDm) {
             sendMessageToServer(currentChat, message);
+            setMessage('');
+        }
+        if (currentChat && message && isDm) {
+            dmSendMessageToServer(currentChat, message);
             setMessage('');
         }
     };
@@ -351,20 +365,36 @@ export const ChatPage = () => {
     useEffect(() => {
         const fetchGroupMessages = async () => {
             try {
-                const response = await axiosPrivate.get<MessageFromBackend[]>(`/api/chat/groupMessages/${currentChat}`);
+                if (!isDirectChat(currentChat)) {
+                    const response = await axiosPrivate.get<MessageFromBackend[]>(`/api/chat/groupMessages/${currentChat}`);
+                    const formattedMessages = response.data.map((message: MessageFromBackend) => ({
+                        groupName: message.group.name,
+                        username: message.sender.user,
+                        date: new Date(message.date),
+                        message: message.content,
+                    }));
+                    const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
+                    console.log(filteredMessages)
+                    setChatMessages(prevMessages => ({
+                        ...prevMessages,
+                        [currentChat as string]: filteredMessages,
+                    }));
+                } else {
+                    const response = await axiosPrivate.get<MessageFromBackend[]>(`/api/chat/dmGroupMessages/${currentChat}`);
+                    const formattedMessages = response.data.map((message: MessageFromBackend) => ({
+                        groupName: message.group.name,
+                        username: message.sender.user,
+                        date: new Date(message.date),
+                        message: message.content,
+                    }));
+                    const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
+                    console.log(filteredMessages)
+                    setChatMessages(prevMessages => ({
+                        ...prevMessages,
+                        [currentChat as string]: filteredMessages,
+                    }));
 
-                const formattedMessages = response.data.map((message: MessageFromBackend) => ({
-                    groupName: message.group.name,
-                    username: message.sender.user,
-                    date: new Date(message.date),
-                    message: message.content,
-                }));
-
-                const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
-                setChatMessages(prevMessages => ({
-                    ...prevMessages,
-                    [currentChat as string]: filteredMessages,
-                }));
+                }
             } catch (error) {
                 console.error('Error fetching group messages:', error);
             }
@@ -375,14 +405,22 @@ export const ChatPage = () => {
         }
     }, [currentChat]);
 
-    const handleOpenGroup = (groupName: string, groupType: string) => {
-        const isMember = groupsAndDms.some(g => g.name === groupName);
-        if (isMember) {
+    const handleOpenGroup = async (groupName: string, groupType: string) => {
+        if (groupType === 'DIRECT') {
             setCurrentChat(groupName);
-            chatSocket.emit('getMembersInGroup', {
-                groupName: groupName,
-                type: groupType
-            });
+            const response = await axiosPrivate.get(`/api/chat/direct-chat/${groupName}/members`);
+            console.log(response.data)
+            setDirectChatMembers(response.data);
+        }
+        else {
+            const isMember = groupsAndDms.some(g => g.name === groupName);
+            if (isMember) {
+                setCurrentChat(groupName);
+                chatSocket.emit('getMembersInGroup', {
+                    groupName: groupName,
+                    type: groupType
+                });
+            }
         }
     }
 
@@ -459,7 +497,7 @@ export const ChatPage = () => {
     };
 
     useEffect(() => {
-        if (currentChat) {
+        if (currentChat && !isDirectChat(currentChat)) {
             const fetchBanList = async () => {
                 try {
                     const response = await axiosPrivate.get(`api/chat/ban/list/${currentChat}`);
@@ -706,6 +744,40 @@ export const ChatPage = () => {
         return currentUserInChat ? currentUserInChat.isAdm : false;
     };
 
+    useEffect(() => {
+        chatSocket.on('DmGroupCreated', ({ name, type }) => {
+            setDmGroups(prevAllGroups => [...prevAllGroups, { name, type }]);
+        });
+
+        return () => {
+            chatSocket.off('DmGroupCreated');
+        };
+    }, [chatSocket]);
+    useEffect(() => {
+        const fetchInitialDmGroups = async () => {
+            try {
+                const response = await axiosPrivate.post(`/api/chat/allDm`, {
+                    username: username,
+                });
+                const dmGroupsData: Group[] = response.data.map((groupName: string) => ({
+                    name: groupName,
+                    type: 'DIRECT', // Definir o tipo como 'direct' para todos os grupos
+                }));
+                setDmGroups(dmGroupsData);
+
+            } catch (error) {
+                console.error('Error fetching initial DM groups:', error);
+            }
+        };
+
+        fetchInitialDmGroups();
+    }, [username]);
+
+    function isDirectChat(chat: string | null): boolean {
+        return chat !== null && chat.startsWith("Dm-");
+    }
+
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -745,6 +817,17 @@ export const ChatPage = () => {
                     <option value="PROTECT">Protected</option>
                     <option value="PRIVATE">Private</option>
                 </select>
+
+                <ul>
+                    {/* Renderizar os grupos de mensagens diretas */}
+                    {dmGroups.map((group, index) => (
+                        <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
+                            {group.name}
+                            <span className="groupTypeIndicator">Direct</span>
+                            {/* Adicionar lógica adicional conforme necessário para as mensagens diretas */}
+                        </li>
+                    ))}
+                </ul>
 
 
                 <ul>
@@ -853,13 +936,33 @@ export const ChatPage = () => {
                             )}
                         </div>
                     )}
-                    <h1>Members: </h1>
+                    <h3>Members: </h3>
+                    {isDirectChat(currentChat) && (
+                        <div>
+                            <ul>
+                                {directChatMembers.map((member, index) => (
+                                    <li key={index}>
+                                        <a href={`/matchHistoryComplete/${member}`} className="memberName text-lg font-bold">{member}</a>
+                                        {username !== member && (
+                                            <div className="buttonGroup">
+                                                {!blockedUsers.includes(member) ? (
+                                                    <button className="blockButton" onClick={() => handleBlock(member)}>Block</button>
+                                                ) : (
+                                                    <button className="unblockButton" onClick={() => unblockUser(member)}>Unblock</button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                     <ul>
                         {groupMembers[currentChat]?.map((member, index) => (
                             <li key={index} className={member.isAdm ? "adminMember" : "regularMember"}>
                                 <a href={`/matchHistoryComplete/${member.username}`} className="memberName text-lg font-bold">{member.username}</a>
                                 {isAdmin(username, groupMembers, currentChat) && username !== member.username && (
-                                    <div>
+                                    <div className="buttonGroup">
                                         <button className="kickButton" onClick={() => handleKickUser(member.username)}>Kick</button>
                                         <button className="banButton" onClick={() => handleOpenBanPopup(member.username)}>Ban</button>
                                         {member.isMuted ? (
@@ -881,7 +984,7 @@ export const ChatPage = () => {
                                 )}
 
                                 {!isAdmin(username, groupMembers, currentChat) && username !== member.username && (
-                                    <div>
+                                    <div className="buttonGroup">
                                         {!blockedUsers.includes(member.username) ? (
                                             <button className="blockButton" onClick={() => handleBlock(member.username)}>Block</button>
                                         ) : (
@@ -892,7 +995,7 @@ export const ChatPage = () => {
                             </li>
                         ))}
                     </ul>
-                    <div>
+                    {!isDirectChat(currentChat) && (
                         <div>
                             <h3>Ban List</h3>
                             <ul>
@@ -904,7 +1007,7 @@ export const ChatPage = () => {
                                 ))}
                             </ul>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
             {isMutePopupOpen && (

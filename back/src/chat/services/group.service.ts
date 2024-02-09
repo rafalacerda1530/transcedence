@@ -1,8 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Group, GroupDM, GroupStatus, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as argon from 'argon2';
-import { GetMembers, JoinGroupDto } from "../dto/chat.dto";
+import { GetMembers } from "../dto/chat.dto";
+import { throwError } from "rxjs";
 
 @Injectable()
 export class GroupService {
@@ -15,6 +16,18 @@ export class GroupService {
             });
             if (!user)
                 throw new BadRequestException(`User ${username} not found`);
+            return user;
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+    async getUserByUserId(userId: number): Promise<User> {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+            });
+            if (!user)
+                throw new BadRequestException(`User not found`);
             return user;
         } catch (error) {
             throw new BadRequestException(error.message);
@@ -355,11 +368,36 @@ export class GroupService {
                     type: true,
                 }
             });
-            console.log(groups);
             return groups;
 
         } catch (error) {
             throw new BadRequestException(error.message);
+        }
+    }
+
+    // TODO TEST
+    async getAllDm(username: string) {
+        try {
+            const user = await this.getUserByUsername(username);
+            const userGroupMemberships = await this.prisma.groupMembership.findMany({
+                where: {
+                    userId: user.id, // Substitua userId pelo ID do usuário que você está procurando
+                    groupDM: {
+                        type: 'DIRECT', // Filtra apenas os GroupDMs com type 'DIRECT'
+                    },
+                },
+                select: {
+                    groupDM: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            });
+            const groupDMNames = userGroupMemberships.map((membership) => membership.groupDM.name);
+            return groupDMNames;
+        } catch (error) {
+            throw new BadRequestException('error fetching all user dms group')
         }
     }
 
@@ -398,14 +436,41 @@ export class GroupService {
     //}
     async getMessagesInGroup(groupName: string) {
         return await this.prisma.message.findMany({
-            where: { group: { name: groupName } },
+            where: {
+                group: { name: groupName },
+            },
             select: {
                 date: true,
                 content: true,
-                group: { select: { name: true } },
                 sender: { select: { user: true } },
+                group: { select: { name: true, type: true } },
             }
-        })
+        });
+    }
+
+    async getDmMessagesInGroup(groupName: string) {
+        const messages = await this.prisma.message.findMany({
+            where: {
+                groupDM: { name: groupName },
+            },
+            select: {
+                date: true,
+                content: true,
+                sender: { select: { user: true } },
+                groupDM: { select: { name: true, type: true } },
+            }
+        });
+
+        // Renomeando o campo groupDM para group nos resultados
+        const renamedMessages = messages.map(message => ({
+            ...message,
+            group: message.groupDM,
+        }));
+
+        // Removendo o campo groupDM dos resultados renomeados
+        renamedMessages.forEach(message => delete message.groupDM);
+
+        return renamedMessages;
     }
 
     async getBanList(groupName: string) {
@@ -436,5 +501,26 @@ export class GroupService {
         }
     }
 
+    async getDMgroupMembers(groupName: string) {
+        try {
+            const groupDM = await this.prisma.groupDM.findUnique({
+                where: {
+                    name: groupName,
+                },
+                include: {
+                    members: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                },
+            });
+            if (groupDM) {
+                return groupDM.members.map(member => member.user.user);
+            }
+        } catch (error) {
+            throw new BadRequestException('Failed to get dm member list');
+        }
+    }
 
 }

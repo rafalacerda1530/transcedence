@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ChatService } from './chat.service';
-import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, DeleteDmGroup, GetMembers, GroupActionsDto, InviteToGroupDto, JoinGroupDto, KickUser, MuteUser, PassowordChannel, SetAdm, SetOnlyInvite } from './dto/chat.dto';
+import { BlockUser, CreateDmGroup, DeleteDmGroup, InviteToGroupDto } from './dto/chat.dto';
 import { GroupService } from './services/group.service';
 
 @Controller('api/chat')
@@ -24,7 +24,7 @@ export class ChatController {
 
     @Post('createDmGroup')
     async createDmGroup(@Body() groupDm: CreateDmGroup) {
-        return await this.chatService.createDmGroup(groupDm);
+        await this.chatService.createDmGroup(groupDm);
     }
 
     @Delete('deleteDmGroup')
@@ -39,12 +39,26 @@ export class ChatController {
 
     @Get('allGroups')
     async getAllGroups() {
+        console.log('----------------------->>>>>>')
         return await this.groupService.getAllGroups();
+    }
+
+    @Post('allDm')
+    async getAllDm(@Body() body: { username: string }) {
+        const { username } = body;
+        // console.log(username)
+        // console.log('----------------------->>>>>>')
+        return await this.groupService.getAllDm(username);
     }
 
     @Get('groupMessages/:groupName')
     async getMessagesInGroup(@Param('groupName') groupName: string) {
         return await this.groupService.getMessagesInGroup(groupName);
+    }
+
+    @Get('dmGroupMessages/:groupName')
+    async getDmMessagesInGroup(@Param('groupName') groupName: string) {
+        return await this.groupService.getDmMessagesInGroup(groupName);
     }
 
     @Get('groupId/:groupName')
@@ -72,6 +86,12 @@ export class ChatController {
     @Get('blockedList/:username')
     async getBlockList(@Param('username') username: string) {
         return await this.groupService.getBlockedListUser(username);
+    }
+
+    @Get('direct-chat/:groupName/members')
+    async getDMgroupMembers(@Param('groupName') groupName: string) {
+
+        return await this.groupService.getDMgroupMembers(groupName);
     }
 
 }

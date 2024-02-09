@@ -5,7 +5,7 @@ import { BanUser, BlockUser, CreateDmGroup, CreateGroupDto, GroupActionsDto, Inv
 import { GroupService } from "./services/group.service";
 import * as argon from 'argon2';
 import { ChatGateway } from "./chat.gateway";
-import { Group, GroupStatus } from "@prisma/client";
+import { GroupStatus } from "@prisma/client";
 
 @Injectable()
 export class ChatService {
@@ -235,9 +235,9 @@ export class ChatService {
         await this.groupService.validateAdmActions(adm, target, group);
         await this.groupService.deleteUserFromGroup(target.id, group.id);
 
-        const userIdFromJWT = target.user;
+        const username = target.user;
         if (this._chatGateway) {
-            const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
+            const socketId = this._chatGateway.getUserSocketId(username);
             if (socketId) {
                 this._chatGateway.leaveUserFromGroup(socketId, group.name)
             }
@@ -261,9 +261,9 @@ export class ChatService {
             },
         });
 
-        const userIdFromJWT = target.user;
+        const username = target.user;
         if (this._chatGateway) {
-            const socketId = this._chatGateway.getUserSocketId(userIdFromJWT);
+            const socketId = this._chatGateway.getUserSocketId(username);
             if (socketId) {
                 this._chatGateway.leaveUserFromGroup(socketId, group.name)
             }
@@ -356,22 +356,32 @@ export class ChatService {
     }
 
     async createDmGroup(groupDm: CreateDmGroup) {
-        const userA = await this.groupService.getUserByUsername(groupDm.userA);
-        const userB = await this.groupService.getUserByUsername(groupDm.userB);
+        const userA = await this.groupService.getUserByUserId(groupDm.userA);
+        const userB = await this.groupService.getUserByUserId(groupDm.userB);
+        const groupName = `Dm-${userA.user}-${userB.user}`
         await this.prisma.groupDM.create({
             data: {
-                name: groupDm.groupName,
+                name: groupName,
                 type: GroupStatus.DIRECT,
                 members: {
                     createMany: {
                         data: [
-                            { userId: userA.id },
-                            { userId: userB.id },
+                            { userId: groupDm.userA },
+                            { userId: groupDm.userB },
                         ],
                     },
                 },
             },
         });
+        this.emitDmGroupCreated(groupName, userA.user, userB.user);
+    }
+
+    async emitDmGroupCreated(groupName: string, userA: string, userB: string){
+        const sockedIdA = this._chatGateway.getUserSocketId(userA)
+        const sockedIdB = this._chatGateway.getUserSocketId(userB)
+        await this._chatGateway.joinDmGroup(sockedIdA, groupName)
+        await this._chatGateway.joinDmGroup(sockedIdB, groupName)
+        await this._chatGateway.socketEmitDmGroup(sockedIdA, groupName, userA, userB );
     }
 
     async deleteDmGroup(deleteDmGroup: DeleteDmGroup) {
@@ -381,19 +391,6 @@ export class ChatService {
         await this.prisma.groupDM.delete({
             where: { id: dmGroup.id },
         });
-    }
-
-    async joinDmGroup(groupActionsDto: GroupActionsDto): Promise<messageToClient> {
-        const user = await this.groupService.getUserByUsername(groupActionsDto.username,);
-        const group = await this.groupService.getDmGroupByName(groupActionsDto.groupName,);
-
-        const messageToClient: messageToClient = {
-            groupName: user.user,
-            username: group.name,
-            message: "Has connected in the group",
-            date: new Date(Date.now()),
-        };
-        return messageToClient;
     }
 
     async DmSaveMessage(messageToServer: messageToServer) {
