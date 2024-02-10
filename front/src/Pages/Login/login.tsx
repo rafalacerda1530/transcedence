@@ -43,7 +43,6 @@ function LoginGame() {
       ) {
         setErrorMessage("Código Inválido");
       } else {
-        console.log(formData);
         CallBackUserAndPassword(formData)
           .then((response) => {
             console.log(response.data);
@@ -98,7 +97,6 @@ function LoginGame() {
           withCredentials: true,
         })
         .then((response) => {
-          console.log(response.data);
           window.location.href = "http://localhost:3000/Home";
         })
         .catch((error) => {

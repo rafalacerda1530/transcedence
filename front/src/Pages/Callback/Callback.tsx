@@ -27,7 +27,6 @@ export const CallBack = () => {
             withCredentials: true,
           })
           .then((response) => {
-        console.log("Resposta do servidor:", response.data);
         window.location.href = "http://localhost:3000/Home";
           })
       .catch((error) => {

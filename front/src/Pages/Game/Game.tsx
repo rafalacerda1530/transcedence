@@ -154,7 +154,6 @@ export const Game = () => {
         if (roomId) {
             connectSocket();
             return () => {
-                console.log("Desconectando do socket");
                 disconnectSocket();
             };
         }

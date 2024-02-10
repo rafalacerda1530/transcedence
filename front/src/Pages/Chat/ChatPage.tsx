@@ -80,7 +80,6 @@ export const ChatPage = () => {
     const connectSocket = () => {
         chatSocket.connect();
         chatSocket.on("connect", () => {
-            console.log("----------Conectado ao socket");
             setIsSocketConnected(true); // Define a flag para verdadeira quando a conexão é estabelecida
 
         });
@@ -139,7 +138,6 @@ export const ChatPage = () => {
     useEffect(() => {
         connectSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectSocket();
         };
     }, [chatSocket]);
@@ -147,7 +145,6 @@ export const ChatPage = () => {
     const connectStatusSocket = () => {
         statusSocket.connect();
         statusSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         statusSocket.on("jwt_error", async (error) => {
@@ -185,7 +182,6 @@ export const ChatPage = () => {
     useEffect(() => {
         connectStatusSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectStatusSocket();
         };
     }, [statusSocket]);
@@ -193,7 +189,6 @@ export const ChatPage = () => {
     const connectGameInviteSocket = () => {
         gameInviteSocket.connect();
         gameInviteSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         gameInviteSocket.on("jwt_error", async (error) => {
@@ -229,13 +224,10 @@ export const ChatPage = () => {
         });
 
         gameInviteSocket.on("joinGame", (response) => {
-            console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
-                console.log("opponentId undefined");
                 disconnectSocket();
                 connectSocket();
             }
-            console.log(response.roomId);
             disconnectSocket();
             window.location.href =
                 "http://localhost:3000/Game?roomId=" +
@@ -255,7 +247,6 @@ export const ChatPage = () => {
     useEffect(() => {
         connectGameInviteSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectGameInviteSocket();
         };
     }, [gameInviteSocket]);
@@ -393,7 +384,6 @@ export const ChatPage = () => {
         chatSocket.on('joinedGroup', ({ groupName, userUsername, type }) => {
             const isGroupInList = groupsAndDms.some(group => group.name === groupName);
             const isAlreadyMember = isGroupInList && groupMembers[groupName]?.some(member => member.username === userUsername);
-            console.log("teste")
 
             if (!isAlreadyMember) {
                 setGroupMembers(prevGroupMembers => ({
@@ -536,7 +526,6 @@ export const ChatPage = () => {
                         gameInvite: message.gameInvite
                     }));
                     const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
-                    console.log(filteredMessages)
                     setChatMessages(prevMessages => ({
                         ...prevMessages,
                         [currentChat as string]: filteredMessages,
@@ -551,7 +540,6 @@ export const ChatPage = () => {
                         gameInvite: message.gameInvite
                     }));
                     const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
-                    console.log(filteredMessages)
                     setChatMessages(prevMessages => ({
                         ...prevMessages,
                         [currentChat as string]: filteredMessages as Message[],
@@ -572,7 +560,6 @@ export const ChatPage = () => {
         if (groupType === 'DIRECT') {
             setCurrentChat(groupName);
             const response = await axiosPrivate.get(`/api/chat/direct-chat/${groupName}/members`);
-            console.log(response.data)
             setDirectChatMembers(response.data);
         }
         else {
@@ -676,7 +663,6 @@ export const ChatPage = () => {
 
     const handleSetAdmin = (target: string) => {
         try {
-            console.log(currentChat)
             chatSocket.emit('setAdm', {
                 groupName: currentChat,
                 admUsername: username,
@@ -761,7 +747,6 @@ export const ChatPage = () => {
                     [groupName]: updatedMembers
                 };
             });
-            console.log(groupMembers[groupName])
         });
 
         return () => {
@@ -930,7 +915,6 @@ export const ChatPage = () => {
             try {
                 if (!groupName)
                     throw new Error('No chat selected');
-                console.log(groupName);
                 chatSocket.emit('gameInvite', {
                     groupName: groupName,
                     username: username,
@@ -945,7 +929,6 @@ export const ChatPage = () => {
 
     const handleGameInviteAccept = (senderUsername: string): React.MouseEventHandler<HTMLButtonElement> => {
         return (event) => {
-            console.log(senderUsername);
             if (senderUsername === username)
                 return;
             gameInviteSocket.emit('acceptGameInvite', {

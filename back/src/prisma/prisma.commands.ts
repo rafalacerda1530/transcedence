@@ -104,11 +104,9 @@ export class PrismaCommands {
         const user = await this.prisma.user.findUnique({
             where: { user: username },
         });
-        console.log(user);
         const group = await this.prisma.group.findUnique({
             where: { name: groupName },
         })
-        console.log(group);
         if (group) {
             const message = await this.prisma.message.findFirst({
                 where: {
@@ -123,7 +121,6 @@ export class PrismaCommands {
         const groupDM = await this.prisma.groupDM.findUnique({
             where: { name: groupName },
         })
-        console.log(groupDM);
         if (groupDM) {
             const message = await this.prisma.message.findFirst({
                 where: {

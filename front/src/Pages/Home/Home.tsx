@@ -106,7 +106,6 @@ export const Home = () => {
     const connectSocket = () => {
         statusSocket.connect();
         statusSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         statusSocket.on("jwt_error", async (error) => {
@@ -144,7 +143,6 @@ export const Home = () => {
     useEffect(() => {
         connectSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectSocket();
         };
     }, [statusSocket]);
@@ -152,7 +150,6 @@ export const Home = () => {
     const connectGameInviteSocket = () => {
         gameInviteSocket.connect();
         gameInviteSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         gameInviteSocket.on("jwt_error", async (error) => {
@@ -180,13 +177,10 @@ export const Home = () => {
         });
 
         gameInviteSocket.on("joinGame", (response) => {
-            console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
-                console.log("opponentId undefined");
                 disconnectSocket();
                 connectSocket();
             }
-            console.log(response.roomId);
             disconnectSocket();
             window.location.href =
                 "http://localhost:3000/Game?roomId=" +
@@ -206,7 +200,6 @@ export const Home = () => {
     useEffect(() => {
         connectGameInviteSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectGameInviteSocket();
         };
     }, [gameInviteSocket]);
@@ -381,7 +374,6 @@ export const Home = () => {
                     }
                 );
 
-                console.log("Imagem enviada com sucesso:", formData);
                 user();
             } catch (error) {
                 console.error("Erro ao enviar a imagem:", error);
@@ -402,8 +394,6 @@ export const Home = () => {
                     userA: userData?.id,
                     userB: amigoId,
                 })
-
-                console.log("Solicitacao aceita com sucesso:", uploadResponse.data);
                 closeModal();
             } catch (error) {
                 console.log(error);
@@ -416,8 +406,6 @@ export const Home = () => {
                 const uploadResponse = await axiosPrivate.post(
                     `friendship/${userData?.id}/reject/${amigoId}`
                 );
-
-                console.log("Solicitacao aceita com sucesso:", uploadResponse.data);
                 closeModal();
             } catch (error) {
                 console.log(error);

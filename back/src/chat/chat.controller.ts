@@ -39,15 +39,12 @@ export class ChatController {
 
     @Get('allGroups')
     async getAllGroups() {
-        console.log('----------------------->>>>>>')
         return await this.groupService.getAllGroups();
     }
 
     @Post('allDm')
     async getAllDm(@Body() body: { username: string }) {
         const { username } = body;
-        // console.log(username)
-        // console.log('----------------------->>>>>>')
         return await this.groupService.getAllDm(username);
     }
 

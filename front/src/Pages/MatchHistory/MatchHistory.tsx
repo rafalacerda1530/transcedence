@@ -46,7 +46,6 @@ export const MatchHistoryComplete = () => {
     const connectSocket = () => {
         statusSocket.connect();
         statusSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         statusSocket.on("jwt_error", async (error) => {
@@ -84,7 +83,6 @@ export const MatchHistoryComplete = () => {
     useEffect(() => {
         connectSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectSocket();
         };
     }, [statusSocket]);
@@ -92,7 +90,6 @@ export const MatchHistoryComplete = () => {
     const connectGameInviteSocket = () => {
         gameInviteSocket.connect();
         gameInviteSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         gameInviteSocket.on("jwt_error", async (error) => {
@@ -120,13 +117,10 @@ export const MatchHistoryComplete = () => {
         });
 
         gameInviteSocket.on("joinGame", (response) => {
-            console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
-                console.log("opponentId undefined");
                 disconnectSocket();
                 connectSocket();
             }
-            console.log(response.roomId);
             disconnectSocket();
             window.location.href =
                 "http://localhost:3000/Game?roomId=" +
@@ -146,7 +140,6 @@ export const MatchHistoryComplete = () => {
     useEffect(() => {
         connectGameInviteSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectGameInviteSocket();
         };
     }, [gameInviteSocket]);
@@ -238,10 +231,6 @@ export const MatchHistoryComplete = () => {
                 `friendship/${userId}/add/${friendId}`
             );
 
-            console.log(
-                "Solicitacao enviada com sucesso:",
-                uploadResponse.data
-            );
         } catch (error) {
             console.error("Erro ao enviar a solicitacao:", error);
         }
@@ -283,7 +272,6 @@ export const MatchHistoryComplete = () => {
 
         AllHistory();
     }, []);
-    console.log("Aqui esta tudo", userData?.userId, meData?.userId);
     return (
         <div className="h-screen bg-gradient-to-b from-purple-700 via-purple-400 to-purple-700 flex items-center justify-center">
             <div className="flex gap-5">

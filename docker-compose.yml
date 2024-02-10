@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  front:
+    depends_on:
+      - back
+    build: ./front
+    image: front
+    container_name: front
+    networks:
+       - transcendence-network
+    restart: unless-stopped
+    ports:
+       - 3000:3000
+    env_file:
+      - ./.env
+
+  postgresDb:
+    container_name: postgresDb
+    networks:
+    - transcendence-network
+    restart: always
+    image: postgres:13
+    ports:
+    - 5434:5432
+    env_file:
+      - ./.env
+
+  back:
+    depends_on:
+    - postgresDb
+    build: ./back
+    image: back
+    container_name: back
+    networks:
+    - transcendence-network
+    restart: unless-stopped
+    # expose ou ports
+    ports:
+      - 3333:3333
+    env_file:
+      - ./.env
+
+networks:
+  transcendence-network:
+    driver: bridge

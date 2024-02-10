@@ -124,12 +124,10 @@ export class UserService {
 			},
 		  });
 
-		//console.log(history)
 		let historyLenght = userGames.length;
 		if (historyLenght > 5){
 			historyLenght = 5;
 		}
-		console.log("lenght: ", historyLenght)
 		const historyComplete = {}
 		for (let i = 0; i < historyLenght; i++){
 			historyComplete[i] = {'Partida': userGames[i].player1Name + ' VS ' + userGames[i].player2Name,
@@ -143,8 +141,6 @@ export class UserService {
 			else{
 				historyComplete[i]['Vencedor'] = 'Vencedor: ' + userGames[i].player2Name
 			};
-			console.log("i : ", i)
-			console.log(historyComplete[i])
 	}
 		const userSend = {
 			history: historyComplete

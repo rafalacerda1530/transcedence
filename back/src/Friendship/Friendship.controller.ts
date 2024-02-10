@@ -90,7 +90,6 @@ export class FriendshipController {
     async getFriendsPend(
         @Param('username') username: string,
     ): Promise<{ id: number; user: string; status: string }[]> {
-        console.log('getFriends', username);
         const friends = await this.friendshipService.getFriendsPend(username);
         return friends.map(({ id, user, status }) => ({
             id,

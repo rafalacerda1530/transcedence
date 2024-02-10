@@ -18,7 +18,6 @@ export class FriendshipService {
     constructor(private readonly prisma: PrismaService) { }
 
     async addFriendship(userId: number, friendId: number): Promise<void> {
-        console.log('chegou aqui?');
         if (userId === friendId)
             throw new BadRequestException('Cannot add yourself as a friend');
         const existingFriendship = await this.prisma.friendship.findFirst({
@@ -111,7 +110,7 @@ export class FriendshipService {
             const friendships = await this.prisma.friendship.findMany({
                 where: {
 					friendshipStatus: 2,
-                     followingId: user.id 
+                     followingId: user.id
                 },
                 include: {
                     following: true,
@@ -151,7 +150,7 @@ export class FriendshipService {
         return friendship.friendshipStatus;
     }
 
-	
+
 
     async acceptFriendship(userId: number, friendId: number): Promise<void> {
         const existingFriendship = await this.prisma.friendship.findFirst({

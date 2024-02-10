@@ -51,7 +51,6 @@ export const CallBackCheck2fa = async (user: any): Promise<boolean> => {
 
 export const CallBack2faAuthenticate = async (user: any): Promise<boolean> => {
   try {
-	console.log(user)
     const url = process.env.REACT_APP_API_URL + "/authentication-2fa/2fa/authenticate";
     const data = {
       user: user.user,

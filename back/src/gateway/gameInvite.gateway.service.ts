@@ -58,7 +58,6 @@ export class GameInviteGatewayService implements OnGatewayConnection, OnGatewayD
 
     @SubscribeMessage('acceptGameInvite')
     async handleGameInviteAccepted(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
-        console.log(data);
         const opponentId = this.playersId.get(data.username);
         if (!opponentId) {
             this.emitErrorAndDisconnect(client, 'Opponent not found', 'opponent_not_found');

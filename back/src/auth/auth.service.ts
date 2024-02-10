@@ -48,7 +48,6 @@ export class AuthService {
 				user: dto.user,
 			},
 		});
-		console.log(user);
 		if (!user) throw new ForbiddenException('User Incorect');
 		if (!user.hash) throw new ForbiddenException('Intra user');
 		const pwMatches = await argon.verify(user.hash, dto.password);

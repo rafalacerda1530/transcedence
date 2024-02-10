@@ -15,7 +15,6 @@ export const QueueGame = () => {
     const connectSocket = () => {
         socket.connect();
         socket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         socket.on("jwt_error", async (error) => {
@@ -43,13 +42,10 @@ export const QueueGame = () => {
         });
 
         socket.on("joinGame", (response) => {
-            console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
-                console.log("opponentId undefined");
                 disconnectSocket();
                 connectSocket();
             }
-            console.log(response.roomId);
             disconnectSocket();
             window.location.href =
                 "http://localhost:3000/Game?roomId=" +
@@ -71,7 +67,6 @@ export const QueueGame = () => {
     useEffect(() => {
         connectSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectSocket();
         };
     }, [socket]);
@@ -79,7 +74,6 @@ export const QueueGame = () => {
     const connectGameInviteSocket = () => {
         gameInviteSocket.connect();
         gameInviteSocket.on("connect", () => {
-            console.log("Conectado ao socket");
         });
 
         gameInviteSocket.on("jwt_error", async (error) => {
@@ -107,9 +101,7 @@ export const QueueGame = () => {
         });
 
         gameInviteSocket.on("joinGame", (response) => {
-            console.log("Conectado ao jogo");
             if (response.roomId === undefined) {
-                console.log("opponentId undefined");
                 disconnectSocket();
                 connectSocket();
             }
@@ -133,7 +125,6 @@ export const QueueGame = () => {
     useEffect(() => {
         connectGameInviteSocket();
         return () => {
-            console.log("Desconectando do socket");
             disconnectGameInviteSocket();
         };
     }, [gameInviteSocket]);

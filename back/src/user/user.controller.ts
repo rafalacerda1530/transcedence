@@ -51,12 +51,10 @@ export class UserController {
 		@UploadedFile() file,
 		@Body('user') user: string
 	) {
-		console.log("I M A G E",file.filename, user)
 		try {
 			const fileName = file.filename;
 			const updatedUser = await this.userService.saveProfileImage(user, fileName);
 			console.log("Imagem salva com sucesso para o usuário:", user);
-
 			return { message: 'Imagem salva com sucesso!', user: updatedUser };
 		} catch (error) {
 			console.error('Erro ao salvar a imagem:', error);
@@ -82,7 +80,7 @@ export class UserController {
 		}
 	}
 
-	
+
 
 	@UseGuards(AtGuard)
 	@Get('meInfo')
@@ -101,7 +99,6 @@ export class UserController {
     try {
         //Logger.log("Fetching user history information...");
         const userHistoryInfo = await this.userService.getUserHistoryComplete(user);
-        console.log("User History Information: ", userHistoryInfo.history[0]);
 		return(userHistoryInfo)
     } catch (error) {
         Logger.error("Error fetching user history information", error);
