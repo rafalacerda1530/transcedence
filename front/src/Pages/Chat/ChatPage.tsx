@@ -284,10 +284,9 @@ export const ChatPage = () => {
     }, [isSocketConnected, username]);
 
 
-    useEffect(() => {
+        useEffect(() => {
         const fetchBlockedUsersStatus = async () => {
-            if (currentChat && !isDirectChat(currentChat)) {
-
+            if (currentChat) {
                 try {
                     const response = await axiosPrivate.get(`/api/chat/blockedList/${username}`);
                     setBlockedUsers(response.data);
@@ -298,7 +297,7 @@ export const ChatPage = () => {
         };
 
         fetchBlockedUsersStatus();
-    }, [username]);
+    }, [currentChat, username]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(event.target.value);

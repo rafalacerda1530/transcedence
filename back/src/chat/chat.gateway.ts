@@ -177,33 +177,36 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                     this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
                 }
             }
-            return ;
+            return;
         }
 
         const groupDM = await this.prisma.groupDM.findUnique({
             where: { name: message.groupName },
         })
-        if (groupDM){
+        if (groupDM) {
             const gameInviteClient: gameInviteClient = await this.chatService.saveGameInvite(message);
-                if (gameInviteClient) {
-                    this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
-                    this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
-                }
+            if (gameInviteClient) {
+                this.server.to(message.groupName).emit('messageToClient', gameInviteClient);
+                this.logger.debug(`Client ${client.id} | ${message.username} send message in group ${message.groupName}: |${gameInviteClient}|`);
+            }
         }
-        return ;
+        return;
     }
 
     @SubscribeMessage('createGroup')
     async createGroup(@ConnectedSocket() client: Socket, @MessageBody() createGroupDto: CreateGroupDto) {
         try {
-            const newGroup = await this.chatService.createGroup(createGroupDto);
-            if (newGroup) {
-                const parameter: GroupActionsDto = {
-                    groupName: createGroupDto.groupName,
-                    username: createGroupDto.ownerUsername
+            const isDM = createGroupDto.groupName.startsWith("Dm-");
+            if (!isDM) {
+                const newGroup = await this.chatService.createGroup(createGroupDto);
+                if (newGroup) {
+                    const parameter: GroupActionsDto = {
+                        groupName: createGroupDto.groupName,
+                        username: createGroupDto.ownerUsername
+                    }
+                    this.handleOwnerJoinGroup(client, parameter, createGroupDto.type);
+                    this.server.emit('groupCreated', newGroup)
                 }
-                this.handleOwnerJoinGroup(client, parameter, createGroupDto.type);
-                this.server.emit('groupCreated', newGroup)
             }
         } catch (error) {
             throw new BadRequestException(error.message);
@@ -310,7 +313,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             this.server.to(banUser.groupName).emit('membersInGroup', banUser.groupName, updatedMembers);
             client.to(banUser.groupName).emit('membersInGroup', banUser.groupName, updatedMembers);
             this.server.to(banUser.groupName).emit('userBanned', banUser.targetUsername);
-            client.to(banUser.groupName).emit('userBanned', banUser.targetUsername);
         } catch (error) {
             throw new BadRequestException(error.message);
         }

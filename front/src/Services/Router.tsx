@@ -4,8 +4,6 @@ import LoginGame from "../Pages/Login/login";
 import { Home } from "../Pages/Home/Home";
 import { CallBack } from "../Pages/Callback/Callback";
 import { Generate2fa } from "../Pages/Generate2fa/Generate2fa";
-import FriendsList from "../Pages/FriendList/FriendList";
-import Profile from "../Pages/Profile/Profile";
 import { GameProvider, gameSocket } from "../context/GameContext";
 import { QueueGame } from "../Pages/Queue/Queue";
 import { Game } from "../Pages/Game/Game";
@@ -45,13 +43,7 @@ export const Router = () => {
                         </Routes>
                     </StatusProvider>
                     <Routes>
-                        <Route path="/profile" element={<Profile />} />
-                    </Routes>
-                    <Routes>
                         <Route path="/generate2fa" element={<Generate2fa />} />
-                    </Routes>
-                    <Routes>
-                        <Route path="/user/:username" element={<FriendsList />} />
                     </Routes>
                     <StatusProvider value={statusSocket}>
                         <Routes>
