@@ -548,6 +548,7 @@ export const ChatPage = () => {
                         username: message.sender.user,
                         date: new Date(message.date),
                         message: message.content,
+                        gameInvite: message.gameInvite
                     }));
                     const filteredMessages = formattedMessages.filter(message => !isUserBlocked(message.username));
                     console.log(filteredMessages)
