@@ -197,7 +197,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     async createGroup(@ConnectedSocket() client: Socket, @MessageBody() createGroupDto: CreateGroupDto) {
         try {
             const isDM = createGroupDto.groupName.startsWith("Dm-");
-            if (!isDM) {
+            if (!isDM && createGroupDto.groupName) {
                 const newGroup = await this.chatService.createGroup(createGroupDto);
                 if (newGroup) {
                     const parameter: GroupActionsDto = {
