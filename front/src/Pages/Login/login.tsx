@@ -109,6 +109,7 @@ function LoginGame() {
   };
 
   useEffect(() => {
+    console.log(process.env.REACT_APP_API_URL);
     // Mostrar a bola após 2 segundos (pode ajustar o tempo)
     const timeout = setTimeout(() => {
       setShowBall(true);

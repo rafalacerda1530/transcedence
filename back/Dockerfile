@@ -20,5 +20,7 @@ RUN npx prisma generate
 # Run the build script
 RUN npm run build
 
+ENV NODE_ENV prod
+
 # Command to run the application
-CMD npx prisma migrate deploy && npm run start
+CMD npx prisma migrate deploy && node ./dist/main.js
