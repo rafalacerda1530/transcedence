@@ -55,6 +55,7 @@ export const ChatPage = () => {
     const [joinPassword, setJoinPassword] = useState<string>('')
     const [chatMessages, setChatMessages] = useState<{ [groupName: string]: Message[] }>({});
     const [inviteUsernames, setInviteUsernames] = useState<{ [key: string]: string }>({});
+    const [protectPassword, setprotectPassword] = useState<{ [key: string]: string }>({});
     const [banList, setBanList] = useState<string[]>([]);
     const [isBanPopupOpen, setIsBanPopupOpen] = useState(false);
     const [banDuration, setBanDuration] = useState<number | null>(null);
@@ -341,6 +342,13 @@ export const ChatPage = () => {
 
     const handleInviteUsernameChange = (chatName: string, username: string) => {
         setInviteUsernames(prevState => ({
+            ...prevState,
+            [chatName]: username
+        }));
+    };
+
+    const handleProtectPasswordnameChange = (chatName: string, username: string) => {
+        setprotectPassword(prevState => ({
             ...prevState,
             [chatName]: username
         }));
@@ -1008,6 +1016,7 @@ export const ChatPage = () => {
                         .map((group, index) => {
                             const isMember = groupsAndDms.some(g => g.name === group.name);
                             const currentChatInviteUsername = inviteUsernames[group.name] || '';
+                            const currentChatInviteUsernamed = protectPassword[group.name] || '';
 
                             return (
                                 <li key={index} onClick={() => handleOpenGroup(group.name, group.type)}>
@@ -1050,10 +1059,10 @@ export const ChatPage = () => {
                                                     <input
                                                         type="password"
                                                         placeholder="Enter group password"
-                                                        value={joinPassword}
-                                                        onChange={(e) => setJoinPassword(e.target.value)}
+                                                        value={currentChatInviteUsernamed}
+                                                        onChange={(e) => handleProtectPasswordnameChange(group.name, e.target.value)}
                                                     />
-                                                    <button className="createGroupButton" onClick={() => handleJoinGroup(group.name, joinPassword)}>
+                                                    <button className="createGroupButton" onClick={() => handleJoinGroup(group.name, currentChatInviteUsernamed)}>
                                                         Join Group
                                                     </button>
                                                 </div>
@@ -1074,17 +1083,17 @@ export const ChatPage = () => {
                 {currentChat && chatMessages[currentChat] ? (
                     chatMessages[currentChat].map((msg, index) => (
                         <div key={index} className={getMessageClass(msg.username)}>
-                                {msg.gameInvite ? (
-                                    <div>
-                                            <p>{msg.username} has sent a game invite.</p>
-                                            <button className="accept-invite-button" onClick={handleGameInviteAccept(msg.username)}>Accept</button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <p>{msg.username}: {msg.message}</p>
-                                    </div>
-                                )}
-                                <p>{new Date(msg.date).toLocaleString()}</p>
+                            {msg.gameInvite ? (
+                                <div>
+                                    <p>{msg.username} has sent a game invite.</p>
+                                    <button className="accept-invite-button" onClick={handleGameInviteAccept(msg.username)}>Accept</button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p>{msg.username}: {msg.message}</p>
+                                </div>
+                            )}
+                            <p>{new Date(msg.date).toLocaleString()}</p>
                         </div>
                     ))
                 ) : (
@@ -1223,23 +1232,23 @@ export const ChatPage = () => {
                     <button onClick={handleGameInvite(currentChat, "normal")}>Normal Map</button>
                     <button onClick={handleGameInvite(currentChat, "hard")}>Hard Map</button>
                     <button onClick={handleGameInvite(currentChat, "stick")}>Stick Ball</button>
-                    <button onClick={() => {setIsGameInvitePopupOpen(false)}}>Cancel</button>
+                    <button onClick={() => { setIsGameInvitePopupOpen(false) }}>Cancel</button>
                 </div>
             )}
             {currentChat && (
                 <div className="messageInputContainer">
-                    <button onClick={() => {setIsGameInvitePopupOpen(true)}}>Game Invite</button>
+                    <button onClick={() => { setIsGameInvitePopupOpen(true) }}>Game Invite</button>
                     <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        value={message}
-                        onChange={handleChange}
-                        placeholder="Type your message (max 200 characters)"
-                        maxLength={200}
-                    />
-                    <button type="submit">Send</button>
-                </form>
-            </div>
+                        <input
+                            type="text"
+                            value={message}
+                            onChange={handleChange}
+                            placeholder="Type your message (max 200 characters)"
+                            maxLength={200}
+                        />
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
             )}
         </div>
     );
