@@ -224,6 +224,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 message: `${username} left the group.`,
                 date: new Date(),
             });
+            const updatedMembers = await this.groupService.getMembersInChat({
+                groupName: groupName,
+                type: 'PUBLIC'
+            });
+            this.server.to(groupName).emit('membersInGroup', groupName, updatedMembers);
+            client.to(groupName).emit('membersInGroup', groupName, updatedMembers);
         } catch (error) {
             throw new BadRequestException(error.message);
         }

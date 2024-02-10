@@ -594,3 +594,25 @@
 .buttonGroup {
     display: inline-block;
 }
+
+.leaveGroupButton {
+    background-color: #ff6347;
+    /* Cor de fundo vermelha */
+    color: #fff;
+    /* Cor do texto branca */
+    border: none;
+    /* Remove a borda */
+    padding: 10px 20px;
+    /* Espaçamento interno */
+    border-radius: 5px;
+    /* Borda arredondada */
+    cursor: pointer;
+    /* Mostra o cursor como ponteiro ao passar por cima */
+    margin-top: 10px;
+    /* Margem superior para separar do conteúdo acima */
+}
+
+.leaveGroupButton:hover {
+    background-color: #ff3b20;
+    /* Cor de fundo vermelha mais escura quando hover */
+}

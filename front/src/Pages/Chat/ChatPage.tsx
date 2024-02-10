@@ -276,7 +276,7 @@ export const ChatPage = () => {
     }, [isSocketConnected, username]);
 
 
-        useEffect(() => {
+    useEffect(() => {
         const fetchBlockedUsersStatus = async () => {
             if (currentChat) {
                 try {
@@ -938,6 +938,18 @@ export const ChatPage = () => {
         };
     };
 
+    const leaveGroup = () => {
+        try {
+            chatSocket.emit('leaveGroup', {
+                username: username,
+                groupName: currentChat,
+            });
+        } catch (error) {
+            console.error('Error leaving group:', error);
+        }
+    };
+
+
     return (
         <div className="chatPageContainer">
             <div className="groupDmsContainer" style={{ maxHeight: `${maxHeight}px` }}>
@@ -1108,6 +1120,9 @@ export const ChatPage = () => {
                                 </div>
                             )}
                         </div>
+                    )}
+                    {!isDirectChat(currentChat) && ( // Verifica se não é uma conversa direta
+                        <button onClick={leaveGroup} className="leaveGroupButton">Leave Group</button>
                     )}
                     <h3>Members: </h3>
                     {isDirectChat(currentChat) && (
