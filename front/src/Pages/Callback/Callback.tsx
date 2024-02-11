@@ -7,6 +7,8 @@ export const CallBack = () => {
   }, []);
   const [code, setCode] = useState("");
 
+  const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
+
   useEffect(() => {
     const error = queryParams.get("error");
     if (error === "access_denied") {
@@ -23,7 +25,7 @@ export const CallBack = () => {
     if (code){
         const url = process.env.REACT_APP_API_URL + "/oauth/intra/" + code;
         axios
-          .get(url, {
+          .post(url, { photo: defaultPhoto }, {
             withCredentials: true,
           })
           .then((response) => {
