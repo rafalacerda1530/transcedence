@@ -97,7 +97,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -108,7 +108,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -155,7 +155,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -166,7 +166,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -199,7 +199,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -210,7 +210,7 @@ export const ChatPage = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -230,7 +230,7 @@ export const ChatPage = () => {
             }
             disconnectSocket();
             window.location.href =
-                "http://localhost:3000/Game?roomId=" +
+                process.env.REACT_APP_WEB_URL + "/Game?roomId=" +
                 response.roomId +
                 "&mode=" +
                 response.mode;

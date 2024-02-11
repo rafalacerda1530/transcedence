@@ -116,7 +116,7 @@ export const Home = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -127,7 +127,7 @@ export const Home = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -160,7 +160,7 @@ export const Home = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -171,7 +171,7 @@ export const Home = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -183,7 +183,7 @@ export const Home = () => {
             }
             disconnectSocket();
             window.location.href =
-                "http://localhost:3000/Game?roomId=" +
+            process.env.REACT_APP_WEB_URL + "/Game?roomId=" +
                 response.roomId +
                 "&mode=" +
                 response.mode;
@@ -317,7 +317,7 @@ export const Home = () => {
                 return response.data;
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/Login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/Login";
             }
         };
         user();

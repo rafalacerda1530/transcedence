@@ -22,7 +22,7 @@ interface UserData {
 
 @WebSocketGateway({
     cors: {
-        origin: 'http://localhost:3000',
+        origin: process.env.REACT_APP_WEB_URL,
         credentials: true,
     },
     namespace: 'gameInvite',

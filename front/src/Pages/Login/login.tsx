@@ -46,7 +46,7 @@ function LoginGame() {
         CallBackUserAndPassword(formData)
           .then((response) => {
             console.log(response.data);
-            window.location.href = "http://localhost:3000/Home";
+            window.location.href = process.env.REACT_APP_WEB_URL + "/Home";
           })
           .catch((error) => {
             console.log("erro:", error.response.data.message);
@@ -57,10 +57,7 @@ function LoginGame() {
   };
 
   const handleLoginIntra = () => {
-    const url =
-      "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-e4c7b8cd4fb31c268132af823110ef8bdbf90e2df97baf4c1fe0f4a6f93e110b&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2FcallBack&response_type=code";
-
-    window.location.href = url;
+    window.location.href = process.env.REACT_APP_INTRA_CALLBACK + "";
   };
   const validatePassword = (senha: string): boolean => {
     const uppercaseRegex = /[A-Z]/;
@@ -97,7 +94,7 @@ function LoginGame() {
           withCredentials: true,
         })
         .then((response) => {
-          window.location.href = "http://localhost:3000/Home";
+          window.location.href = process.env.REACT_APP_WEB_URL + "/Home";
         })
         .catch((error) => {
           console.log("erro:", error.response.data.message, formData);

@@ -10,14 +10,14 @@ export class OauthService {
     ) {}
     private readonly UID = this.config.get('API_INTRA_UID');
     private readonly SECRET = this.config.get('API_INTRA_SECRET');
-    private readonly site = 'https://api.intra.42.fr';
+    private readonly site = this.config.get('INTRA_URL');
 
     async getAccessToken(code: string) {
         const body = {
             grant_type: 'authorization_code',
             client_id: this.UID,
             client_secret: this.SECRET,
-            redirect_uri: 'http://localhost:3000/callBack',
+            redirect_uri: process.env.REACT_APP_WEB_URL + "/callBack",
             code: code,
         };
 

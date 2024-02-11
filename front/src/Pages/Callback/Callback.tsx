@@ -14,7 +14,7 @@ export const CallBack = () => {
     if (error === "access_denied") {
         console.log(error);
         // Redirecione para a tela de login
-        window.location.href = "http://localhost:3000/Login";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Login";
     }
     const newCode = queryParams.get("code");
     if (newCode)
@@ -29,11 +29,11 @@ export const CallBack = () => {
             withCredentials: true,
           })
           .then((response) => {
-        window.location.href = "http://localhost:3000/Home";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Home";
           })
       .catch((error) => {
         console.error("Erro na requisição:", error);
-        window.location.href = "http://localhost:3000/Login";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Login";
           });
     }
   }, [code]);
