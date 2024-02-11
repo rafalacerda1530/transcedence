@@ -31,10 +31,10 @@ export const Game = () => {
         const newmode = queryParams.get("mode");
 
         if (newroomId) setRoomId(newroomId);
-        else window.location.href = "http://localhost:3000/Queue";
+        else window.location.href = process.env.REACT_APP_WEB_URL + "/Queue";
 
         if (newmode) setMode(newmode);
-        else window.location.href = "http://localhost:3000/Queue";
+        else window.location.href = process.env.REACT_APP_WEB_URL + "/Queue";
     }, [queryParams]);
 
     const disconnectSocket = () => {
@@ -67,7 +67,7 @@ export const Game = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -78,7 +78,7 @@ export const Game = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });

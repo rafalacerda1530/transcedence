@@ -7,12 +7,14 @@ export const CallBack = () => {
   }, []);
   const [code, setCode] = useState("");
 
+  const defaultPhoto = "https://i.imgur.com/VavB8Rm.png";
+
   useEffect(() => {
     const error = queryParams.get("error");
     if (error === "access_denied") {
         console.log(error);
         // Redirecione para a tela de login
-        window.location.href = "http://localhost:3000/Login";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Login";
     }
     const newCode = queryParams.get("code");
     if (newCode)
@@ -23,15 +25,15 @@ export const CallBack = () => {
     if (code){
         const url = process.env.REACT_APP_API_URL + "/oauth/intra/" + code;
         axios
-          .get(url, {
+          .post(url, { photo: defaultPhoto }, {
             withCredentials: true,
           })
           .then((response) => {
-        window.location.href = "http://localhost:3000/Home";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Home";
           })
       .catch((error) => {
         console.error("Erro na requisição:", error);
-        window.location.href = "http://localhost:3000/Login";
+        window.location.href = process.env.REACT_APP_WEB_URL + "/Login";
           });
     }
   }, [code]);

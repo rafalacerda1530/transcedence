@@ -25,7 +25,7 @@ export const QueueGame = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -36,7 +36,7 @@ export const QueueGame = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -48,7 +48,7 @@ export const QueueGame = () => {
             }
             disconnectSocket();
             window.location.href =
-                "http://localhost:3000/Game?roomId=" +
+                process.env.REACT_APP_WEB_URL + "/Game?roomId=" +
                 response.roomId +
                 "&mode=" +
                 response.mode;
@@ -84,7 +84,7 @@ export const QueueGame = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -95,7 +95,7 @@ export const QueueGame = () => {
                 await refreshToken();
             } catch (error) {
                 console.log(error);
-                window.location.href = "http://localhost:3000/login";
+                window.location.href = process.env.REACT_APP_WEB_URL + "/login";
             }
             connectSocket();
         });
@@ -108,7 +108,7 @@ export const QueueGame = () => {
             console.log(response.roomId);
             disconnectSocket();
             window.location.href =
-                "http://localhost:3000/Game?roomId=" +
+                process.env.REACT_APP_WEB_URL + "/Game?roomId=" +
                 response.roomId +
                 "&mode=" +
                 response.mode;

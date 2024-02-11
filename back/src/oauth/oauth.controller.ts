@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Body, Post} from '@nestjs/common';
 import { Param, Res } from '@nestjs/common/decorators';
 import { OauthService } from './oauth.service';
 import { PrismaCommands } from 'src/prisma/prisma.commands';
@@ -13,14 +13,14 @@ export class OauthController {
         private token: TokenService,
     ) {}
 
-    @Get('oauth/intra/:code')
-    async getToken(@Param('code') code: string, @Res() response: Response) {
+    @Post('oauth/intra/:code')
+    async getToken(@Param('code') code: string, @Res() response: Response, @Body() body: any){
         var testeString = await this.authService.getAccessToken(code);
         const resultado = testeString;
-        const user = await this.prismaCommands.createUserIntra(resultado);
+        const user = await this.prismaCommands.createUserIntra(resultado, body.photo);
         await this.token.refreshToken(user.user, response);
         response.send();
     }
 
-   
+
 }

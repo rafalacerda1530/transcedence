@@ -10,7 +10,7 @@ import internal from 'stream';
 export class PrismaCommands {
     constructor(private prisma: PrismaService) { }
 
-    async createUserIntra(responseFromIntra: object) {
+    async createUserIntra(responseFromIntra: object, photo: string) {
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -19,11 +19,20 @@ export class PrismaCommands {
                 },
             });
             if (user) return user;
+            const loginUser = await this.prisma.user.findUnique({
+                where: {
+                    user: responseFromIntra['login'],
+                    hash: null,
+                },
+            });
+            if (loginUser) return loginUser;
             const newUser = await this.prisma.user.create({
                 data: {
                     email: responseFromIntra['email'],
                     user: responseFromIntra['login'],
+                    hash: null,
                     userIntra: true,
+                    profileImage: photo,
                 },
             });
             return newUser;
