@@ -16,9 +16,7 @@ export const CallBackQrCode = () => {
 };
 
 const handleHomeButton = () => {
-  const url =
-    "http://localhost:3000/home";
-  window.location.href = url;
+  window.location.href = process.env.REACT_APP_WEB_URL + "/home";
 };
 
 export const Generate2fa = () => {
